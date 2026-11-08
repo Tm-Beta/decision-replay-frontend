@@ -65,6 +65,12 @@ export interface Snapshot {
   isVerified?: boolean;
 }
 
+export interface SnapshotSummary {
+  contentHash: string;
+  isVerified?: boolean;
+  lockedAt: string;
+}
+
 export interface Decision {
   id: string;
   title: string;
@@ -82,11 +88,25 @@ export interface Decision {
   lockedAt: string | null;
   snapshotHash?: string | null;
   isVerified?: boolean;
+  /** Contract shape: `snapshot { contentHash, isVerified, lockedAt }` returned by GET /decisions/:id */
+  snapshot?: SnapshotSummary | null;
+  /** Present on list items: GET /decisions */
+  hasOutcome?: boolean;
   assumptions: Assumption[];
   alternatives: Alternative[];
   preMortems: PreMortem[];
   events: TimelineEvent[];
   outcome: Outcome | null;
+}
+
+/** Outcome as returned inside GET /replay/:decisionId (no id / decisionId in the contract). */
+export interface ReplayOutcome {
+  recordedAt: string;
+  actualOutcome: string;
+  outcomeScore: number;
+  reflection: string;
+  wouldRepeat: boolean;
+  unexpectedFactors?: string;
 }
 
 export interface ReplayComparison {
@@ -98,7 +118,7 @@ export interface ReplayComparison {
     expectedOutcome: string;
     decisionReason?: string;
   };
-  outcome: Outcome;
+  outcome: ReplayOutcome;
   metrics: {
     predictionAccuracy: number;
     confidenceCalibrationDelta: number;
@@ -137,4 +157,62 @@ export interface SocraticQuestion {
 export interface SocraticChallengeResponse {
   socraticQuestions: SocraticQuestion[];
   detectedBiases: string[];
+}
+
+// ---------- API response shapes (decision-replay-docs/api-contracts) ----------
+
+/** POST /decisions -> 201 Created */
+export interface CreateDecisionResponse {
+  id: string;
+  title: string;
+  status: DecisionStatus;
+  confidence: number;
+  reviewDate: string | null;
+  lockedAt: string | null;
+  snapshotHash: string;
+  assumptionsCount?: number;
+  alternativesCount?: number;
+  preMortemsCount?: number;
+  createdAt: string;
+}
+
+/** GET /decisions */
+export interface DecisionListResponse {
+  data: Decision[];
+  total: number;
+  page?: number;
+  limit?: number;
+}
+
+/** POST /replay/:decisionId/outcome -> 201 Created */
+export interface RecordOutcomeResponse {
+  outcomeId: string;
+  decisionId: string;
+  predictionAccuracy: number;
+  outcomeScore: number;
+  confidenceVariance: number;
+  assumptionAccuracyRate: number;
+  preMortemMatched?: boolean;
+  replaySummary?: {
+    expected: string;
+    actual: string;
+    status: string;
+  };
+  recordedAt: string;
+}
+
+/** GET /replay/patterns/summary */
+export interface DetectedPattern {
+  patternKey: string;
+  title: string;
+  description: string;
+  evidenceDecisionIds?: string[];
+  severity: string;
+}
+
+export interface PatternSummary {
+  totalDecisionsEvaluated: number;
+  overallPredictionAccuracy: number;
+  calibrationBias: string;
+  detectedPatterns: DetectedPattern[];
 }

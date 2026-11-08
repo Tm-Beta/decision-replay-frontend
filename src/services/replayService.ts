@@ -8,7 +8,11 @@
 // ==============================================================================
 
 import { apiClient } from "./apiClient";
-import { ReplayComparison } from "../types/decision.types";
+import {
+  PatternSummary,
+  RecordOutcomeResponse,
+  ReplayComparison,
+} from "../types/decision.types";
 
 export interface RecordOutcomeInput {
   actualOutcome: string;
@@ -24,8 +28,11 @@ export interface RecordOutcomeInput {
 }
 
 export const replayService = {
-  recordOutcome: async (decisionId: string, data: RecordOutcomeInput) => {
-    return apiClient(`/replay/${decisionId}/outcome`, {
+  recordOutcome: async (
+    decisionId: string,
+    data: RecordOutcomeInput
+  ): Promise<RecordOutcomeResponse> => {
+    return apiClient<RecordOutcomeResponse>(`/replay/${decisionId}/outcome`, {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -35,17 +42,7 @@ export const replayService = {
     return apiClient<ReplayComparison>(`/replay/${decisionId}`);
   },
 
-  getPatternSummary: async () => {
-    return apiClient<{
-      totalDecisionsEvaluated: number;
-      overallPredictionAccuracy: number;
-      calibrationBias: string;
-      detectedPatterns: Array<{
-        patternKey: string;
-        title: string;
-        description: string;
-        severity: string;
-      }>;
-    }>("/replay/patterns/summary");
+  getPatternSummary: async (): Promise<PatternSummary> => {
+    return apiClient<PatternSummary>("/replay/patterns/summary");
   },
 };

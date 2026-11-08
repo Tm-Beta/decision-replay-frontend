@@ -8,7 +8,12 @@
 // ==============================================================================
 
 import { apiClient } from "./apiClient";
-import { Decision, TimelineEvent } from "../types/decision.types";
+import {
+  CreateDecisionResponse,
+  Decision,
+  DecisionListResponse,
+  TimelineEvent,
+} from "../types/decision.types";
 
 export interface CreateDecisionInput {
   projectId?: string;
@@ -27,8 +32,8 @@ export interface CreateDecisionInput {
 }
 
 export const decisionService = {
-  createDecision: async (data: CreateDecisionInput): Promise<Decision> => {
-    return apiClient<Decision>("/decisions", {
+  createDecision: async (data: CreateDecisionInput): Promise<CreateDecisionResponse> => {
+    return apiClient<CreateDecisionResponse>("/decisions", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -38,19 +43,27 @@ export const decisionService = {
     return apiClient<Decision>(`/decisions/${id}`);
   },
 
-  listDecisions: async (filters?: { status?: string; projectId?: string; category?: string }): Promise<{ data: Decision[]; total: number }> => {
+  listDecisions: async (filters?: {
+    status?: string;
+    projectId?: string;
+    category?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<DecisionListResponse> => {
     const params = new URLSearchParams();
     if (filters?.status) params.append("status", filters.status);
     if (filters?.projectId) params.append("projectId", filters.projectId);
     if (filters?.category) params.append("category", filters.category);
+    if (filters?.page !== undefined) params.append("page", String(filters.page));
+    if (filters?.limit !== undefined) params.append("limit", String(filters.limit));
 
     const queryString = params.toString() ? `?${params.toString()}` : "";
-    return apiClient<{ data: Decision[]; total: number }>(`/decisions${queryString}`);
+    return apiClient<DecisionListResponse>(`/decisions${queryString}`);
   },
 
   appendTimelineEvent: async (
     decisionId: string,
-    event: { eventType: string; title: string; detail: string }
+    event: { eventType: TimelineEvent["eventType"]; title: string; detail: string }
   ): Promise<TimelineEvent> => {
     return apiClient<TimelineEvent>(`/decisions/${decisionId}/events`, {
       method: "POST",
