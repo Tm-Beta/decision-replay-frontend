@@ -5,7 +5,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import "./globals.css";
+import("./globals.css")
 import { Compass, PlusCircle, Dna, LayoutDashboard, History } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="light">
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
         <div className="flex min-h-screen flex-col">
           {/* Top Navigation Bar */}
