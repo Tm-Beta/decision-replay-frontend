@@ -1,12 +1,6 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
-// FEATURE: Dashboard Cognitive Blind Spot Alerts Component
-//
-// TODO: [Member D]
-// 1. Render patterns identified by the Replay & Pattern Engine.
-// 2. Show severity tones (High, Medium, Positive).
-// 3. Link to `/dna` for deeper longitudinal analysis.
-// ==============================================================================
+//Renders the patterns it receives from the Replay & Pattern Engine summary (the dashboard page fetches them and passes them in as `patterns`).
+//Shows severity tones: red for High, amber for Medium/Low, green for Positive.The most serious alerts come first, and at most 3 are shown.
+//Links to `/dna` for deeper longitudinal analysis.
 
 "use client";
 
@@ -24,24 +18,17 @@ export interface BlindSpotItem {
   severity: "HIGH" | "MEDIUM" | "POSITIVE" | string;
 }
 
+const SEVERITY_ORDER: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2, POSITIVE: 3 };
+const MAX_ALERTS = 3;
+
 export function BlindSpotAlert({
-  patterns = [
-    {
-      patternKey: "SCHEDULE_OPTIMISM",
-      title: "Schedule Optimism Detected",
-      description: "In 65% of technical migration decisions, actual timeline exceeded original estimate.",
-      severity: "HIGH",
-    },
-    {
-      patternKey: "PRE_MORTEM_ACCURACY",
-      title: "High Risk Anticipation",
-      description: "Pre-mortems correctly foresaw 75% of production bottlenecks before release.",
-      severity: "POSITIVE",
-    },
-  ],
+  patterns = [],
 }: {
   patterns?: BlindSpotItem[];
 }) {
+    const topPatterns = [...patterns]
+    .sort((a, b) => (SEVERITY_ORDER[a.severity] ?? 2) - (SEVERITY_ORDER[b.severity] ?? 2))
+    .slice(0, MAX_ALERTS);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -57,10 +44,13 @@ export function BlindSpotAlert({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {patterns.map((p, i) => (
-          <div
-            key={i}
-            className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+        {topPatterns.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-6">
+            No patterns detected yet. Patterns appear after you replay a few decisions.
+          </p>
+        )}
+        {topPatterns.map((p, i) => (          
+          <div key={i} className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
               p.severity === "HIGH"
                 ? "border-destructive/30 bg-destructive/5"
                 : p.severity === "POSITIVE"

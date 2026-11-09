@@ -1,12 +1,6 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
-// FEATURE: Dashboard Pending Reviews Due Component
-//
-// TODO: [Member D]
-// 1. Render decisions where `status === 'LOCKED'` or `'REVIEW_PENDING'`.
-// 2. Highlight decisions whose reviewDate has passed.
-// 3. Provide direct link to `/decisions/[id]/replay`.
-// ==============================================================================
+//Lists only decisions with status LOCKED or REVIEW_PENDING (waiting for an outcome).
+//Highlights decisions whose review date has passed with a red "Review Due" badge.
+//Links each decision to its replay page (/decisions/[id]/replay) to record the outcome.
 
 "use client";
 
@@ -24,8 +18,7 @@ interface PendingReviewsListProps {
 }
 
 export function PendingReviewsList({ decisions = [] }: PendingReviewsListProps) {
-  const pending = decisions.filter((d) => d.status !== "REPLAYED");
-
+const pending = decisions.filter((d) => d.status === "LOCKED" || d.status === "REVIEW_PENDING");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
