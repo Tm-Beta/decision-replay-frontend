@@ -2,90 +2,176 @@
 // RESPONSIBLE MEMBER: Member B (Frontend Lead - Creation Wizard & Snapshot UI)
 // FEATURE: Step 1 - Core Choice & Reasoning Form
 //
-// TODO: [Member B]
-// 1. Capture title, choice, decision reason, belief rationale, and expected outcome.
-// 2. Validate inputs before permitting progression to Step 2.
+// Captures title, category, choice, decision reason, belief rationale,
+// expected outcome, and confidence. Validation happens in new/page.tsx
+// (handleNext) before the user can move to Step 2.
 // ==============================================================================
 
 "use client";
 
-import React from "react";
 import { useDecisionDraftStore } from "@/store/useDecisionDraftStore";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
+const CATEGORIES = [
+  "Career",
+  "Product",
+  "Finance",
+  "Hiring",
+  "Technology",
+  "Strategy",
+  "Personal",
+  "Other",
+];
+
+const inputClass =
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm " +
+  "placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 " +
+  "focus:ring-primary/30 focus:border-primary transition-all";
+
+const labelClass = "block text-sm font-semibold text-foreground mb-1.5";
+const hintClass = "text-xs text-muted-foreground mb-2";
 
 export function CoreDecisionStep() {
   const {
     title,
+    category,
     choice,
     decisionReason,
     beliefRationale,
     expectedOutcome,
-    updateField,
+    confidence,
+    setField,
   } = useDecisionDraftStore();
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">1. Core Choice & Reasoning</h2>
-        <p className="text-sm text-muted-foreground">
-          Define what you are committing to and why you believe it will work.
+        <h2 className="font-display text-xl font-semibold text-foreground">
+          The Choice
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Record what you decided and what you expect, before you know how it ends.
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="text-sm font-medium">Decision Title</label>
-          <p className="text-xs text-muted-foreground mb-1">What concrete question or fork are you addressing?</p>
-          <Input
-            placeholder="e.g. Migrate primary caching tier to DynamoDB"
-            value={title}
-            onChange={(e) => updateField("title", e.target.value)}
-          />
-        </div>
+      {/* Title */}
+      <div>
+        <label htmlFor="title" className={labelClass}>
+          Decision title <span className="text-destructive">*</span>
+        </label>
+        <input
+          id="title"
+          value={title}
+          onChange={(e) => setField("title", e.target.value)}
+          placeholder="e.g. Launch the app in March"
+          className={inputClass}
+        />
+      </div>
 
-        <div>
-          <label className="text-sm font-medium">Your Selected Choice</label>
-          <p className="text-xs text-muted-foreground mb-1">What exact course of action are you committing to?</p>
-          <Textarea
-            rows={2}
-            placeholder="e.g. Fully replace the self-hosted Redis cluster with managed DynamoDB on AWS."
-            value={choice}
-            onChange={(e) => updateField("choice", e.target.value)}
-          />
-        </div>
+      {/* Category */}
+      <div>
+        <label htmlFor="category" className={labelClass}>
+          Category
+        </label>
+        <select
+          id="category"
+          value={category}
+          onChange={(e) => setField("category", e.target.value)}
+          className={inputClass}
+        >
+          <option value="">Select a category...</option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div>
-          <label className="text-sm font-medium">Why This Decision Now?</label>
-          <p className="text-xs text-muted-foreground mb-1">The trigger, crisis, or strategic opportunity behind it.</p>
-          <Textarea
-            rows={2}
-            placeholder="e.g. Current Redis nodes are running at 85% memory capacity during traffic spikes."
-            value={decisionReason}
-            onChange={(e) => updateField("decisionReason", e.target.value)}
-          />
-        </div>
+      {/* Choice */}
+      <div>
+        <label htmlFor="choice" className={labelClass}>
+          What did you choose? <span className="text-destructive">*</span>
+        </label>
+        <p className={hintClass}>State the option you are going with, in one or two sentences.</p>
+        <textarea
+          id="choice"
+          value={choice}
+          onChange={(e) => setField("choice", e.target.value)}
+          rows={3}
+          className={inputClass}
+        />
+      </div>
 
-        <div>
-          <label className="text-sm font-medium">Belief & Empirical Rationale</label>
-          <p className="text-xs text-muted-foreground mb-1">Why do you believe this will succeed? What facts support it?</p>
-          <Textarea
-            rows={2}
-            placeholder="e.g. Internal benchmark showed consistent 4ms read latency under 10k QPS."
-            value={beliefRationale}
-            onChange={(e) => updateField("beliefRationale", e.target.value)}
-          />
-        </div>
+      {/* Decision reason */}
+      <div>
+        <label htmlFor="decisionReason" className={labelClass}>
+          Why this choice?
+        </label>
+        <p className={hintClass}>The main reasons that tipped the decision.</p>
+        <textarea
+          id="decisionReason"
+          value={decisionReason}
+          onChange={(e) => setField("decisionReason", e.target.value)}
+          rows={3}
+          className={inputClass}
+        />
+      </div>
 
-        <div>
-          <label className="text-sm font-medium">Expected Observable Outcome</label>
-          <p className="text-xs text-muted-foreground mb-1">A quantifiable result you can objectively check on review day.</p>
-          <Textarea
-            rows={2}
-            placeholder="e.g. Zero memory-related outages over 60 days, monthly AWS bill remains under $250."
-            value={expectedOutcome}
-            onChange={(e) => updateField("expectedOutcome", e.target.value)}
-          />
+      {/* Belief rationale */}
+      <div>
+        <label htmlFor="beliefRationale" className={labelClass}>
+          What do you believe that makes this the right call?
+        </label>
+        <p className={hintClass}>
+          The underlying beliefs or evidence you are relying on right now.
+        </p>
+        <textarea
+          id="beliefRationale"
+          value={beliefRationale}
+          onChange={(e) => setField("beliefRationale", e.target.value)}
+          rows={3}
+          className={inputClass}
+        />
+      </div>
+
+      {/* Expected outcome */}
+      <div>
+        <label htmlFor="expectedOutcome" className={labelClass}>
+          What do you expect to happen? <span className="text-destructive">*</span>
+        </label>
+        <p className={hintClass}>Be specific so it can be checked later.</p>
+        <textarea
+          id="expectedOutcome"
+          value={expectedOutcome}
+          onChange={(e) => setField("expectedOutcome", e.target.value)}
+          rows={3}
+          className={inputClass}
+        />
+      </div>
+
+      {/* Confidence slider */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label htmlFor="confidence" className="text-sm font-semibold text-foreground">
+            How confident are you?
+          </label>
+          <span className="text-sm font-semibold text-primary tabular-nums">
+            {confidence}%
+          </span>
+        </div>
+        <input
+          id="confidence"
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={confidence}
+          onChange={(e) => setField("confidence", Number(e.target.value))}
+          className="w-full accent-primary"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>Unsure</span>
+          <span>Certain</span>
         </div>
       </div>
     </div>
