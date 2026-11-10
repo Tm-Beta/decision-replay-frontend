@@ -34,23 +34,19 @@ export default function RootLayout({
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-4 text-xs font-medium text-muted-foreground">
-                  <Link
-                    href="/"
-                    className="flex items-center gap-1.5 transition-colors hover:text-foreground"
-                  >
-                    <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
+                  <Link href="/" className="flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                    <LayoutDashboard className="h-4 w-4 text-indigo-600" />
+                    Dashboard
                   </Link>
-                  <Link
-                    href="/decisions"
-                    className="flex items-center gap-1.5 transition-colors hover:text-foreground"
-                  >
-                    <History className="h-3.5 w-3.5" /> All Decisions
+
+                  <Link href="/decisions" className="flex items-center gap-1.5 rounded-lg bg-sky-50 px-3 py-1.5 text-sky-700 hover:bg-sky-100">
+                    <History className="h-4 w-4 text-sky-600" />
+                    All Decisions
                   </Link>
-                  <Link
-                    href="/dna"
-                    className="flex items-center gap-1.5 transition-colors hover:text-foreground"
-                  >
-                    <Dna className="h-3.5 w-3.5" /> Decision DNA
+
+                  <Link href="/dna" className="flex items-center gap-1.5 rounded-lg bg-violet-50 px-3 py-1.5 text-violet-700 hover:bg-violet-100">
+                    <Dna className="h-4 w-4 text-violet-600" />
+                    Decision DNA
                   </Link>
                 </nav>
               </div>
