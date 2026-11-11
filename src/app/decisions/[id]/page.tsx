@@ -2,10 +2,8 @@
 // RESPONSIBLE MEMBER: Member B (Frontend Lead - Creation Wizard & Snapshot UI)
 // FEATURE: Decision Snapshot & Timeline Inspection View
 //
-// TODO: [Member B]
-// 1. Fetch decision details via `decisionService.getDecisionById(id)`.
-// 2. Render SnapshotTimeline component displaying immutable snapshot and verified hash.
-// 3. Render Pre-Mortem failure scenarios and assumptions cards.
+// Fetches the decision, shows the frozen snapshot with the append-only timeline,
+// and breaks down assumptions, pre-mortems and alternatives.
 // ==============================================================================
 
 "use client";
@@ -20,6 +18,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { GitCompare, AlertTriangle, Split, ArrowLeft } from "lucide-react";
+
+function daysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const ms = new Date(dateStr).getTime() - Date.now();
+  return Math.ceil(ms / 86400000);
+}
 
 export default function DecisionDetailPage() {
   const params = useParams();
@@ -105,6 +109,9 @@ export default function DecisionDetailPage() {
     );
   }
 
+  const daysLeft = daysUntil(decision.reviewDate);
+  const reviewDue = daysLeft !== null && daysLeft <= 0;
+
   return (
     <div className="space-y-6">
       {/* Top Navigation */}
@@ -116,12 +123,32 @@ export default function DecisionDetailPage() {
         </Link>
 
         <Link href={`/decisions/${decision.id}/replay`}>
-          <Button size="sm">
+          <Button size="sm" variant={reviewDue || decision.outcome ? "default" : "outline"}>
             <GitCompare className="h-4 w-4 mr-1.5" />
             {decision.outcome ? "View Replay Comparison" : "Record Outcome Replay"}
           </Button>
         </Link>
       </div>
+
+      {/* Time until review */}
+      {decision.reviewDate && !decision.outcome && daysLeft !== null && (
+        <div
+          className={`rounded-xl border px-4 py-2.5 text-sm ${
+            reviewDue
+              ? "border-amber-500/30 bg-amber-500/10 text-amber-800"
+              : "border-border bg-muted/40 text-muted-foreground"
+          }`}
+        >
+          {reviewDue
+            ? "Review due: it is time to record what actually happened."
+            : `Review in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`}
+        </div>
+      )}
+
+      <p className="text-sm text-muted-foreground">
+        This snapshot is frozen. It shows exactly what you believed on the day you decided,
+        and it can never be edited.
+      </p>
 
       {/* Snapshot and Timeline Engine */}
       <SnapshotTimeline
@@ -146,7 +173,7 @@ export default function DecisionDetailPage() {
                 <div key={i} className="p-3 rounded-xl border border-border bg-card/60 text-xs space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-foreground">{a.statement}</span>
-                    <Badge tone="default">{a.confidence}%</Badge>
+                    <Badge tone="default">{a.confidence}% confident</Badge>
                   </div>
                   {a.metricTarget && (
                     <p className="text-muted-foreground font-mono">Target: {a.metricTarget}</p>
