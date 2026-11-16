@@ -22,12 +22,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { decisionService } from "@/services/decisionService";
 import { Lock, ArrowLeft, ArrowRight } from "lucide-react";
+import { validateTitle, validateChoice, validateExpectedOutcome, validateReviewDate } from "@/lib/validation";
 
 export default function NewDecisionWizardPage() {
   const router = useRouter();
   const store = useDecisionDraftStore();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showErrors, setShowErrors] = useState(false);
 
   const steps = [
     { title: "The Choice", desc: "Define choice & expected result" },
@@ -37,23 +39,31 @@ export default function NewDecisionWizardPage() {
 
   const handleNext = () => {
     if (store.currentStep === 0) {
-      if (!store.title.trim() || !store.choice.trim() || !store.expectedOutcome.trim()) {
-        setError("Please complete title, choice, and expected outcome.");
+      if (
+        validateTitle(store.title) ||
+        validateChoice(store.choice) ||
+        validateExpectedOutcome(store.expectedOutcome)
+      ) {
+        setShowErrors(true);
+        setError("Please fix the highlighted fields.");
         return;
       }
     }
+    setShowErrors(false);
     setError("");
     store.nextStep();
   };
 
   const handleFinalSubmit = async () => {
-    if (!store.reviewDate) {
-      setError("Please pick a review date to schedule the replay.");
+    const dateError = validateReviewDate(store.reviewDate);
+    if (dateError) {
+      setError(dateError);
       return;
     }
 
     setSubmitting(true);
     setError("");
+    
 
     try {
       const created = await decisionService.createDecision({
@@ -115,8 +125,7 @@ export default function NewDecisionWizardPage() {
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6 sm:p-8">
-              {store.currentStep === 0 && <CoreDecisionStep />}
-
+              {store.currentStep === 0 && <CoreDecisionStep showErrors={showErrors} />}
               {store.currentStep === 1 && (
                 <div className="space-y-8">
                   <AssumptionBuilder />
