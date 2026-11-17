@@ -1,6 +1,19 @@
 // ==============================================================================
-// RESPONSIBLE MEMBER: Member B (Frontend Lead) & Member D (Full-Stack UI)
 // FEATURE: Application Root Layout & Navigation Shell
+
+/**
+ * Root Layout (app/layout.tsx)
+ *
+ * Defines the shell that wraps every page in the Decision Replay app.
+ *
+ * - Sets the page metadata (title and description) used for SEO and the browser tab.
+ * - Loads the global stylesheet (globals.css).
+ * - Renders a sticky top navigation bar with the app logo, links to Dashboard,
+ *   All Decisions and Decision DNA, and a "Record Decision" call-to-action button.
+ * - Renders the active page inside a centered, max-width <main> container
+ *   via the `children` prop.
+ * - Renders a minimal footer at the bottom of every page.
+ */
 // ==============================================================================
 
 import type { Metadata } from "next";
