@@ -1,11 +1,7 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
 // FEATURE: Decision & Timeline API Service Layer
-//
-// TODO: [Member D]
-// 1. Connect to backend endpoints defined in `decision-replay-docs/api-contracts/decisions-api.md`.
-// 2. Implement createDecision, getDecisionById, appendTimelineEvent, listDecisions.
-// ==============================================================================
+// Connects to the backend endpoints in `decision-replay-docs/api-contracts/decisions-api.md`.
+// Provides createDecision, getDecisionById, listDecisions (with status, category, page and limit filters) and appendTimelineEvent, all typed to the contract.
+
 
 import { apiClient } from "./apiClient";
 import {
