@@ -1,16 +1,14 @@
-// ==============================================================================
 // RESPONSIBLE MEMBER: Member B (Frontend Lead) & Member C (Backend AI Lead)
 // FEATURE: Real-Time Socratic AI Analyst Sidebar
 //
-// TODO: [Member B]
+
 // 1. Fetch Socratic questions from `/api/v1/ai-analyst/challenge` as user updates draft.
 // 2. Display provocative questions and detected cognitive bias warnings.
 // 3. Keep purely Socratic: never show recommendations on what choice to make.
-// ==============================================================================
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDecisionDraftStore } from "@/store/useDecisionDraftStore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +21,32 @@ export function AiAnalystSidebar() {
   const store = useDecisionDraftStore();
   const [loading, setLoading] = useState(false);
   const [challenge, setChallenge] = useState<SocraticChallengeResponse | null>(null);
+
+    const firstRun = useRef(true);
+
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    const hasContent = store.title.trim() || store.choice.trim() || store.expectedOutcome.trim();
+    if (!hasContent) return;
+
+    const timer = setTimeout(() => {
+      fetchChallenge();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [
+    store.title,
+    store.choice,
+    store.decisionReason,
+    store.expectedOutcome,
+    store.confidence,
+    store.assumptions,
+    store.alternatives,
+    store.preMortems,
+  ]);
 
   const fetchChallenge = async () => {
     setLoading(true);
@@ -41,18 +65,55 @@ export function AiAnalystSidebar() {
         }),
       });
       setChallenge(res);
-    } catch {
-      // Fallback local challenge heuristic
-      setChallenge({
-        socraticQuestions: [
-          {
-            focusArea: "Assumption Rigor",
-            question: "How will you measure if this choice succeeded within the first 14 days?",
-            suggestedAction: "Define a quantitative metric target.",
-          },
-        ],
-        detectedBiases: ["PLANNING_FALLACY"],
-      });
+       } catch {
+      const questions: SocraticChallengeResponse["socraticQuestions"] = [];
+      const biases: string[] = [];
+
+      if (store.expectedOutcome.trim() && !/\d/.test(store.expectedOutcome)) {
+        questions.push({
+          focusArea: "Measurability",
+          question: "Your expected outcome has no numbers. How would someone verify it later?",
+          suggestedAction: "Add a count, percentage, amount or date.",
+        });
+      }
+      if (store.assumptions.length === 0) {
+        questions.push({
+          focusArea: "Assumption Rigor",
+          question: "Which assumptions must be true for this choice to work?",
+        });
+      } else if (store.assumptions.some((a) => !a.metricTarget?.trim())) {
+        questions.push({
+          focusArea: "Assumption Rigor",
+          question: "Some assumptions have no measurable target. How will you know if they held?",
+        });
+      }
+      if (store.alternatives.length === 0) {
+        questions.push({
+          focusArea: "Alternative Breadth",
+          question: "What other options did you consider, and why did they lose?",
+        });
+      }
+      if (store.preMortems.length === 0) {
+        questions.push({
+          focusArea: "Failure Anticipation",
+          question: "If this fails in six months, what is the most likely reason?",
+        });
+      }
+      if (store.confidence >= 90) {
+        biases.push("OVERCONFIDENCE");
+        questions.push({
+          focusArea: "Calibration",
+          question: `You are ${store.confidence}% confident. What evidence would make you doubt this?`,
+        });
+      }
+      if (questions.length === 0) {
+        questions.push({
+          focusArea: "Assumption Rigor",
+          question: "Which single assumption, if wrong, would hurt this decision the most?",
+        });
+      }
+
+      setChallenge({ socraticQuestions: questions, detectedBiases: biases });
     } finally {
       setLoading(false);
     }
@@ -78,8 +139,7 @@ export function AiAnalystSidebar() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Challenger mode: Questions your reasoning, never decides for you.
-        </p>
+            Updates as you type. Questions your reasoning, never decides for you.       </p>
       </CardHeader>
 
       <CardContent className="space-y-4">
