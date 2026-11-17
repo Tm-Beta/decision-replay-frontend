@@ -32,10 +32,10 @@ export default function NewDecisionWizardPage() {
   const [showErrors, setShowErrors] = useState(false);
 
   const steps = [
-    { title: "The Choice", desc: "Define choice & expected result" },
-    { title: "Hypotheses & Trade-Offs", desc: "Assumptions & counter-alternatives" },
-    { title: "Pre-Mortem & Lock", desc: "Failure anticipation & calibration" },
-  ];
+  { title: "The choice", desc: "Define choice & expected result" },
+  { title: "Your reasoning", desc: "Assumptions & counter-alternatives" },
+  { title: "Look ahead", desc: "Failure anticipation & calibration" },
+];
 
   const handleNext = () => {
     if (store.currentStep === 0) {
@@ -105,20 +105,20 @@ export default function NewDecisionWizardPage() {
   return (
     <div className="space-y-6">
       {/* Wizard Progress Stepper */}
-      <div className="grid grid-cols-3 gap-2">
-        {steps.map((s, i) => (
-          <div key={i} className="space-y-1.5">
-            <div
-              className={`h-1.5 rounded-full transition-all ${
-                i <= store.currentStep ? "bg-primary" : "bg-muted"
-              }`}
-            />
-            <p className="text-xs font-semibold text-foreground truncate">
-              {i + 1}. {s.title}
-            </p>
-          </div>
-        ))}
-      </div>
+     <div className="grid grid-cols-3 gap-3">
+  {steps.map((s, i) => (
+    <div key={i} className="space-y-2">
+      <div
+        className={`h-1 rounded-full transition-all ${
+          i <= store.currentStep ? "bg-primary" : "bg-border"
+        }`}
+      />
+      <p className="text-xs truncate">
+        {i + 1}. {s.title}
+      </p>
+    </div>
+  ))}
+</div>
 
       {/* Main Layout: Form Steps on Left, Socratic Challenger on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
@@ -155,8 +155,8 @@ export default function NewDecisionWizardPage() {
                 </Button>
 
                 {store.currentStep < 2 ? (
-                  <Button size="sm" onClick={handleNext}>
-                    Next Step <ArrowRight className="h-4 w-4 ml-1.5" />
+                 <Button size="sm" onClick={handleNext}>
+                    Continue <ArrowRight className="h-4 w-4 ml-1.5" />
                   </Button>
                 ) : (
                   <Button size="sm" onClick={handleFinalSubmit} disabled={submitting}>
