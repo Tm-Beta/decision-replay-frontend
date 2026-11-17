@@ -1,11 +1,6 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
 // FEATURE: Decision DNA API Service Layer
-//
-// TODO: [Member D]
-// 1. Fetch longitudinal Decision DNA radar scores from `/dna/profile`.
-// 2. Fetch specific historical decisions for a metric using evidence IDs.
-// ==============================================================================
+// Fetches the Decision DNA profile (the six dimension scores) from `/dna/profile`. This endpoint has no contract document yet, so the response type follows the backend.
+// Fetches the historical decisions behind a score or pattern, using its evidence IDs. It loads each decision with GET /decisions/:id and skips any that fail.
 
 import { apiClient } from "./apiClient";
 import { decisionService } from "./decisionService";

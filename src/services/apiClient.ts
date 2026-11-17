@@ -1,11 +1,6 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
-// FEATURE: Central HTTP Client & Fetch Wrapper
-//
-// TODO: [Member D]
-// 1. Configure base URL pointing to Next.js API rewrites or external backend URL.
-// 2. Add standard error handling and toast notifications for network failures.
-// ==============================================================================
+//FEATURE: Central HTTP Client & Fetch Wrapper
+//Builds the base URL from NEXT_PUBLIC_API_URL (default http://localhost:4000/api/v1)and sends every request as JSON.
+//Handles errors in one place: failed requests throw an `ApiError` with a clear message, the HTTP status, and a flag for network failures (server unreachable).Pages show these messages in an error box with a "Try again" button.
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
