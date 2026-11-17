@@ -62,7 +62,7 @@ export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean 
       {/* Title */}
       <div>
         <label htmlFor="title" className={labelClass}>
-          Decision title <span className="text-destructive">*</span>
+          What are you deciding? <span className="text-destructive">*</span>
         </label>
         <input
           id="title"
@@ -98,7 +98,7 @@ export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean 
       {/* Choice */}
       <div>
         <label htmlFor="choice" className={labelClass}>
-          What did you choose? <span className="text-destructive">*</span>
+          Your Choice? <span className="text-destructive">*</span>
         </label>
         <p className={hintClass}>State the option you are going with, in one or two sentences.</p>
         <textarea
@@ -115,7 +115,7 @@ export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean 
       {/* Decision reason */}
       <div>
         <label htmlFor="decisionReason" className={labelClass}>
-          Why this choice?
+          Why take this decision now?
         </label>
         <p className={hintClass}>The main reasons that tipped the decision.</p>
         <textarea
@@ -130,7 +130,7 @@ export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean 
       {/* Belief rationale */}
       <div>
         <label htmlFor="beliefRationale" className={labelClass}>
-          What do you believe that makes this the right call?
+          What do you believe that makes this will work?
         </label>
         <p className={hintClass}>
           The underlying beliefs or evidence you are relying on right now.
@@ -147,7 +147,7 @@ export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean 
       {/* Expected outcome */}
       <div>
         <label htmlFor="expectedOutcome" className={labelClass}>
-          What do you expect to happen? <span className="text-destructive">*</span>
+          What results do you expect? <span className="text-destructive">*</span>
         </label>
         <p className={hintClass}>Be specific so it can be checked later.</p>
         <textarea
