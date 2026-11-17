@@ -1,6 +1,6 @@
 // RESPONSIBLE MEMBER: Member B (Frontend Lead) & Member C (Backend AI Lead)
 // FEATURE: Real-Time Socratic AI Analyst Sidebar
-//
+
 
 // 1. Fetch Socratic questions from `/api/v1/ai-analyst/challenge` as user updates draft.
 // 2. Display provocative questions and detected cognitive bias warnings.
