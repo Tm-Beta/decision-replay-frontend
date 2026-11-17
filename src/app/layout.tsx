@@ -20,6 +20,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import("./globals.css")
 import { Compass, PlusCircle, Dna, LayoutDashboard, History } from "lucide-react";
+import { Plus_Jakarta_Sans } from "next/font/google";
+
+const display = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-display",
+});
 
 export const metadata: Metadata = {
   title: "Decision Replay — Prospective Decision Intelligence",
@@ -32,8 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="light">
-      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
+<html lang="en" className={`light ${display.variable}`}>      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
         <div className="flex min-h-screen flex-col">
           {/* Top Navigation Bar */}
           <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">

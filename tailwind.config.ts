@@ -48,6 +48,10 @@ const config: Config = {
       boxShadow: {
         soft: "0 4px 24px -8px rgb(0 0 0 / 0.08)",
       },
+
+      fontFamily: {
+        display: ["var(--font-display)", "Inter", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [],

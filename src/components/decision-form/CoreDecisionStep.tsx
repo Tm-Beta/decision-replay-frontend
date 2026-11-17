@@ -168,7 +168,7 @@ export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean 
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label htmlFor="confidence" className="text-sm font-semibold text-foreground">
-            How confident are you?
+            Confidence
           </label>
           <span className="text-sm font-semibold text-primary tabular-nums">{confidence}%</span>
         </div>

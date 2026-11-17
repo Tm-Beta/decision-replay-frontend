@@ -16,7 +16,7 @@ import { SnapshotTimeline } from "@/components/replay/SnapshotTimeline";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GitCompare, AlertTriangle, Split, ArrowLeft } from "lucide-react";
+import { GitCompare, AlertTriangle, Split, ArrowLeft, Check, X, Circle } from "lucide-react";
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null;
@@ -168,17 +168,27 @@ export default function DecisionDetailPage() {
             {decision.assumptions?.length === 0 ? (
               <p className="text-xs text-muted-foreground">No explicit assumptions recorded.</p>
             ) : (
-              decision.assumptions?.map((a, i) => (
-                <div key={i} className="p-3 rounded-xl border border-border bg-card/60 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-foreground">{a.statement}</span>
-                    <Badge tone="default">{a.confidence}% confident</Badge>
-                  </div>
-                  {a.metricTarget && (
-                    <p className="text-muted-foreground font-mono">Target: {a.metricTarget}</p>
-                  )}
-                </div>
-              ))
+            decision.assumptions?.map((a, i) => (
+  <div key={i} className="flex items-center gap-4 rounded-xl border border-border p-4">
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-muted text-xs font-semibold">
+      A{i + 1}
+    </span>
+    <div className="flex-1">
+      <p className="text-sm">{a.statement}</p>
+      {a.metricTarget && (
+        <p className="mt-0.5 text-xs font-mono text-muted-foreground">Target: {a.metricTarget}</p>
+      )}
+            </div>
+              <span className="text-xs font-semibold">{a.confidence}% confident</span>
+              {a.validated === true ? (
+                <Check className="h-4 w-4 text-emerald-500" />
+              ) : a.validated === false ? (
+                <X className="h-4 w-4 text-red-500" />
+              ) : (
+                <Circle className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
+          ))
             )}
           </CardContent>
         </Card>
@@ -220,13 +230,21 @@ export default function DecisionDetailPage() {
             </div>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            {decision.alternatives.map((alt, i) => (
-              <div key={i} className="p-3 rounded-xl border border-border bg-card/60 space-y-1">
-                <span className="font-semibold text-foreground block">{alt.title}</span>
-                <p className="text-emerald-600 dark:text-emerald-400">Pros: {alt.pros || "None listed"}</p>
-                <p className="text-amber-600 dark:text-amber-400">Cons: {alt.cons || "None listed"}</p>
-              </div>
-            ))}
+           {decision.alternatives.map((alt, i) => (
+                  <div key={i} className="rounded-xl border border-border p-4">
+                    <p className="font-medium">{alt.title}</p>
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <p className="font-medium text-emerald-600">UPSIDE</p>
+                        <p className="mt-1 leading-5 text-muted-foreground">{alt.pros || "Not recorded"}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-amber-600">TRADE-OFF</p>
+                        <p className="mt-1 leading-5 text-muted-foreground">{alt.cons || "Not recorded"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
           </CardContent>
         </Card>
       )}
