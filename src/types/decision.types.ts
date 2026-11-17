@@ -1,11 +1,7 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead) & Member A
 // FEATURE: Canonical TypeScript Type Definitions
-//
-// TODO: [Member D]
-// 1. Maintain alignment with `decision-replay-docs/api-contracts/*`.
-// 2. Export strict interfaces for Decisions, Snapshots, Outcomes, Replay, and DNA dimensions.
-// ==============================================================================
+//Keeps the frontend types aligned with `decision-replay-docs/api-contracts/*` (decisions, replay engine and AI analyst response shapes).
+//Exports the interfaces for Decisions, Snapshots, Outcomes, Replay comparison, Pattern summary and DNA dimensions. The DNA types follow the backend response, because `/dna/profile` has no contract document yet.
+
 
 export type DecisionStatus = "DRAFT" | "LOCKED" | "REVIEW_PENDING" | "REPLAYED" | "ARCHIVED";
 
@@ -159,9 +155,9 @@ export interface SocraticChallengeResponse {
   detectedBiases: string[];
 }
 
-// ---------- API response shapes (decision-replay-docs/api-contracts) ----------
+//API response shapes (decision-replay-docs/api-contracts)
 
-/** POST /decisions -> 201 Created */
+/** POST /decisions - 201 Created */
 export interface CreateDecisionResponse {
   id: string;
   title: string;
@@ -184,7 +180,7 @@ export interface DecisionListResponse {
   limit?: number;
 }
 
-/** POST /replay/:decisionId/outcome -> 201 Created */
+/** POST /replay/:decisionId/outcome - 201 Created */
 export interface RecordOutcomeResponse {
   outcomeId: string;
   decisionId: string;
@@ -215,4 +211,12 @@ export interface PatternSummary {
   overallPredictionAccuracy: number;
   calibrationBias: string;
   detectedPatterns: DetectedPattern[];
+}
+
+/** POST /ai-analyst/replay-analysis response */
+export interface ReplayAnalysis {
+  varianceExplanation: string;
+  reasoningPatternIdentified: string;
+  socraticTakeaway: string;
+  repeatabilityAssessment: string;
 }
