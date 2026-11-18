@@ -1,89 +1,45 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
 // FEATURE: Decision DNA Profile & Longitudinal Patterns View
-//
-// TODO: [Member D]
-// 1. Fetch Decision DNA profile from `dnaService.getProfile()`.
-// 2. Render DnaRadarChart with 6 dimensions (Calibration, Prediction Accuracy, Rigor, Risk Foresight, Estimation, Breadth).
-// 3. Open MetricEvidenceModal when a user clicks a dimension to inspect underlying historical decisions.
-// ==============================================================================
+//Fetches the Decision DNA profile from `dnaService.getProfile()`.
+//Renders DnaRadarChart with the 6 dimensions (Calibration, Prediction Accuracy, Rigor, Risk Foresight, Estimation, Breadth), or an empty-state message when no decision has been replayed yet.
+//Passes the dimension the user clicks to MetricEvidenceModal, which shows the historical decisions behind that score.
+//If the backend is offline, shows an error message with a "Try again" button instead of fake data.
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { DecisionDnaProfile, DnaDimension } from "@/types/decision.types";
+import React, { useCallback, useEffect, useState } from "react";import { DecisionDnaProfile, DnaDimension } from "@/types/decision.types";
 import { dnaService } from "@/services/dnaService";
+import { ApiError } from "@/services/apiClient";
 import { DnaRadarChart } from "@/components/dna/DnaRadarChart";
 import { MetricEvidenceModal } from "@/components/dna/MetricEvidenceModal";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Dna, ShieldAlert, Award } from "lucide-react";
 
 export default function DecisionDnaPage() {
   const [profile, setProfile] = useState<DecisionDnaProfile | null>(null);
   const [selectedDimension, setSelectedDimension] = useState<DnaDimension | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await dnaService.getProfile();
+      setProfile(res);
+    } catch (err) {
+      setProfile(null);
+      setLoadError(
+        err instanceof ApiError ? err.message : "Something went wrong while loading your Decision DNA."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await dnaService.getProfile();
-        setProfile(res);
-      } catch {
-        // Fallback demo profile
-        setProfile({
-          totalDecisions: 18,
-          overallDnaScore: 81,
-          dimensions: [
-            {
-              name: "Calibration",
-              score: 84,
-              label: "Confidence Calibration",
-              description: "Stated subjective probabilities tightly track empirical outcome rates.",
-              evidenceDecisionIds: ["dec-101", "dec-102", "dec-105"],
-            },
-            {
-              name: "PredictionAccuracy",
-              score: 79,
-              label: "Prediction Accuracy",
-              description: "Fidelity of expected metrics vs observed production telemetry.",
-              evidenceDecisionIds: ["dec-101", "dec-103"],
-            },
-            {
-              name: "AssumptionRigor",
-              score: 88,
-              label: "Assumption Rigor",
-              description: "Proportion of explicitly validated testable hypotheses.",
-              evidenceDecisionIds: ["dec-101", "dec-104", "dec-107"],
-            },
-            {
-              name: "RiskForesight",
-              score: 74,
-              label: "Risk Foresight",
-              description: "Realized production challenges anticipated in Pre-Mortems.",
-              evidenceDecisionIds: ["dec-102", "dec-106"],
-            },
-            {
-              name: "EstimationAccuracy",
-              score: 68,
-              label: "Time & Cost Estimation",
-              description: "Consistency in scheduling and budget boundaries without optimism drift.",
-              evidenceDecisionIds: ["dec-101", "dec-105"],
-            },
-            {
-              name: "AlternativeBreadth",
-              score: 92,
-              label: "Alternative Breadth",
-              description: "Rigorous exploration of trade-offs across counter-options before locking.",
-              evidenceDecisionIds: ["dec-101", "dec-102", "dec-103", "dec-104"],
-            },
-          ],
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+    loadData();
+  }, [loadData]);
 
   if (loading) {
     return (
@@ -92,6 +48,12 @@ export default function DecisionDnaPage() {
       </div>
     );
   }
+
+  // to find weakest dimension, only when there is real data behind scores.
+  const lowestDimension =
+    profile && profile.totalDecisions > 0 && profile.dimensions.length > 0
+      ? profile.dimensions.reduce((lowest, d) => (d.score < lowest.score ? d : lowest))
+      : null;
 
   return (
     <div className="space-y-8">
@@ -122,28 +84,51 @@ export default function DecisionDnaPage() {
         )}
       </div>
 
+      {/* Offline / error fallback */}
+      {loadError && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-foreground">{loadError}</p>
+          <Button size="sm" variant="outline" onClick={loadData}>
+            Try again
+          </Button>
+        </div>
+      )}
+
+      {/* Empty state: nothing replayed yet */}
+      {profile && profile.totalDecisions === 0 && (
+        <div className="text-center py-12 border border-dashed rounded-2xl text-xs text-muted-foreground">
+          No replayed decisions yet. Record an outcome on a decision to build your Decision DNA.
+        </div>
+      )}
+
       {/* Radar & Dimension Grid */}
-      {profile && (
+      {profile && profile.totalDecisions > 0 && (
         <DnaRadarChart
           dimensions={profile.dimensions}
           onSelectDimension={(dim) => setSelectedDimension(dim)}
         />
       )}
 
-      {/* Cognitive Blind Spot Advice */}
-      <Card className="border-amber-500/20 bg-amber-500/5 p-5">
-        <div className="flex items-start gap-3">
-          <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-          <div className="text-xs space-y-1">
-            <h4 className="font-semibold text-amber-900 dark:text-amber-200 text-sm">
-              Cognitive Calibration Insight
-            </h4>
-            <p className="text-muted-foreground leading-relaxed">
-              Your lowest scoring dimension is <strong>Time & Cost Estimation (68/100)</strong>. Historical replays reveal an average schedule variance of +25% on engineering refactoring tasks. For future decisions, add an explicit buffer to your metric targets before locking.
-            </p>
+      {/* Cognitive Blind Spot Insight (built from the real lowest score) */}
+      {lowestDimension && (
+        <Card className="border-amber-500/20 bg-amber-500/5 p-5">
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <h4 className="font-semibold text-amber-900 dark:text-amber-200 text-sm">
+                Cognitive Calibration Insight
+              </h4>
+              <p className="text-muted-foreground leading-relaxed">
+                Your lowest scoring dimension is{" "}
+                <strong>
+                  {lowestDimension.label} ({lowestDimension.score}/100)
+                </strong>
+                . {lowestDimension.description}
+              </p>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* Evidence Audit Modal */}
       <MetricEvidenceModal
