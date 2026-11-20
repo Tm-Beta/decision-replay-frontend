@@ -1,5 +1,5 @@
 // FEATURE: Metric Evidence Audit Modal
-// 1. Loads the real decisions behind a DNA score and shows each one's title, lock date, confidence and outcome, with links to its snapshot and its replay.
+//Loads the real decisions behind a DNA score and shows each one's title, lock date, confidence and outcome, with links to its snapshot and its replay.
 //Shows only decisions that exist: nothing is claimed that is not checked, and any record that cannot be loaded is counted and reported instead of hidden.
 
 "use client";
