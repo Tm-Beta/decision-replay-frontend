@@ -1,7 +1,4 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member B & Member D
 // FEATURE: Common UI Utilities
-// ==============================================================================
 
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
