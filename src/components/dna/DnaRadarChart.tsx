@@ -161,7 +161,7 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-3">
-              <Progress value={dim.score} max={100} className="h-1.5" />
+              <Progress value={dim.score} className="h-1.5" />
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {dim.description}
               </p>
