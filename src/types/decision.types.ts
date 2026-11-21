@@ -128,13 +128,19 @@ export interface DecisionDnaProfile {
   dimensions: DnaDimension[];
 }
 
+
+
 export interface SocraticQuestion {
   focusArea: string;
   question: string;
   suggestedAction: string;
 }
-
 export interface SocraticChallengeResponse {
-  socraticQuestions: SocraticQuestion[];
+  socraticQuestions: {
+    focusArea: string;
+    question: string;
+    suggestedAction?: string;
+  }[];
   detectedBiases: string[];
 }
+

@@ -22,38 +22,48 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { decisionService } from "@/services/decisionService";
 import { Lock, ArrowLeft, ArrowRight } from "lucide-react";
+import { validateTitle, validateChoice, validateExpectedOutcome, validateReviewDate } from "@/lib/validation";
 
 export default function NewDecisionWizardPage() {
   const router = useRouter();
   const store = useDecisionDraftStore();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showErrors, setShowErrors] = useState(false);
 
   const steps = [
-    { title: "The Choice", desc: "Define choice & expected result" },
-    { title: "Hypotheses & Trade-Offs", desc: "Assumptions & counter-alternatives" },
-    { title: "Pre-Mortem & Lock", desc: "Failure anticipation & calibration" },
-  ];
+  { title: "The choice", desc: "Define choice & expected result" },
+  { title: "Your reasoning", desc: "Assumptions & counter-alternatives" },
+  { title: "Look ahead", desc: "Failure anticipation & calibration" },
+];
 
   const handleNext = () => {
     if (store.currentStep === 0) {
-      if (!store.title.trim() || !store.choice.trim() || !store.expectedOutcome.trim()) {
-        setError("Please complete title, choice, and expected outcome.");
+      if (
+        validateTitle(store.title) ||
+        validateChoice(store.choice) ||
+        validateExpectedOutcome(store.expectedOutcome)
+      ) {
+        setShowErrors(true);
+        setError("Please fix the highlighted fields.");
         return;
       }
     }
+    setShowErrors(false);
     setError("");
     store.nextStep();
   };
 
   const handleFinalSubmit = async () => {
-    if (!store.reviewDate) {
-      setError("Please pick a review date to schedule the replay.");
+    const dateError = validateReviewDate(store.reviewDate);
+    if (dateError) {
+      setError(dateError);
       return;
     }
 
     setSubmitting(true);
     setError("");
+    
 
     try {
       const created = await decisionService.createDecision({
@@ -95,28 +105,27 @@ export default function NewDecisionWizardPage() {
   return (
     <div className="space-y-6">
       {/* Wizard Progress Stepper */}
-      <div className="grid grid-cols-3 gap-2">
-        {steps.map((s, i) => (
-          <div key={i} className="space-y-1.5">
-            <div
-              className={`h-1.5 rounded-full transition-all ${
-                i <= store.currentStep ? "bg-primary" : "bg-muted"
-              }`}
-            />
-            <p className="text-xs font-semibold text-foreground truncate">
-              {i + 1}. {s.title}
-            </p>
-          </div>
-        ))}
-      </div>
+     <div className="grid grid-cols-3 gap-3">
+  {steps.map((s, i) => (
+    <div key={i} className="space-y-2">
+      <div
+        className={`h-1 rounded-full transition-all ${
+          i <= store.currentStep ? "bg-primary" : "bg-border"
+        }`}
+      />
+      <p className="text-xs truncate">
+        {i + 1}. {s.title}
+      </p>
+    </div>
+  ))}
+</div>
 
       {/* Main Layout: Form Steps on Left, Socratic Challenger on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6 sm:p-8">
-              {store.currentStep === 0 && <CoreDecisionStep />}
-
+              {store.currentStep === 0 && <CoreDecisionStep showErrors={showErrors} />}
               {store.currentStep === 1 && (
                 <div className="space-y-8">
                   <AssumptionBuilder />
@@ -146,8 +155,8 @@ export default function NewDecisionWizardPage() {
                 </Button>
 
                 {store.currentStep < 2 ? (
-                  <Button size="sm" onClick={handleNext}>
-                    Next Step <ArrowRight className="h-4 w-4 ml-1.5" />
+                 <Button size="sm" onClick={handleNext}>
+                    Continue <ArrowRight className="h-4 w-4 ml-1.5" />
                   </Button>
                 ) : (
                   <Button size="sm" onClick={handleFinalSubmit} disabled={submitting}>

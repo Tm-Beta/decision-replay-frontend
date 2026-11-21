@@ -1,21 +1,28 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member B (Frontend Lead - Creation Wizard & Snapshot UI)
-// FEATURE: Client State Management for Multi-Step Decision Creation Wizard
-//
-// TODO: [Member B]
-// 1. Maintain form drafts across steps (Choice, Reasoning, Hypotheses, Pre-Mortem).
-// 2. Add local storage persistence so users don't lose drafts on accidental refresh.
-// 3. Connect real-time state changes to the Socratic challenger sidebar.
-// ==============================================================================
-
 import { create } from "zustand";
-import { Alternative, Assumption, PreMortem } from "../types/decision.types";
+import { persist } from "zustand/middleware";
 
-interface DecisionDraftState {
-  currentStep: number;
+export interface Assumption {
+  statement: string;
+  metricTarget?: string;
+  confidence: number; // 1-100
+}
+
+export interface Alternative {
+  title: string;
+  pros: string;
+  cons: string;
+}
+
+export interface PreMortem {
+  failureScenario: string;
+  preventiveAction?: string;
+  severityScore: number; // 0-100
+}
+
+interface DraftData {
+  currentStep: number; // 0, 1, 2
   title: string;
   category: string;
-  projectId: string;
   choice: string;
   context: string;
   decisionReason: string;
@@ -26,80 +33,63 @@ interface DecisionDraftState {
   assumptions: Assumption[];
   alternatives: Alternative[];
   preMortems: PreMortem[];
-
-  // Actions
-  setStep: (step: number) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-  updateField: (field: string, value: unknown) => void;
-  addAssumption: (assumption: Assumption) => void;
-  removeAssumption: (index: number) => void;
-  addAlternative: (alternative: Alternative) => void;
-  removeAlternative: (index: number) => void;
-  addPreMortem: (preMortem: PreMortem) => void;
-  removePreMortem: (index: number) => void;
-  resetDraft: () => void;
 }
 
-const initialDraft = {
+interface DraftStore extends DraftData {
+  setField: <K extends keyof DraftData>(key: K, value: DraftData[K]) => void;
+  updateField: <K extends keyof DraftData>(key: K, value: DraftData[K]) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  resetDraft: () => void;
+
+  addAssumption: (a: Assumption) => void;
+  removeAssumption: (index: number) => void;
+  addAlternative: (alt: Alternative) => void;
+  removeAlternative: (index: number) => void;
+  addPreMortem: (pm: PreMortem) => void;
+  removePreMortem: (index: number) => void;
+}
+
+const initialState: DraftData = {
   currentStep: 0,
   title: "",
-  category: "ENGINEERING",
-  projectId: "",
+  category: "",
   choice: "",
   context: "",
   decisionReason: "",
   beliefRationale: "",
   expectedOutcome: "",
-  confidence: 70,
+  confidence: 50,
   reviewDate: "",
   assumptions: [],
   alternatives: [],
   preMortems: [],
 };
 
-export const useDecisionDraftStore = create<DecisionDraftState>((set) => ({
-  ...initialDraft,
+export const useDecisionDraftStore = create<DraftStore>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  setStep: (step) => set({ currentStep: step }),
-  nextStep: () => set((state) => ({ currentStep: Math.min(2, state.currentStep + 1) })),
-  prevStep: () => set((state) => ({ currentStep: Math.max(0, state.currentStep - 1) })),
+      setField: (key, value) => set({ [key]: value } as Partial<DraftStore>),
+      updateField: (key, value) => set({ [key]: value } as Partial<DraftStore>),
 
-  updateField: (field, value) =>
-    set((state) => ({
-      ...state,
-      [field]: value,
-    })),
+      nextStep: () => set((s) => ({ currentStep: Math.min(2, s.currentStep + 1) })),
+      prevStep: () => set((s) => ({ currentStep: Math.max(0, s.currentStep - 1) })),
+      resetDraft: () => set(initialState),
 
-  addAssumption: (assumption) =>
-    set((state) => ({
-      assumptions: [...state.assumptions, assumption],
-    })),
+      addAssumption: (a) => set((s) => ({ assumptions: [...s.assumptions, a] })),
+      removeAssumption: (i) =>
+        set((s) => ({ assumptions: s.assumptions.filter((_, idx) => idx !== i) })),
 
-  removeAssumption: (index) =>
-    set((state) => ({
-      assumptions: state.assumptions.filter((_, i) => i !== index),
-    })),
+      addAlternative: (alt) => set((s) => ({ alternatives: [...s.alternatives, alt] })),
+      removeAlternative: (i) =>
+        set((s) => ({ alternatives: s.alternatives.filter((_, idx) => idx !== i) })),
 
-  addAlternative: (alternative) =>
-    set((state) => ({
-      alternatives: [...state.alternatives, alternative],
-    })),
-
-  removeAlternative: (index) =>
-    set((state) => ({
-      alternatives: state.alternatives.filter((_, i) => i !== index),
-    })),
-
-  addPreMortem: (preMortem) =>
-    set((state) => ({
-      preMortems: [...state.preMortems, preMortem],
-    })),
-
-  removePreMortem: (index) =>
-    set((state) => ({
-      preMortems: state.preMortems.filter((_, i) => i !== index),
-    })),
-
-  resetDraft: () => set({ ...initialDraft }),
-}));
+      addPreMortem: (pm) => set((s) => ({ preMortems: [...s.preMortems, pm] })),
+      removePreMortem: (i) =>
+        set((s) => ({ preMortems: s.preMortems.filter((_, idx) => idx !== i) })),
+    }),
+    { name: "decision-draft" }
+  )
+);
