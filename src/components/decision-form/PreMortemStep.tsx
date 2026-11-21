@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, AlertTriangle, Calendar, Lock } from "lucide-react";
+import { validateReviewDate } from "@/lib/validation";
 
 export function PreMortemStep() {
   const {
@@ -28,6 +29,7 @@ export function PreMortemStep() {
 
   const [failureScenario, setFailureScenario] = useState("");
   const [preventiveAction, setPreventiveAction] = useState("");
+  const dateError = reviewDate ? validateReviewDate(reviewDate) : "";
 
   const handleAdd = () => {
     if (!failureScenario.trim()) return;
@@ -112,9 +114,11 @@ export function PreMortemStep() {
             type="date"
             value={reviewDate}
             onChange={(e) => updateField("reviewDate", e.target.value)}
-          />
-        </div>
 
+          />
+                      {dateError && <p className="text-xs text-destructive mt-1">{dateError}</p>}
+
+        </div>
         <div>
           <Slider
             label="Commitment Confidence"
