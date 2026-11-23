@@ -6,6 +6,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Navbar } from "@/components/navigation/Navbar";
 import { MobileNav } from "@/components/navigation/MobileNav";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { WelcomeTourModal } from "@/components/onboarding/WelcomeTourModal";
 
 const displayFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -62,6 +64,10 @@ export default function RootLayout({
 
             {/* Mobile-First Bottom Navigation Dock */}
             <MobileNav />
+
+            {/* Authentication & Onboarding Modals */}
+            <AuthModal />
+            <WelcomeTourModal />
           </div>
         </ThemeProvider>
       </body>

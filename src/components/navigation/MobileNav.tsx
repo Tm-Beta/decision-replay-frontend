@@ -5,24 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
-import { Plus } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Plus, User as UserIcon } from "lucide-react";
 
 export function MobileNav() {
   const pathname = usePathname();
-
-  const mobileLinks = [
-    { href: "/", label: "Home", icon: "dashboard" as const },
-    { href: "/decisions", label: "Decisions", icon: "history" as const },
-    { href: "/dna", label: "DNA", icon: "dna" as const },
-  ];
+  const { user, isAuthenticated, openAuthModal, openTourModal } = useAuthStore();
 
   return (
     <div className="fixed bottom-3 inset-x-3 z-50 sm:hidden">
       <nav className="glass-dock relative flex h-16 items-center justify-around rounded-2xl px-2 shadow-dock border border-border/80">
-        {/* Left Links */}
+        {/* Dashboard */}
         <Link
           href="/"
-          className={`flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors ${
+          className={`flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold transition-colors ${
             pathname === "/" ? "text-primary" : "text-muted-foreground"
           }`}
         >
@@ -31,12 +27,13 @@ export function MobileNav() {
             size={18}
             className={pathname === "/" ? "text-primary" : "text-muted-foreground"}
           />
-          <span>Dashboard</span>
+          <span>Home</span>
         </Link>
 
+        {/* Decisions */}
         <Link
           href="/decisions"
-          className={`flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors ${
+          className={`flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold transition-colors ${
             pathname.startsWith("/decisions") && pathname !== "/decisions/new"
               ? "text-primary"
               : "text-muted-foreground"
@@ -66,10 +63,10 @@ export function MobileNav() {
           <span className="mt-1 text-[10px] font-bold text-foreground">Record</span>
         </Link>
 
-        {/* Right Links */}
+        {/* DNA */}
         <Link
           href="/dna"
-          className={`flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors ${
+          className={`flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold transition-colors ${
             pathname.startsWith("/dna") ? "text-primary" : "text-muted-foreground"
           }`}
         >
@@ -80,6 +77,21 @@ export function MobileNav() {
           />
           <span>DNA</span>
         </Link>
+
+        {/* Profile / Login */}
+        <button
+          onClick={() => (isAuthenticated ? openTourModal() : openAuthModal())}
+          className="flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {isAuthenticated && user?.avatar ? (
+            <div className="h-5 w-5 rounded-full overflow-hidden border border-border">
+              <img src={user.avatar} alt="User" className="h-full w-full object-cover" />
+            </div>
+          ) : (
+            <UserIcon className="h-4 w-4" />
+          )}
+          <span>{isAuthenticated ? "Profile" : "Sign In"}</span>
+        </button>
       </nav>
     </div>
   );

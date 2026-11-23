@@ -1,14 +1,7 @@
-//FEATURE: Central HTTP Client & Fetch Wrapper
-//Builds the base URL from NEXT_PUBLIC_API_URL (default http://localhost:4000/api/v1)and sends every request as JSON.
-//Handles errors in one place: failed requests throw an `ApiError` with a clear message, the HTTP status, and a flag for network failures (server unreachable).Pages show these messages in an error box with a "Try again" button.
+// FEATURE: Central HTTP Client & Fetch Wrapper
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
-/**
- * Error thrown for every failed API call, so pages can show a clear message.
- * - `status` is the HTTP status code (0 when the server could not be reached).
- * - `isNetworkError` is true when the request never reached the backend.
- */
 export class ApiError extends Error {
   status: number;
   isNetworkError: boolean;
@@ -21,15 +14,32 @@ export class ApiError extends Error {
   }
 }
 
+function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("decision-replay-auth");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed.state?.token || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function apiClient<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
-  const defaultHeaders: HeadersInit = {
+  const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
   };
+
+  const token = getStoredToken();
+  if (token) {
+    defaultHeaders["Authorization"] = `Bearer ${token}`;
+  }
 
   let response: Response;
   try {
@@ -41,7 +51,6 @@ export async function apiClient<T>(
       },
     });
   } catch {
-    // fetch only rejects when the request could not be made (server down, offline, CORS, ...)
     throw new ApiError(
       "Cannot reach the server. Please check that the backend is running and try again.",
       0,
@@ -53,7 +62,9 @@ export async function apiClient<T>(
     let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
     try {
       const errorBody = await response.json();
-      if (typeof errorBody?.message === "string") {
+      if (typeof errorBody?.detail === "string") {
+        errorMessage = errorBody.detail;
+      } else if (typeof errorBody?.message === "string") {
         errorMessage = errorBody.message;
       }
     } catch {
@@ -62,7 +73,6 @@ export async function apiClient<T>(
     throw new ApiError(errorMessage, response.status);
   }
 
-  // Some responses (for example 204 No Content) have no body.
   if (response.status === 204) {
     return undefined as T;
   }

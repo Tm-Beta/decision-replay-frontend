@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { UserMenu } from "@/components/auth/UserMenu";
 import { Plus } from "lucide-react";
 
 export function Navbar() {
@@ -87,6 +88,8 @@ export function Navbar() {
 
           <ThemeToggle />
 
+          <UserMenu />
+
           {/* Primary CTA Button */}
           <Link href="/decisions/new">
             <motion.div
@@ -104,3 +107,4 @@ export function Navbar() {
     </header>
   );
 }
+
