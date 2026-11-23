@@ -1,34 +1,33 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
+
 // FEATURE: Replay Engine Comparison Diff & Outcome Submission View
-//
-// TODO: [Member D]
-// 1. If outcome is pending, render the outcome recording form with hypothesis validation.
-// 2. If outcome is completed, render ReplayScoreCard and side-by-side expectation vs reality diff.
-// 3. Mount post-replay variance audit from `/ai-analyst/replay-analysis`.
-// ==============================================================================
+
+//If the outcome is pending, shows the outcome recording form, including a held-true / did-not-hold check for each assumption (hypothesis validation).
+//If the outcome is completed, shows ReplayScoreCard and the side-by-side.Then vs Now comparison with the assumption diff table.
+//Mounts the post-replay variance audit from `/ai-analyst/replay-analysis`.If the AI is unavailable, it says so and the comparison still works.
+//If the server is offline, shows an error message with a "Try again" button.
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ReplayComparison } from "@/types/decision.types";
+import { Assumption, ReplayAnalysis, ReplayComparison } from "@/types/decision.types";
 import { replayService } from "@/services/replayService";
 import { decisionService } from "@/services/decisionService";
+import { ApiError } from "@/services/apiClient";
 import { ReplayScoreCard } from "@/components/replay/ReplayScoreCard";
 import { AssumptionDiffTable } from "@/components/replay/AssumptionDiffTable";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import { GitCompare, ArrowLeft, CheckCircle2, RotateCcw, Sparkles } from "lucide-react";
+import { GitCompare, ArrowLeft, CheckCircle2, XCircle, RotateCcw, Sparkles } from "lucide-react";
 
 export default function ReplayComparisonPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params?.id as string;
 
   const [replay, setReplay] = useState<ReplayComparison | null>(null);
@@ -42,34 +41,87 @@ export default function ReplayComparisonPage() {
   const [unexpectedFactors, setUnexpectedFactors] = useState("");
   const [evaluations, setEvaluations] = useState<Record<string, { actual: string; validated: boolean }>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [assumptions, setAssumptions] = useState<Assumption[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<ReplayAnalysis | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisFailed, setAnalysisFailed] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const data = await replayService.getReplayComparison(id);
-        setReplay(data);
-      } catch {
-        // If 404, outcome hasn't been submitted yet; fetch the decision snapshot to populate the form
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const data = await replayService.getReplayComparison(id);
+      setReplay(data);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        // 404 means no outcome has been recorded yet: load the decision to build the form.
         try {
           const d = await decisionService.getDecisionById(id);
+          const decisionAssumptions = d.assumptions ?? [];
+          setAssumptions(decisionAssumptions);
           const initialEvals: Record<string, { actual: string; validated: boolean }> = {};
-          d.assumptions?.forEach((a) => {
+          decisionAssumptions.forEach((a) => {
             if (a.id) initialEvals[a.id] = { actual: "", validated: true };
           });
           setEvaluations(initialEvals);
-        } catch {
-          // Demo fallback
+        } catch (decisionErr) {
+          setLoadError(
+            decisionErr instanceof ApiError ? decisionErr.message : "Could not load this decision."
+          );
         }
-      } finally {
-        setLoading(false);
+      } else {
+        setLoadError(err instanceof ApiError ? err.message : "Could not load the replay.");
       }
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [id]);
 
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Once a replay exists, ask the AI analyst for a neutral variance audit.
+  useEffect(() => {
+    if (!replay) return;
+    let cancelled = false;
+    setAnalysisLoading(true);
+    setAnalysisFailed(false);
+    replayService
+      .getReplayAnalysis({
+        decisionId: id,
+        expectedOutcome: replay.initialSnapshot.expectedOutcome,
+        actualOutcome: replay.outcome.actualOutcome,
+        confidence: replay.initialSnapshot.confidence,
+        outcomeScore: replay.outcome.outcomeScore,
+        assumptions: replay.assumptionDiffs.map((a) => ({
+          statement: a.statement,
+          validated: a.validated ?? null,
+        })),
+      })
+      .then((result) => {
+        if (!cancelled) setAnalysis(result);
+      })
+      .catch(() => {
+        if (!cancelled) setAnalysisFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setAnalysisLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [replay, id]);
+
   const handleSubmitOutcome = async () => {
-    if (!actualOutcome.trim() || !reflection.trim()) return;
+    if (actualOutcome.trim().length < 5 || reflection.trim().length < 5) {
+      setSubmitError("Please describe what happened and what you learned (at least 5 characters each).");
+      return;
+    }
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const assumptionEvals = Object.entries(evaluations).map(([assumptionId, val]) => ({
         assumptionId,
@@ -90,7 +142,9 @@ export default function ReplayComparisonPage() {
       const freshReplay = await replayService.getReplayComparison(id);
       setReplay(freshReplay);
     } catch (err) {
-      console.error("Failed to record outcome:", err);
+      setSubmitError(
+        err instanceof ApiError ? err.message : "Could not save the outcome. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -98,6 +152,17 @@ export default function ReplayComparisonPage() {
 
   if (loading) {
     return <div className="py-16 text-center text-xs text-muted-foreground">Loading Replay Engine...</div>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-foreground">{loadError}</p>
+        <Button size="sm" variant="outline" onClick={loadData}>
+          Try again
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -209,12 +274,24 @@ export default function ReplayComparisonPage() {
               <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
               <div className="space-y-2 text-xs">
                 <h4 className="font-semibold text-sm text-foreground">AI Post-Mortem Variance Audit</h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  The primary variance stemmed from assumptions regarding infrastructure overhead under peak concurrency. While the direct functional outcome was achieved, cost estimation failed to factor in telemetry heartbeats.
-                </p>
-                <div className="pt-1 text-[11px] font-mono text-primary">
-                  Metacognitive Rule: Audit background service telemetry rates before locking high-concurrency cloud migrations.
-                </div>
+                {analysisLoading && <p className="text-muted-foreground">Analysing variance...</p>}
+                {analysisFailed && (
+                  <p className="text-muted-foreground">
+                    The AI audit is not available right now. The comparison above is not affected.
+                  </p>
+                )}
+                {analysis && (
+                  <>
+                    <p className="text-muted-foreground leading-relaxed">{analysis.varianceExplanation}</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Pattern identified: {analysis.reasoningPatternIdentified}
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed">{analysis.repeatabilityAssessment}</p>
+                    <div className="pt-1 text-[11px] font-mono text-primary">
+                      Takeaway: {analysis.socraticTakeaway}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </Card>
@@ -251,6 +328,53 @@ export default function ReplayComparisonPage() {
               />
             </div>
 
+            {assumptions.some((a) => a.id) && (
+              <div className="space-y-3">
+                <label className="text-xs font-semibold block">Were your assumptions correct?</label>
+                {assumptions
+                  .filter((a) => a.id)
+                  .map((a) => {
+                    const key = a.id as string;
+                    const ev = evaluations[key] ?? { actual: "", validated: true };
+                    return (
+                      <div key={key} className="rounded-xl border border-border p-3 space-y-2 text-xs">
+                        <p className="font-medium text-foreground">{a.statement}</p>
+                        {a.metricTarget && <p className="text-muted-foreground">Target: {a.metricTarget}</p>}
+                        <Input
+                          placeholder="Actual result (optional)"
+                          value={ev.actual}
+                          onChange={(e) =>
+                            setEvaluations((prev) => ({ ...prev, [key]: { ...(prev[key] ?? ev), actual: e.target.value } }))
+                          }
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={ev.validated ? "default" : "outline"}
+                            onClick={() =>
+                              setEvaluations((prev) => ({ ...prev, [key]: { ...(prev[key] ?? ev), validated: true } }))
+                            }
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Held true
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={!ev.validated ? "destructive" : "outline"}
+                            onClick={() =>
+                              setEvaluations((prev) => ({ ...prev, [key]: { ...(prev[key] ?? ev), validated: false } }))
+                            }
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1.5" /> Did not hold
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+
             <div>
               <label className="text-xs font-semibold block mb-1.5">
                 What did you learn about your reasoning?
@@ -260,6 +384,16 @@ export default function ReplayComparisonPage() {
                 placeholder="Which assumption held? What unexpected factor surprised you?"
                 value={reflection}
                 onChange={(e) => setReflection(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold block mb-1.5">Anything unexpected? (optional)</label>
+              <Textarea
+                rows={2}
+                placeholder="Factors you did not anticipate..."
+                value={unexpectedFactors}
+                onChange={(e) => setUnexpectedFactors(e.target.value)}
               />
             </div>
 
@@ -286,6 +420,12 @@ export default function ReplayComparisonPage() {
                 </Button>
               </div>
             </div>
+
+            {submitError && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-foreground">
+                {submitError}
+              </div>
+            )}
 
             <div className="flex justify-end pt-4 border-t border-border">
               <Button onClick={handleSubmitOutcome} disabled={submitting || !actualOutcome.trim()}>

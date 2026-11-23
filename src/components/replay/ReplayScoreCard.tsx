@@ -1,12 +1,7 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
 // FEATURE: Replay Engine Comparison Score Card
-//
-// TODO: [Member D]
-// 1. Display prediction accuracy score and outcome rating.
-// 2. Display confidence calibration delta (e.g. +5% or -12%).
-// 3. Render wouldRepeat flag ("Would make this decision again").
-// ==============================================================================
+// Displays the prediction accuracy score and the outcome rating.
+// Displays the confidence calibration delta with its sign (for example +5 or -12).
+// Shows whether the user would repeat the decision ("Would Repeat Decision" or "Would Change Course").
 
 "use client";
 

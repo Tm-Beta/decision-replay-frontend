@@ -1,12 +1,7 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead) & Member B
 // FEATURE: Combined Immutable Snapshot & Append-Only Timeline Component
-//
-// TODO: [Member D]
-// 1. Render the immutable snapshot card with SHA-256 verification badge.
-// 2. Render chronologically ordered append-only timeline events.
-// 3. Provide quick inline form to append new evidence notes.
-// ==============================================================================
+//Renders the immutable snapshot card with the SHA-256 verification badge.
+//Renders the append-only timeline events, in the order the page provides them.
+//Provides a quick inline form to append new evidence notes.
 
 "use client";
 

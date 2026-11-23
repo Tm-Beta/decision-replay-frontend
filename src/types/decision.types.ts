@@ -1,11 +1,7 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead) & Member A
 // FEATURE: Canonical TypeScript Type Definitions
-//
-// TODO: [Member D]
-// 1. Maintain alignment with `decision-replay-docs/api-contracts/*`.
-// 2. Export strict interfaces for Decisions, Snapshots, Outcomes, Replay, and DNA dimensions.
-// ==============================================================================
+//Keeps the frontend types aligned with `decision-replay-docs/api-contracts/*` (decisions, replay engine and AI analyst response shapes).
+//Exports the interfaces for Decisions, Snapshots, Outcomes, Replay comparison, Pattern summary and DNA dimensions. The DNA types follow the backend response, because `/dna/profile` has no contract document yet.
+
 
 export type DecisionStatus = "DRAFT" | "LOCKED" | "REVIEW_PENDING" | "REPLAYED" | "ARCHIVED";
 
@@ -65,6 +61,12 @@ export interface Snapshot {
   isVerified?: boolean;
 }
 
+export interface SnapshotSummary {
+  contentHash: string;
+  isVerified?: boolean;
+  lockedAt: string;
+}
+
 export interface Decision {
   id: string;
   title: string;
@@ -82,11 +84,25 @@ export interface Decision {
   lockedAt: string | null;
   snapshotHash?: string | null;
   isVerified?: boolean;
+  /** Contract shape: `snapshot { contentHash, isVerified, lockedAt }` returned by GET /decisions/:id */
+  snapshot?: SnapshotSummary | null;
+  /** Present on list items: GET /decisions */
+  hasOutcome?: boolean;
   assumptions: Assumption[];
   alternatives: Alternative[];
   preMortems: PreMortem[];
   events: TimelineEvent[];
   outcome: Outcome | null;
+}
+
+/** Outcome as returned inside GET /replay/:decisionId (no id / decisionId in the contract). */
+export interface ReplayOutcome {
+  recordedAt: string;
+  actualOutcome: string;
+  outcomeScore: number;
+  reflection: string;
+  wouldRepeat: boolean;
+  unexpectedFactors?: string;
 }
 
 export interface ReplayComparison {
@@ -98,7 +114,7 @@ export interface ReplayComparison {
     expectedOutcome: string;
     decisionReason?: string;
   };
-  outcome: Outcome;
+  outcome: ReplayOutcome;
   metrics: {
     predictionAccuracy: number;
     confidenceCalibrationDelta: number;
@@ -144,3 +160,68 @@ export interface SocraticChallengeResponse {
   detectedBiases: string[];
 }
 
+//API response shapes (decision-replay-docs/api-contracts)
+
+/** POST /decisions - 201 Created */
+export interface CreateDecisionResponse {
+  id: string;
+  title: string;
+  status: DecisionStatus;
+  confidence: number;
+  reviewDate: string | null;
+  lockedAt: string | null;
+  snapshotHash: string;
+  assumptionsCount?: number;
+  alternativesCount?: number;
+  preMortemsCount?: number;
+  createdAt: string;
+}
+
+/** GET /decisions */
+export interface DecisionListResponse {
+  data: Decision[];
+  total: number;
+  page?: number;
+  limit?: number;
+}
+
+/** POST /replay/:decisionId/outcome - 201 Created */
+export interface RecordOutcomeResponse {
+  outcomeId: string;
+  decisionId: string;
+  predictionAccuracy: number;
+  outcomeScore: number;
+  confidenceVariance: number;
+  assumptionAccuracyRate: number;
+  preMortemMatched?: boolean;
+  replaySummary?: {
+    expected: string;
+    actual: string;
+    status: string;
+  };
+  recordedAt: string;
+}
+
+/** GET /replay/patterns/summary */
+export interface DetectedPattern {
+  patternKey: string;
+  title: string;
+  description: string;
+  evidenceDecisionIds?: string[];
+  severity: string;
+}
+
+export interface PatternSummary {
+  totalDecisionsEvaluated: number;
+  overallPredictionAccuracy: number;
+  calibrationBias: string;
+  detectedPatterns: DetectedPattern[];
+}
+
+/** POST /ai-analyst/replay-analysis response */
+export interface ReplayAnalysis {
+  varianceExplanation: string;
+  reasoningPatternIdentified: string;
+  socraticTakeaway: string;
+  repeatabilityAssessment: string;
+}
