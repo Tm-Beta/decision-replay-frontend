@@ -1,11 +1,6 @@
-// ==============================================================================
-// RESPONSIBLE MEMBER: Member D (Full-Stack / Analytics Lead)
 // FEATURE: Replay Assumption Diff Comparison Table
-//
-// TODO: [Member D]
-// 1. Render side-by-side comparison of Target Metric vs Actual Metric.
-// 2. Render hypothesis validation status (Checkmark for true, X for false).
-// ==============================================================================
+// Renders a side-by-side comparison of each assumption's expected target and actual result.
+// Shows the hypothesis result as a badge: a check for Validated, an X for Falsified, and Pending when it was not evaluated.
 
 "use client";
 
