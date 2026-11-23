@@ -54,7 +54,8 @@ interface AuthState {
 
   // Actions
   setHasHydrated: (state: boolean) => void;
-  loginWithGoogle: (data?: { email: string; name: string; avatar?: string }) => Promise<{ isNewUser: boolean }>;
+  loginWithGoogle: (data?: { email: string; name: string; avatar?: string; credential?: string }) => Promise<{ isNewUser: boolean }>;
+  loginWithGoogleCredential: (credential: string) => Promise<{ isNewUser: boolean }>;
   logout: () => void;
   openAuthModal: () => void;
   closeAuthModal: () => void;
@@ -106,6 +107,33 @@ export const useAuthStore = create<AuthState>()(
           return { isNewUser };
         } catch (error) {
           console.error("Google authentication failed:", error);
+          throw error;
+        }
+      },
+
+      loginWithGoogleCredential: async (credential: string) => {
+        try {
+          const res = await apiClient<{
+            status: string;
+            data: { user: UserProfile; token: string; isNewUser: boolean };
+          }>("/auth/google", {
+            method: "POST",
+            body: JSON.stringify({ credential }),
+          });
+
+          const { user, token, isNewUser } = res.data;
+
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+            showAuthModal: false,
+            showTourModal: isNewUser || !get().hasSeenTour,
+          });
+
+          return { isNewUser };
+        } catch (error) {
+          console.error("Google credential login failed:", error);
           throw error;
         }
       },

@@ -1,6 +1,7 @@
 // FEATURE: Application Root Layout & Navigation Shell
 
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -32,6 +33,11 @@ export default function RootLayout({
       className={displayFont.variable}
     >
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-accent/30 selection:text-foreground">
+        {/* Official Google Identity Services SDK */}
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+        />
         <ThemeProvider>
           {/* Cinematic Ambient Background Lighting */}
           <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
