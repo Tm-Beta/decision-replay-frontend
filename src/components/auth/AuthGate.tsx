@@ -135,41 +135,18 @@ export function AuthGate() {
                 User-isolated encrypted database
               </span>
             </div>
-          </motion.div>
 
-          {/* Team Quick Switcher (Zero Manual Typing) */}
-          <div className="pt-6 border-t border-border/60">
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
-              Or sign in directly as a team member
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
-              {GOOGLE_TEAM_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.email}
-                  disabled={loadingEmail !== null}
-                  onClick={() => handleSignIn(acc)}
-                  className="flex items-center gap-3 p-3 rounded-2xl border border-border/70 bg-card hover:border-primary/50 hover:bg-muted/40 transition-all text-left group disabled:opacity-50"
-                >
-                  <img
-                    src={acc.avatar}
-                    alt={acc.name}
-                    className="h-9 w-9 rounded-full border border-border/80 object-cover shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                      {acc.name}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground truncate">
-                      {acc.email}
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-[10px] font-semibold text-primary group-hover:underline">
-                    Sign in
-                  </div>
-                </button>
-              ))}
+            {/* Switch Account link */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => useAuthStore.getState().openAuthModal()}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors underline font-medium"
+              >
+                Sign in with another Google workspace account
+              </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -217,3 +194,4 @@ export function AuthGate() {
     </div>
   );
 }
+

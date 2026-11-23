@@ -12,6 +12,10 @@ export function MobileNav() {
   const pathname = usePathname();
   const { user, isAuthenticated, openAuthModal, openTourModal } = useAuthStore();
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="fixed bottom-3 inset-x-3 z-50 sm:hidden">
       <nav className="glass-dock relative flex h-16 items-center justify-around rounded-2xl px-2 shadow-dock border border-border/80">

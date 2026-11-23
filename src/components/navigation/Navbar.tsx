@@ -39,61 +39,65 @@ export function Navbar() {
           </div>
         </Link>
 
-        {/* Center: Desktop Navigation Links with animated active pill */}
-        <div className="hidden items-center gap-1 sm:flex">
-          {navLinks.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
+        {/* Center: Desktop Navigation Links with animated active pill (Only when authenticated) */}
+        {isAuthenticated && (
+          <div className="hidden items-center gap-1 sm:flex">
+            {navLinks.map((link) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(link.href);
 
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`relative flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeNavPill"
-                    className="absolute inset-0 rounded-xl bg-plum-100/80 dark:bg-plum-900/40"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-1.5">
-                  <AnimatedIcon
-                    name={link.icon}
-                    size={15}
-                    className={isActive ? "text-primary" : "text-muted-foreground"}
-                  />
-                  {link.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNavPill"
+                      className="absolute inset-0 rounded-xl bg-plum-100/80 dark:bg-plum-900/40"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    <AnimatedIcon
+                      name={link.icon}
+                      size={15}
+                      className={isActive ? "text-primary" : "text-muted-foreground"}
+                    />
+                    {link.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* Right Actions: System Beacon, Theme Switcher & Record CTA */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Live Calibration Beacon */}
-          <div className="hidden items-center gap-1.5 rounded-full border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground md:flex">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spring-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-spring-500" />
-            </span>
-            <span>Calibrated</span>
-          </div>
+          {/* Live Calibration Beacon (Only when authenticated) */}
+          {isAuthenticated && (
+            <div className="hidden items-center gap-1.5 rounded-full border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground md:flex">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spring-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-spring-500" />
+              </span>
+              <span>Calibrated</span>
+            </div>
+          )}
 
           <ThemeToggle />
 
           <UserMenu />
 
-          {/* Primary CTA Button */}
-          {isAuthenticated ? (
+          {/* Primary CTA Button (Only when authenticated) */}
+          {isAuthenticated && (
             <Link href="/decisions/new">
               <motion.div
                 whileHover={{ scale: 1.04 }}
@@ -105,17 +109,6 @@ export function Navbar() {
                 <span className="sm:hidden">New</span>
               </motion.div>
             </Link>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={openAuthModal}
-              className="flex items-center gap-1.5 rounded-xl bg-spring-500 px-3 py-1.5 text-xs font-bold text-plum-950 shadow-spring transition-shadow hover:bg-spring-400 sm:px-4 sm:py-2 sm:text-xs"
-            >
-              <Plus className="h-3.5 w-3.5 stroke-[3]" />
-              <span className="hidden sm:inline">Record Decision</span>
-              <span className="sm:hidden">New</span>
-            </motion.button>
           )}
         </div>
       </nav>
