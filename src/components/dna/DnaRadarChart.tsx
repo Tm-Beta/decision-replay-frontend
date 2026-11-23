@@ -1,6 +1,4 @@
-//FEATURE: Decision DNA Interactive Radar Chart & Dimension Cards
-// Draws an SVG radar of the 6 Decision DNA dimensions: rings at 25, 50, 75 and 100, one axis per dimension and a shape showing the scores.
-// Lets the user click a radar node or a dimension card (the keyboard works too) to inspect the historical evidence behind that score.
+// FEATURE: Decision DNA Interactive Radar Chart & Dimension Cards
 
 "use client";
 
@@ -8,14 +6,15 @@ import React from "react";
 import { DnaDimension } from "@/types/decision.types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Dna, ExternalLink } from "lucide-react";
+import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
+import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
 
 interface DnaRadarChartProps {
   dimensions: DnaDimension[];
   onSelectDimension: (dimension: DnaDimension) => void;
 }
 
-// Short axis names so the labels fit around the chart.
 const SHORT_LABELS: Record<string, string> = {
   Calibration: "Calibration",
   PredictionAccuracy: "Prediction",
@@ -27,14 +26,13 @@ const SHORT_LABELS: Record<string, string> = {
 
 const SIZE = 400;
 const CENTER = SIZE / 2;
-const RADIUS = 120; // distance from the centre to the 100-point ring
-const LABEL_RADIUS = 150;
+const RADIUS = 125;
+const LABEL_RADIUS = 155;
 const RINGS = [25, 50, 75, 100];
 
-// Position of axis `index` (out of `total`) at a given distance from the centre. Axis 0 points up.
 function polar(index: number, total: number, radius: number): [number, number] {
   const angle = -Math.PI / 2 + (index * 2 * Math.PI) / total;
-  const round = (value: number) => Math.round(value * 100) / 100; // 2 decimals keeps the SVG tidy
+  const round = (value: number) => Math.round(value * 100) / 100;
   return [round(CENTER + radius * Math.cos(angle)), round(CENTER + radius * Math.sin(angle))];
 }
 
@@ -47,28 +45,44 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
 
   return (
     <div className="space-y-6">
-      {/* Radar chart: needs at least 3 axes to form a shape */}
+      {/* Radar chart container */}
       {total >= 3 && (
-        <Card className="p-4">
+        <Card className="p-6 border-border/80 bg-card/80 shadow-soft backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4 border-b border-border/60 pb-3">
+            <div>
+              <h3 className="font-display text-sm font-bold text-foreground">
+                Metacognitive Geometry
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                6-dimensional empirical profile. Click any node to audit historical decision proof.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-spring-500/15 border border-spring-500/30 px-2.5 py-0.5 text-[11px] font-bold text-spring-700 dark:text-spring-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-spring-500" />
+              Active Calibration
+            </div>
+          </div>
+
           <svg
             viewBox={`0 0 ${SIZE} ${SIZE}`}
-            className="w-full max-w-md mx-auto"
+            className="w-full max-w-sm sm:max-w-md mx-auto overflow-visible"
             role="img"
             aria-label="Radar chart of the Decision DNA dimensions"
           >
-            {/* Background rings at 25, 50, 75 and 100 */}
+            {/* Background concentric rings */}
             {RINGS.map((ring) => (
               <polygon
                 key={ring}
                 points={dimensions
                   .map((_, i) => polar(i, total, (ring / 100) * RADIUS).join(","))
                   .join(" ")}
-                style={{ fill: "none", stroke: "hsl(var(--border))" }}
+                style={{ fill: ring === 100 ? "hsl(var(--muted) / 0.25)" : "none", stroke: "hsl(var(--border))" }}
                 strokeWidth={1}
+                strokeDasharray={ring < 100 ? "3 3" : undefined}
               />
             ))}
 
-            {/* One axis line per dimension */}
+            {/* Axis lines */}
             {dimensions.map((dim, i) => {
               const [x, y] = polar(i, total, RADIUS);
               return (
@@ -84,14 +98,14 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
               );
             })}
 
-            {/* The score shape */}
+            {/* Score Polygon with Plum Fill & Spring Green Stroke */}
             <polygon
               points={scorePolygon}
-              style={{ fill: "hsl(var(--primary) / 0.2)", stroke: "hsl(var(--primary))" }}
-              strokeWidth={2}
+              className="fill-primary/20 stroke-primary dark:stroke-spring-400"
+              strokeWidth={2.5}
             />
 
-            {/* Clickable nodes with labels */}
+            {/* Clickable Radar Nodes */}
             {dimensions.map((dim, i) => {
               const [nx, ny] = scorePoints[i];
               const [lx, ly] = polar(i, total, LABEL_RADIUS);
@@ -102,41 +116,34 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
                   role="button"
                   tabIndex={0}
                   aria-label={`${dim.label}: ${dim.score} out of 100. Inspect evidence`}
-                  className="cursor-pointer focus:outline-none"
+                  className="cursor-pointer group focus:outline-none"
                   onClick={() => onSelectDimension(dim)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onSelectDimension(dim);
-                    }
-                  }}
                 >
+                  {/* Glowing Node */}
                   <circle
                     cx={nx}
                     cy={ny}
-                    r={7}
-                    style={{ fill: "hsl(var(--primary))", stroke: "hsl(var(--background))" }}
-                    strokeWidth={2}
+                    r={8}
+                    className="fill-spring-500 stroke-background transition-transform group-hover:scale-125"
+                    strokeWidth={2.5}
                   />
                   <text
                     x={lx}
                     y={ly}
                     textAnchor={anchor}
                     dominantBaseline="middle"
-                    className="text-[11px] font-semibold"
-                    style={{ fill: "hsl(var(--foreground))" }}
+                    className="font-display text-[11px] font-bold fill-foreground group-hover:fill-primary transition-colors"
                   >
                     {SHORT_LABELS[dim.name] ?? dim.label}
                   </text>
                   <text
                     x={lx}
-                    y={ly + 14}
+                    y={ly + 13}
                     textAnchor={anchor}
                     dominantBaseline="middle"
-                    className="text-[10px] font-mono"
-                    style={{ fill: "hsl(var(--muted-foreground))" }}
+                    className="font-mono text-[10px] font-semibold fill-spring-600 dark:fill-spring-400"
                   >
-                    {dim.score}
+                    {dim.score}/100
                   </text>
                 </g>
               );
@@ -144,48 +151,58 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
           </svg>
         </Card>
       )}
-      {/* Visual Dimension Grid */}
+
+      {/* Dimension Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {dimensions.map((dim) => (
-          <Card
+          <motion.div
             key={dim.name}
-            className="hover:border-primary/50 transition-all cursor-pointer group bg-card/70"
-            onClick={() => onSelectDimension(dim)}
+            whileHover={{ y: -2 }}
+            transition={{ duration: 0.2 }}
           >
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold group-hover:text-primary transition-colors">
-                  {dim.label}
-                </CardTitle>
-                <span className="text-lg font-bold font-mono">{dim.score}</span>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3">
-              <Progress value={dim.score} className="h-1.5" />
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {dim.description}
-              </p>
-              <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px] text-muted-foreground">
-                <span>{dim.evidenceDecisionIds.length} historical decisions</span>
-                <span className="flex items-center gap-1 text-primary group-hover:underline">
-                  Inspect evidence <ExternalLink className="h-3 w-3" />
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+            <Card
+              className="hover:border-primary/50 transition-all cursor-pointer group bg-card border-border/80 shadow-soft"
+              onClick={() => onSelectDimension(dim)}
+            >
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="font-display text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                    {dim.label}
+                  </CardTitle>
+                  <span className="text-base font-extrabold font-mono text-spring-600 dark:text-spring-400">
+                    {dim.score}
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 space-y-3">
+                <Progress value={dim.score} className="h-1.5 bg-muted" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {dim.description}
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
+                  <span className="font-mono">{dim.evidenceDecisionIds.length} empirical decisions</span>
+                  <span className="flex items-center gap-1 font-semibold text-primary group-hover:underline">
+                    Inspect evidence <ExternalLink className="h-3 w-3" />
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
-      {/* Profile Overview Banner */}
-      <Card className="p-5 border-primary/20 bg-primary/5">
-        <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Dna className="h-5 w-5" />
+      {/* Metacognitive Philosophy Card */}
+      <Card className="p-5 border-border/80 bg-gradient-to-br from-card via-card to-plum-50/40 dark:to-plum-950/20 shadow-soft">
+        <div className="flex items-start gap-3.5">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-plum-900 text-cream-50 dark:bg-primary dark:text-plum-950 shrink-0">
+            <AnimatedIcon name="dna" size={20} />
           </div>
-          <div>
-            <h4 className="text-sm font-semibold">Evidence-Based Metacognition</h4>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Decision DNA does not label your personality; it measures empirical consistency between what you anticipated and what transpired. Click any dimension above to audit the exact decisions backing the score.
+          <div className="space-y-1">
+            <h4 className="font-display text-sm font-bold text-foreground">
+              Evidence-Based Decision DNA
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Decision DNA does not label your personality; it calculates mathematical calibration between prospective estimates and observed outcomes. Click any dimension above to audit the exact historical decision records that yielded the score.
             </p>
           </div>
         </div>

@@ -1,14 +1,12 @@
 // FEATURE: Replay Engine Comparison Score Card
-// Displays the prediction accuracy score and the outcome rating.
-// Displays the confidence calibration delta with its sign (for example +5 or -12).
-// Shows whether the user would repeat the decision ("Would Repeat Decision" or "Would Change Course").
 
 "use client";
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GitCompare, CheckCircle2, RotateCcw } from "lucide-react";
+import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
+import { motion } from "framer-motion";
 
 interface ReplayScoreCardProps {
   predictionAccuracy: number;
@@ -24,32 +22,37 @@ export function ReplayScoreCard({
   wouldRepeat,
 }: ReplayScoreCardProps) {
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
+    <Card className="border-border/80 bg-gradient-to-br from-card via-card to-plum-50/40 dark:to-plum-950/20 shadow-soft">
       <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-              <GitCompare className="h-6 w-6" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-spring">
+              <AnimatedIcon name="replay" size={22} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold tracking-tight">{predictionAccuracy}%</span>
-                <Badge tone="blue">Prediction Accuracy</Badge>
+              <div className="flex items-center gap-2.5">
+                <span className="font-display text-3xl font-extrabold text-foreground tracking-tight">
+                  <span className="text-spring-600 dark:text-spring-400">{predictionAccuracy}%</span>
+                </span>
+                <Badge tone="spring">Prediction Accuracy</Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Outcome Quality: {outcomeScore}/100 • Calibration Delta: {confidenceDelta > 0 ? `+${confidenceDelta}` : confidenceDelta}%
+                Outcome Quality: <strong className="text-foreground">{outcomeScore}/100</strong> • Calibration Delta:{" "}
+                <strong className={confidenceDelta > 0 ? "text-amber-600" : "text-spring-600 dark:text-spring-400"}>
+                  {confidenceDelta > 0 ? `+${confidenceDelta}` : confidenceDelta}%
+                </strong>
               </p>
             </div>
           </div>
 
           <div>
             {wouldRepeat ? (
-              <Badge tone="green" className="py-1 px-3 text-xs">
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Would Repeat Decision
+              <Badge tone="spring" className="py-1 px-3 text-xs">
+                <AnimatedIcon name="check-circle" size={13} className="mr-1.5" /> Would Repeat Choice
               </Badge>
             ) : (
               <Badge tone="amber" className="py-1 px-3 text-xs">
-                <RotateCcw className="h-3.5 w-3.5 mr-1" /> Would Change Course
+                <AnimatedIcon name="repeat" size={13} className="mr-1.5" /> Would Change Course
               </Badge>
             )}
           </div>
