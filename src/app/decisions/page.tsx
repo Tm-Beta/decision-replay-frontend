@@ -13,9 +13,12 @@ import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { EmptyDecisionsIllustration } from "@/components/illustrations/DecisionIllustrations";
 import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { ProtectedGate } from "@/components/auth/ProtectedGate";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Search, Plus } from "lucide-react";
 
 export default function DecisionsListPage() {
+  const { isAuthenticated } = useAuthStore();
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | "LOCKED" | "REPLAYED">("ALL");
@@ -23,6 +26,7 @@ export default function DecisionsListPage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    if (!isAuthenticated) return;
     setLoading(true);
     setError(null);
     try {
@@ -38,11 +42,13 @@ export default function DecisionsListPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated, loadData]);
 
   const filteredDecisions = decisions.filter((d) => {
     const matchesSearch =
@@ -58,11 +64,12 @@ export default function DecisionsListPage() {
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6"
-    >
+    <ProtectedGate>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6"
+      >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -238,5 +245,6 @@ export default function DecisionsListPage() {
         )}
       </div>
     </motion.div>
+    </ProtectedGate>
   );
 }

@@ -7,10 +7,12 @@ import { motion } from "framer-motion";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Plus } from "lucide-react";
 
 export function Navbar() {
   const pathname = usePathname();
+  const { isAuthenticated, openAuthModal } = useAuthStore();
 
   const navLinks = [
     { href: "/", label: "Dashboard", icon: "dashboard" as const },
@@ -91,17 +93,30 @@ export function Navbar() {
           <UserMenu />
 
           {/* Primary CTA Button */}
-          <Link href="/decisions/new">
-            <motion.div
+          {isAuthenticated ? (
+            <Link href="/decisions/new">
+              <motion.div
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-1.5 rounded-xl bg-spring-500 px-3 py-1.5 text-xs font-bold text-plum-950 shadow-spring transition-shadow hover:bg-spring-400 sm:px-4 sm:py-2 sm:text-xs"
+              >
+                <Plus className="h-3.5 w-3.5 stroke-[3]" />
+                <span className="hidden sm:inline">Record Decision</span>
+                <span className="sm:hidden">New</span>
+              </motion.div>
+            </Link>
+          ) : (
+            <motion.button
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.95 }}
+              onClick={openAuthModal}
               className="flex items-center gap-1.5 rounded-xl bg-spring-500 px-3 py-1.5 text-xs font-bold text-plum-950 shadow-spring transition-shadow hover:bg-spring-400 sm:px-4 sm:py-2 sm:text-xs"
             >
               <Plus className="h-3.5 w-3.5 stroke-[3]" />
               <span className="hidden sm:inline">Record Decision</span>
               <span className="sm:hidden">New</span>
-            </motion.div>
-          </Link>
+            </motion.button>
+          )}
         </div>
       </nav>
     </header>

@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { ProtectedGate } from "@/components/auth/ProtectedGate";
 import { GitCompare, ArrowLeft, CheckCircle2, XCircle, RotateCcw, Sparkles } from "lucide-react";
 
 export default function ReplayComparisonPage() {
@@ -166,7 +167,8 @@ export default function ReplayComparisonPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <ProtectedGate>
+      <div className="space-y-6">
       {/* Back button */}
       <div className="flex items-center justify-between">
         <Link href={`/decisions/${id}`}>
@@ -436,5 +438,6 @@ export default function ReplayComparisonPage() {
         </Card>
       )}
     </div>
+    </ProtectedGate>
   );
 }

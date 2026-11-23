@@ -13,14 +13,18 @@ import { Button } from "@/components/ui/button";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { motion } from "framer-motion";
 import { Award, ShieldAlert } from "lucide-react";
+import { ProtectedGate } from "@/components/auth/ProtectedGate";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function DecisionDnaPage() {
+  const { isAuthenticated } = useAuthStore();
   const [profile, setProfile] = useState<DecisionDnaProfile | null>(null);
   const [selectedDimension, setSelectedDimension] = useState<DnaDimension | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    if (!isAuthenticated) return;
     setLoading(true);
     setLoadError(null);
     try {
@@ -34,11 +38,13 @@ export default function DecisionDnaPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated, loadData]);
 
   if (loading) {
     return (
@@ -57,11 +63,12 @@ export default function DecisionDnaPage() {
       : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-8"
-    >
+    <ProtectedGate>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-8"
+      >
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -159,5 +166,6 @@ export default function DecisionDnaPage() {
         />
       )}
     </motion.div>
+    </ProtectedGate>
   );
 }

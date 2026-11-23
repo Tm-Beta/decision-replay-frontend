@@ -12,16 +12,21 @@ import { Decision, PatternSummary } from "@/types/decision.types";
 import { decisionService } from "@/services/decisionService";
 import { replayService } from "@/services/replayService";
 import { ApiError } from "@/services/apiClient";
+import { useAuthStore } from "@/store/useAuthStore";
+import { AuthGate } from "@/components/auth/AuthGate";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 
 export default function DashboardPage() {
+  const { isAuthenticated, isHydrated, user } = useAuthStore();
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [summary, setSummary] = useState<PatternSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    if (!isAuthenticated) return;
+
     setLoading(true);
     setError(null);
 
@@ -44,11 +49,28 @@ export default function DashboardPage() {
       );
     }
     setLoading(false);
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated, loadData]);
+
+  // If zustand hasn't rehydrated from localStorage yet, render subtle placeholder to avoid flicker
+  if (!isHydrated) {
+    return (
+      <div className="py-24 text-center text-xs text-muted-foreground">
+        <div className="h-6 w-6 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin mb-3" />
+        <p>Loading Decision Replay workspace...</p>
+      </div>
+    );
+  }
+
+  // If unauthenticated, present the Auth Gate (Google Sign-In Wall)
+  if (!isAuthenticated) {
+    return <AuthGate />;
+  }
 
   const activeCount = decisions.filter(
     (d) => d.status === "LOCKED" || d.status === "REVIEW_PENDING"
@@ -64,9 +86,16 @@ export default function DashboardPage() {
       transition={{ duration: 0.4 }}
       className="space-y-6 sm:space-y-8"
     >
-      {/* Hero Header */}
+      {/* Hero Header with Authenticated User Greeting */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold text-primary">
+              Welcome back, {user?.name?.split(" ")[0] || "Leader"}
+            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-spring-500" />
+            <span className="text-[11px] text-muted-foreground font-mono">{user?.email}</span>
+          </div>
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
             Prospective Decision Intelligence
           </h1>
@@ -98,53 +127,28 @@ export default function DashboardPage() {
       {loading ? (
         <div className="py-16 text-center text-xs text-muted-foreground space-y-3">
           <div className="grid h-10 w-10 mx-auto place-items-center rounded-xl bg-muted animate-spin">
-            <AnimatedIcon name="compass" size={20} interactive={false} />
+            <AnimatedIcon name="target" size={20} />
           </div>
-          <p>Calibrating prospective workspace...</p>
+          <p>Analyzing prospective decisions and calibration metrics...</p>
         </div>
       ) : (
         <>
-          {/* Accuracy & Metacognition Summary Card */}
+          {/* Top Metric Cards */}
           <AccuracySummaryCard
-            predictionAccuracy={predictionAccuracy}
-            totalDecisions={replayCount}
             activeCount={activeCount}
+            totalDecisions={replayCount}
+            predictionAccuracy={predictionAccuracy}
             calibrationBias={summary?.calibrationBias}
           />
 
-          {/* Main Grid: Pending Reviews & Blind Spot Alerts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Decisions Pending Review + Reasoning Patterns */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <PendingReviewsList decisions={decisions} />
             <BlindSpotAlert patterns={summary?.detectedPatterns ?? []} />
           </div>
 
-          {/* Philosophy Card with Decision Loop Illustration */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="rounded-3xl border border-border/80 p-6 sm:p-8 bg-card/60 shadow-soft backdrop-blur-sm"
-          >
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-              <div className="space-y-2 max-w-xl text-center lg:text-left">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-plum-100 dark:bg-plum-900/50 px-2.5 py-0.5 text-[11px] font-bold text-primary">
-                  <AnimatedIcon name="target" size={12} />
-                  Scientific Metacognition
-                </div>
-                <h3 className="font-display text-lg sm:text-xl font-bold text-foreground">
-                  The Prospective Decision Cycle
-                </h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Human retrospectives suffer from hindsight bias: the human mind naturally edits past memories to match known results. Decision Replay locks your explicit belief snapshot with a cryptographic SHA-256 seal. When reality arrives, you uncover your true estimation accuracy without revisionism.
-                </p>
-              </div>
-
-              {/* Bespoke SVG Loop Illustration */}
-              <div className="w-full lg:w-auto shrink-0">
-                <DecisionLoopIllustration className="w-full max-w-md mx-auto" />
-              </div>
-            </div>
-          </motion.div>
+          {/* Prospective Cycle Explainer Infographic */}
+          <DecisionLoopIllustration />
         </>
       )}
     </motion.div>

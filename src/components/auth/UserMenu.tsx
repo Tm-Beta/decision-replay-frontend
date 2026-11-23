@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, HelpCircle, Shield, ChevronDown } from "lucide-react";
-import Image from "next/image";
 
 export function UserMenu() {
-  const { user, isAuthenticated, logout, openAuthModal, openTourModal } = useAuthStore();
+  const router = useRouter();
+  const { user, isAuthenticated, isHydrated, logout, openAuthModal, openTourModal } = useAuthStore();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpen(false);
@@ -20,6 +23,12 @@ export function UserMenu() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  if (!mounted || !isHydrated) {
+    return (
+      <div className="h-9 w-20 rounded-xl bg-muted/40 animate-pulse" />
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return (
@@ -58,6 +67,12 @@ export function UserMenu() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  const handleLogout = () => {
+    setOpen(false);
+    logout();
+    router.push("/");
+  };
 
   return (
     <div className="relative" ref={menuRef}>
@@ -116,10 +131,7 @@ export function UserMenu() {
               </button>
 
               <button
-                onClick={() => {
-                  setOpen(false);
-                  logout();
-                }}
+                onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors text-left"
               >
                 <LogOut className="h-3.5 w-3.5" />
@@ -132,3 +144,4 @@ export function UserMenu() {
     </div>
   );
 }
+

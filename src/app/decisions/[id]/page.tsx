@@ -16,6 +16,7 @@ import { SnapshotTimeline } from "@/components/replay/SnapshotTimeline";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ProtectedGate } from "@/components/auth/ProtectedGate";
 import { GitCompare, AlertTriangle, Split, ArrowLeft, Check, X, Circle } from "lucide-react";
 
 function daysUntil(dateStr: string | null): number | null {
@@ -112,7 +113,8 @@ export default function DecisionDetailPage() {
   const reviewDue = daysLeft !== null && daysLeft <= 0;
 
   return (
-    <div className="space-y-6">
+    <ProtectedGate>
+      <div className="space-y-6">
       {/* Top Navigation */}
       <div className="flex items-center justify-between">
         <Link href="/decisions">
@@ -249,5 +251,6 @@ export default function DecisionDetailPage() {
         </Card>
       )}
     </div>
+    </ProtectedGate>
   );
 }

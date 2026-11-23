@@ -52,16 +52,32 @@ export function MobileNav() {
         </Link>
 
         {/* Center Floating Jewel Button: Record Decision */}
-        <Link href="/decisions/new" className="-mt-6 flex flex-col items-center">
-          <motion.div
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.9 }}
-            className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-spring ring-4 ring-background"
+        {isAuthenticated ? (
+          <Link href="/decisions/new" className="-mt-6 flex flex-col items-center">
+            <motion.div
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.9 }}
+              className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-spring ring-4 ring-background"
+            >
+              <Plus className="h-6 w-6 stroke-[3]" />
+            </motion.div>
+            <span className="mt-1 text-[10px] font-bold text-foreground">Record</span>
+          </Link>
+        ) : (
+          <button
+            onClick={openAuthModal}
+            className="-mt-6 flex flex-col items-center cursor-pointer"
           >
-            <Plus className="h-6 w-6 stroke-[3]" />
-          </motion.div>
-          <span className="mt-1 text-[10px] font-bold text-foreground">Record</span>
-        </Link>
+            <motion.div
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.9 }}
+              className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-spring ring-4 ring-background"
+            >
+              <Plus className="h-6 w-6 stroke-[3]" />
+            </motion.div>
+            <span className="mt-1 text-[10px] font-bold text-foreground">Record</span>
+          </button>
+        )}
 
         {/* DNA */}
         <Link

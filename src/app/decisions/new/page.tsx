@@ -14,6 +14,7 @@ import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { decisionService } from "@/services/decisionService";
 import { validateTitle, validateChoice, validateExpectedOutcome, validateReviewDate } from "@/lib/validation";
 import { motion, AnimatePresence } from "framer-motion";
+import { ProtectedGate } from "@/components/auth/ProtectedGate";
 
 export default function NewDecisionWizardPage() {
   const router = useRouter();
@@ -94,11 +95,12 @@ export default function NewDecisionWizardPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6 sm:space-y-8"
-    >
+    <ProtectedGate>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6 sm:space-y-8"
+      >
       {/* Wizard Header */}
       <div>
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
@@ -222,5 +224,6 @@ export default function NewDecisionWizardPage() {
         <AiAnalystSidebar />
       </div>
     </motion.div>
+    </ProtectedGate>
   );
 }
