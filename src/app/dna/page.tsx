@@ -1,19 +1,18 @@
 // FEATURE: Decision DNA Profile & Longitudinal Patterns View
-//Fetches the Decision DNA profile from `dnaService.getProfile()`.
-//Renders DnaRadarChart with the 6 dimensions (Calibration, Prediction Accuracy, Rigor, Risk Foresight, Estimation, Breadth), or an empty-state message when no decision has been replayed yet.
-//Passes the dimension the user clicks to MetricEvidenceModal, which shows the historical decisions behind that score.
-//If the backend is offline, shows an error message with a "Try again" button instead of fake data.
 
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";import { DecisionDnaProfile, DnaDimension } from "@/types/decision.types";
+import React, { useCallback, useEffect, useState } from "react";
+import { DecisionDnaProfile, DnaDimension } from "@/types/decision.types";
 import { dnaService } from "@/services/dnaService";
 import { ApiError } from "@/services/apiClient";
 import { DnaRadarChart } from "@/components/dna/DnaRadarChart";
 import { MetricEvidenceModal } from "@/components/dna/MetricEvidenceModal";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dna, ShieldAlert, Award } from "lucide-react";
+import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
+import { motion } from "framer-motion";
+import { Award, ShieldAlert } from "lucide-react";
 
 export default function DecisionDnaPage() {
   const [profile, setProfile] = useState<DecisionDnaProfile | null>(null);
@@ -43,65 +42,87 @@ export default function DecisionDnaPage() {
 
   if (loading) {
     return (
-      <div className="py-16 text-center text-xs text-muted-foreground">
-        Loading Decision DNA Profile...
+      <div className="py-20 text-center text-xs text-muted-foreground space-y-3">
+        <div className="grid h-10 w-10 mx-auto place-items-center rounded-xl bg-muted animate-spin">
+          <AnimatedIcon name="dna" size={20} interactive={false} />
+        </div>
+        <p>Synthesizing Decision DNA profile...</p>
       </div>
     );
   }
 
-  // to find weakest dimension, only when there is real data behind scores.
   const lowestDimension =
     profile && profile.totalDecisions > 0 && profile.dimensions.length > 0
       ? profile.dimensions.reduce((lowest, d) => (d.score < lowest.score ? d : lowest))
       : null;
 
   return (
-    <div className="space-y-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-8"
+    >
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 text-primary">
-              <Dna className="h-4 w-4" />
+          <div className="flex items-center gap-2.5">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-plum-900 text-cream-50 dark:bg-primary dark:text-plum-950">
+              <AnimatedIcon name="dna" size={17} />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">Decision DNA Profile</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+              Decision DNA Profile
+            </h1>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Longitudinal metacognitive profile derived from historical decision replays.
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xl">
+            Longitudinal metacognitive profile derived from empirical prediction accuracy and estimation variance.
           </p>
         </div>
 
         {profile && (
           <div className="flex items-center gap-3 self-start sm:self-auto">
-            <div className="px-4 py-2 rounded-xl bg-card border border-border shadow-soft flex items-center gap-2">
-              <Award className="h-4 w-4 text-primary" />
+            <div className="px-4 py-2.5 rounded-2xl bg-card border border-border/80 shadow-soft flex items-center gap-2.5">
+              <Award className="h-5 w-5 text-spring-500" />
               <div>
-                <div className="text-base font-bold leading-none">{profile.overallDnaScore}/100</div>
-                <div className="text-[10px] text-muted-foreground uppercase font-semibold">DNA Index</div>
+                <div className="font-display text-lg font-extrabold leading-none text-foreground">
+                  {profile.overallDnaScore}/100
+                </div>
+                <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                  DNA Index
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Offline / error fallback */}
+      {/* Offline / Error Banner */}
       {loadError && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-foreground">{loadError}</p>
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-soft">
+          <p className="text-foreground font-medium">{loadError}</p>
           <Button size="sm" variant="outline" onClick={loadData}>
             Try again
           </Button>
         </div>
       )}
 
-      {/* Empty state: nothing replayed yet */}
+      {/* Empty State */}
       {profile && profile.totalDecisions === 0 && (
-        <div className="text-center py-12 border border-dashed rounded-2xl text-xs text-muted-foreground">
-          No replayed decisions yet. Record an outcome on a decision to build your Decision DNA.
-        </div>
+        <Card className="text-center py-16 px-6 border-dashed border-border/80 bg-card/60 rounded-3xl shadow-soft">
+          <div className="max-w-md mx-auto space-y-3">
+            <div className="grid h-12 w-12 mx-auto place-items-center rounded-2xl bg-plum-100 dark:bg-plum-900/40 text-primary">
+              <AnimatedIcon name="dna" size={24} />
+            </div>
+            <h3 className="font-display text-base font-bold text-foreground">
+              No Replay Data Recorded Yet
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Your Decision DNA profile synthesizes calibration, estimation accuracy, risk foresight, and alternative breadth once you record real outcomes on completed decisions.
+            </p>
+          </div>
+        </Card>
       )}
 
-      {/* Radar & Dimension Grid */}
+      {/* Radar & Dimension Cards */}
       {profile && profile.totalDecisions > 0 && (
         <DnaRadarChart
           dimensions={profile.dimensions}
@@ -109,18 +130,18 @@ export default function DecisionDnaPage() {
         />
       )}
 
-      {/* Cognitive Blind Spot Insight (built from the real lowest score) */}
+      {/* Cognitive Calibration Insight */}
       {lowestDimension && (
-        <Card className="border-amber-500/20 bg-amber-500/5 p-5">
+        <Card className="border-amber-500/30 bg-amber-500/5 p-5 rounded-2xl shadow-soft">
           <div className="flex items-start gap-3">
-            <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
-              <h4 className="font-semibold text-amber-900 dark:text-amber-200 text-sm">
+              <h4 className="font-display font-bold text-amber-900 dark:text-amber-200 text-sm">
                 Cognitive Calibration Insight
               </h4>
               <p className="text-muted-foreground leading-relaxed">
                 Your lowest scoring dimension is{" "}
-                <strong>
+                <strong className="text-foreground">
                   {lowestDimension.label} ({lowestDimension.score}/100)
                 </strong>
                 . {lowestDimension.description}
@@ -130,11 +151,13 @@ export default function DecisionDnaPage() {
         </Card>
       )}
 
-      {/* Evidence Audit Modal */}
-      <MetricEvidenceModal
-        dimension={selectedDimension}
-        onClose={() => setSelectedDimension(null)}
-      />
-    </div>
+      {/* Historical Evidence Modal */}
+      {selectedDimension && (
+        <MetricEvidenceModal
+          dimension={selectedDimension}
+          onClose={() => setSelectedDimension(null)}
+        />
+      )}
+    </motion.div>
   );
 }

@@ -1,48 +1,59 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 60 17% 98%;            /* #FAFAF8 warm off-white */
-    --foreground: 249 11% 12%;           /* #1C1B22 near-black */
-    --card: 0 0% 100%;
-    --card-foreground: 249 11% 12%;
-    --primary: 244 58% 51%;              /* #4338CA deep indigo */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 245 30% 95%;
-    --secondary-foreground: 244 50% 30%;
-    --muted: 60 10% 94%;
-    --muted-foreground: 245 5% 44%;      /* #6B6A75 */
-    --accent: 245 40% 95%;
-    --accent-foreground: 244 55% 35%;
-    --destructive: 0 74% 42%;            /* #B91C1C */
+    /* 60% Butter Cream Canvas */
+    --background: 44 55% 97%;            /* #FAF6ED rich butter cream */
+    --foreground: 300 35% 15%;           /* #311430 deep velvet plum */
+    --card: 40 40% 99%;                  /* #FDFCF9 pure ivory cream */
+    --card-foreground: 300 35% 15%;      /* #311430 deep plum */
+    
+    /* 30% Deep Plum Structure & Authority */
+    --primary: 300 45% 25%;              /* #5D225A royal deep plum */
+    --primary-foreground: 44 60% 96%;    /* #FAF5E8 butter cream */
+    --secondary: 300 30% 94%;            /* #F5EDF4 subtle plum tint */
+    --secondary-foreground: 300 45% 25%; /* #5D225A deep plum */
+    --muted: 42 30% 92%;                 /* #F3ECE0 gentle cream-sand */
+    --muted-foreground: 300 15% 42%;     /* #6B586A muted plum */
+    --border: 40 20% 86%;                /* #E6DEC9 warm parchment border */
+    --input: 40 20% 88%;                 /* #ECE4D3 */
+    
+    /* 10% Loud Electric Spring Green */
+    --accent: 155 100% 40%;              /* #00D27F electric spring green */
+    --accent-foreground: 300 45% 12%;    /* #240A23 deep plum text */
+    --ring: 155 100% 40%;                /* #00D27F spring green focus ring */
+    
+    --destructive: 0 74% 45%;            /* #C52222 */
     --destructive-foreground: 0 0% 100%;
-    --border: 20 6% 90%;                 /* #E7E5E4 */
-    --input: 20 6% 86%;
-    --ring: 244 58% 51%;
-    --radius: 0.8rem;
+    --radius: 0.85rem;
   }
 
   .dark {
-    --background: 249 15% 8%;
-    --foreground: 60 10% 96%;
-    --card: 249 14% 11%;
-    --card-foreground: 60 10% 96%;
-    --primary: 244 80% 72%;
-    --primary-foreground: 249 15% 8%;
-    --secondary: 247 20% 17%;
-    --secondary-foreground: 245 60% 85%;
-    --muted: 249 12% 16%;
-    --muted-foreground: 245 8% 64%;
-    --accent: 247 20% 17%;
-    --accent-foreground: 245 60% 85%;
-    --destructive: 0 62% 50%;
+    /* Dark Velvet Obsidian with warm plum undertones */
+    --background: 300 20% 7%;            /* #140D14 obsidian velvet */
+    --foreground: 44 60% 94%;            /* #FAF5E8 butter cream text */
+    --card: 300 18% 11%;                 /* #1E131E deep midnight plum */
+    --card-foreground: 44 60% 94%;       /* #FAF5E8 */
+    
+    /* Luminous Plum & Orchid */
+    --primary: 300 55% 72%;              /* #D88CD4 luminous orchid plum */
+    --primary-foreground: 300 45% 10%;   /* #1A0919 dark plum */
+    --secondary: 300 20% 18%;            /* #2E192D */
+    --secondary-foreground: 300 45% 85%; /* #F0D4EE */
+    --muted: 300 15% 16%;                /* #281B28 */
+    --muted-foreground: 44 15% 65%;      /* #ABA496 warm muted cream */
+    --border: 300 15% 18%;               /* #2E1E2E plum border */
+    --input: 300 15% 20%;                /* #342234 */
+    
+    /* Electric Spring Green */
+    --accent: 155 100% 45%;              /* #00E58A electric spring green */
+    --accent-foreground: 300 45% 8%;     /* #160615 */
+    --ring: 155 100% 45%;
+    
+    --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 249 10% 19%;
-    --input: 249 10% 23%;
-    --ring: 244 80% 72%;
   }
 
   * {
@@ -50,41 +61,66 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    @apply bg-background text-foreground antialiased selection:bg-accent/30 selection:text-foreground;
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), "Plus Jakarta Sans", sans-serif;
+    letter-spacing: -0.025em;
   }
 
   button, input, textarea, select {
     font: inherit;
   }
-
-  ::selection {
-    @apply bg-primary/20;
-  }
 }
 
 @layer utilities {
   .noise {
-    background-image: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.055) 1px, transparent 0);
-    background-size: 22px 22px;
+    background-image: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.05) 1px, transparent 0);
+    background-size: 24px 24px;
   }
+  
+  .glass-panel {
+    background: hsl(var(--card) / 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.65);
+  }
+
+  .glass-dock {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.8);
+    box-shadow: 0 12px 40px -10px rgba(49, 20, 48, 0.12);
+  }
+
+  .glow-spring {
+    box-shadow: 0 0 24px -2px rgba(0, 210, 127, 0.35);
+  }
+
+  .glow-plum {
+    box-shadow: 0 0 30px -4px rgba(93, 34, 90, 0.25);
+  }
+
   .text-balance {
     text-wrap: balance;
   }
 }
 
-
-@keyframes step-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/* Custom scrollbar matching Butter Cream & Plum */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-
-.step-in {
-  animation: step-in 0.25s ease-out;
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
 }
