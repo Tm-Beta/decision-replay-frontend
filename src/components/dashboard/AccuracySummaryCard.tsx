@@ -1,25 +1,23 @@
-//Displays overall prediction accuracy %, total replayed decisions and the active decision count (a dash is shown when nothing has been replayed yet).
-//Shows the confidence calibration status (Well Calibrated, Overconfident, Underconfident or Not enough data yet) from the calibration bias it receives.
-
 "use client";
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, Activity, ShieldCheck } from "lucide-react";
+import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
+import { motion } from "framer-motion";
 
 interface AccuracySummaryCardProps {
-  predictionAccuracy: number | null;  // null when decision has been not replayed yet
+  predictionAccuracy: number | null;
   totalDecisions: number;
   activeCount: number;
   calibrationBias?: string;
 }
 
-function calibrationBadge(bias?: string): { label: string; tone: "green" | "amber" | "blue" } {
-  if (bias === "WELL_CALIBRATED") return { label: "Well Calibrated", tone: "green" };
+function calibrationBadge(bias?: string): { label: string; tone: "spring" | "amber" | "plum" | "default" } {
+  if (bias === "WELL_CALIBRATED") return { label: "Well Calibrated", tone: "spring" };
   if (bias?.startsWith("OVERCONFIDENT")) return { label: "Overconfident", tone: "amber" };
   if (bias?.startsWith("UNDERCONFIDENT")) return { label: "Underconfident", tone: "amber" };
-  return { label: "Not enough data yet", tone: "blue" };
+  return { label: "Calibrating Metacognition", tone: "plum" };
 }
 
 export function AccuracySummaryCard({
@@ -31,43 +29,84 @@ export function AccuracySummaryCard({
   const calibration = calibrationBadge(calibrationBias);
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card via-card to-primary/5">
-      <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Badge tone={calibration.tone}>
-                <ShieldCheck className="h-3 w-3 mr-1" />
-                {calibration.label}
-              </Badge>
-              <span className="text-xs text-muted-foreground">Longitudinal Metacognition</span>
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {predictionAccuracy === null ? "—" : `${predictionAccuracy}%`}{" "}
-              <span className="text-base font-normal text-muted-foreground">Prediction Accuracy</span>
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {predictionAccuracy === null
-                ? "No replays yet. Record an outcome to see your accuracy."
-                : `Calculated across ${totalDecisions} completed replay reviews.`}
-            </p>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      <Card className="relative overflow-hidden border-border/80 bg-gradient-to-br from-card via-card to-plum-50/50 dark:to-plum-950/30 shadow-soft">
+        {/* Subtle Ambient Spring Glow on Top-Right Corner */}
+        <div className="absolute -top-16 -right-16 h-36 w-36 rounded-full bg-spring-500/10 blur-2xl pointer-events-none" />
 
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-center min-w-[90px]">
-              <Target className="h-4 w-4 text-primary mx-auto mb-1" />
-              <div className="text-lg font-bold text-foreground">{totalDecisions}</div>
-              <div className="text-[10px] text-muted-foreground uppercase font-medium">Replays</div>
+        <CardContent className="p-6 sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <div className="flex items-center gap-2.5">
+                <Badge tone={calibration.tone}>
+                  <AnimatedIcon name="shield" size={13} className="mr-1.5 text-current" />
+                  {calibration.label}
+                </Badge>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Zero Hindsight Bias
+                </span>
+              </div>
+
+              <div>
+                <h2 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+                  {predictionAccuracy === null ? (
+                    <span className="text-muted-foreground font-light">—</span>
+                  ) : (
+                    <span className="text-spring-600 dark:text-spring-400">
+                      {predictionAccuracy}%
+                    </span>
+                  )}{" "}
+                  <span className="text-lg sm:text-xl font-normal text-muted-foreground">
+                    Prediction Accuracy
+                  </span>
+                </h2>
+                <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  {predictionAccuracy === null
+                    ? "No replayed outcomes yet. Lock a decision snapshot, then review reality when due."
+                    : `Empirically measured across ${totalDecisions} completed prospective reviews.`}
+                </p>
+              </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-muted/60 border border-border text-center min-w-[90px]">
-              <Activity className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-              <div className="text-lg font-bold text-foreground">{activeCount}</div>
-              <div className="text-[10px] text-muted-foreground uppercase font-medium">Active</div>           
+            {/* Quick Metrics Pills */}
+            <div className="flex items-center gap-3 shrink-0">
+              <motion.div
+                whileHover={{ y: -2 }}
+                className="p-3.5 rounded-2xl bg-card border border-border text-center min-w-[100px] shadow-sm"
+              >
+                <div className="grid h-7 w-7 mx-auto mb-1 place-items-center rounded-lg bg-plum-100 dark:bg-plum-900/60 text-primary">
+                  <AnimatedIcon name="target" size={16} />
+                </div>
+                <div className="font-display text-xl font-bold text-foreground">
+                  {totalDecisions}
+                </div>
+                <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                  Replays
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ y: -2 }}
+                className="p-3.5 rounded-2xl bg-card border border-border text-center min-w-[100px] shadow-sm"
+              >
+                <div className="grid h-7 w-7 mx-auto mb-1 place-items-center rounded-lg bg-spring-500/15 text-spring-600 dark:text-spring-400">
+                  <AnimatedIcon name="trending-up" size={16} />
+                </div>
+                <div className="font-display text-xl font-bold text-foreground">
+                  {activeCount}
+                </div>
+                <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                  Active
+                </div>
+              </motion.div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

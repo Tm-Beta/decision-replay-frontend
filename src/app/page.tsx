@@ -1,8 +1,3 @@
-//Clean Main Dashboard Page
-//Fetches the decisions list (`/decisions`) and the pattern summary (`/replay/patterns/summary`) at the same time.
-//Renders AccuracySummaryCard, PendingReviewsList and BlindSpotAlert with that data.
-//If the backend is offline, shows a clear error message with a "Try again" button instead of fake data.
-
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
@@ -11,11 +6,14 @@ import { AccuracySummaryCard } from "@/components/dashboard/AccuracySummaryCard"
 import { PendingReviewsList } from "@/components/dashboard/PendingReviewsList";
 import { BlindSpotAlert } from "@/components/dashboard/BlindSpotAlert";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Compass } from "lucide-react";
+import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
+import { DecisionLoopIllustration } from "@/components/illustrations/DecisionIllustrations";
 import { Decision, PatternSummary } from "@/types/decision.types";
 import { decisionService } from "@/services/decisionService";
 import { replayService } from "@/services/replayService";
 import { ApiError } from "@/services/apiClient";
+import { motion } from "framer-motion";
+import { Plus } from "lucide-react";
 
 export default function DashboardPage() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
@@ -27,7 +25,6 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
 
-    // The two requests are independent. If one fails, the other still shows its data.
     const [decisionsResult, summaryResult] = await Promise.allSettled([
       decisionService.listDecisions({ limit: 100 }),
       replayService.getPatternSummary(),
@@ -53,39 +50,45 @@ export default function DashboardPage() {
     loadData();
   }, [loadData]);
 
-  // Open decisions are the ones still waiting for their outcome.
   const activeCount = decisions.filter(
     (d) => d.status === "LOCKED" || d.status === "REVIEW_PENDING"
   ).length;
   const replayedInList = decisions.filter((d) => d.status === "REPLAYED").length;
   const replayCount = summary?.totalDecisionsEvaluated ?? replayedInList;
-  const predictionAccuracy =
-    summary && summary.totalDecisionsEvaluated > 0
-      ? Math.round(summary.overallPredictionAccuracy)
-      : null;
+  const predictionAccuracy = summary?.overallPredictionAccuracy ?? null;
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Banner */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6 sm:space-y-8"
+    >
+      {/* Hero Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Decision Intelligence Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Capture prospective beliefs before reality unfolds; compare expectation with outcome.
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            Prospective Decision Intelligence
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed">
+            Record beliefs and testable hypotheses before reality unfolds; compare expectation with outcome when review day arrives.
           </p>
         </div>
 
         <Link href="/decisions/new">
-          <Button className="shadow-soft">
-            <PlusCircle className="h-4 w-4 mr-2" /> Record New Decision
-          </Button>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}>
+            <Button className="h-10 rounded-xl bg-spring-500 text-plum-950 font-bold shadow-spring hover:bg-spring-400">
+              <Plus className="h-4 w-4 mr-1.5 stroke-[3]" />
+              Record New Decision
+            </Button>
+          </motion.div>
         </Link>
       </div>
-      
-      {/* Offline / error fallback */}
+
+      {/* Offline / Error Banner */}
       {error && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-foreground">{error}</p>
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-soft">
+          <p className="text-foreground font-medium">{error}</p>
           <Button size="sm" variant="outline" onClick={loadData}>
             Try again
           </Button>
@@ -93,10 +96,15 @@ export default function DashboardPage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+        <div className="py-16 text-center text-xs text-muted-foreground space-y-3">
+          <div className="grid h-10 w-10 mx-auto place-items-center rounded-xl bg-muted animate-spin">
+            <AnimatedIcon name="compass" size={20} interactive={false} />
+          </div>
+          <p>Calibrating prospective workspace...</p>
+        </div>
       ) : (
         <>
-          {/* Accuracy & Metacognition Summary */}
+          {/* Accuracy & Metacognition Summary Card */}
           <AccuracySummaryCard
             predictionAccuracy={predictionAccuracy}
             totalDecisions={replayCount}
@@ -104,26 +112,41 @@ export default function DashboardPage() {
             calibrationBias={summary?.calibrationBias}
           />
 
-          {/* Main Grid: Pending Reviews & Cognitive Blind Spots */}
+          {/* Main Grid: Pending Reviews & Blind Spot Alerts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <PendingReviewsList decisions={decisions} />
             <BlindSpotAlert patterns={summary?.detectedPatterns ?? []} />
           </div>
+
+          {/* Philosophy Card with Decision Loop Illustration */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-3xl border border-border/80 p-6 sm:p-8 bg-card/60 shadow-soft backdrop-blur-sm"
+          >
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+              <div className="space-y-2 max-w-xl text-center lg:text-left">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-plum-100 dark:bg-plum-900/50 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                  <AnimatedIcon name="target" size={12} />
+                  Scientific Metacognition
+                </div>
+                <h3 className="font-display text-lg sm:text-xl font-bold text-foreground">
+                  The Prospective Decision Cycle
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Human retrospectives suffer from hindsight bias: the human mind naturally edits past memories to match known results. Decision Replay locks your explicit belief snapshot with a cryptographic SHA-256 seal. When reality arrives, you uncover your true estimation accuracy without revisionism.
+                </p>
+              </div>
+
+              {/* Bespoke SVG Loop Illustration */}
+              <div className="w-full lg:w-auto shrink-0">
+                <DecisionLoopIllustration className="w-full max-w-md mx-auto" />
+              </div>
+            </div>
+          </motion.div>
         </>
       )}
-
-      {/* Explanatory Philosophy Card */}
-      <div className="rounded-2xl border border-dashed border-border p-6 bg-card/40 flex items-start gap-4">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-muted text-muted-foreground shrink-0">
-          <Compass className="h-5 w-5" />
-        </div>
-        <div className="text-xs space-y-1">
-          <h4 className="font-semibold text-foreground text-sm">Prospective vs Retrospective Decision Making</h4>
-          <p className="text-muted-foreground leading-relaxed">
-            Human memory rewrites history after an outcome is known (hindsight bias). Decision Replay freezes your exact reasons, assumptions, and confidence at the moment of commitment. When review day arrives, you learn what actually happened without self-deception.
-          </p>
-        </div>
-      </div>
-    </div>
+    </motion.div>
   );
 }
