@@ -1,5 +1,6 @@
 "use client";
 
+import { Bell } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -79,7 +80,7 @@ export function MobileNav() {
             size={18}
             className={isDecisionsActive ? "text-spring-400" : "text-muted-foreground"}
           />
-          <span>Projects</span>
+          <span>Collections</span>
           {isDecisionsActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
 
@@ -127,6 +128,12 @@ export function MobileNav() {
           <span>Chat</span>
           {isDnaActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
+
+        {isAuthenticated && <Link href="/notifications" aria-label="Notifications"
+          aria-current={pathname === "/notifications" ? "page" : undefined}
+          className="grid min-h-11 min-w-9 place-items-center text-muted-foreground aria-[current=page]:text-spring-400">
+          <Bell size={18} />
+        </Link>}
 
         {/* Profile / Menu Button with Popup */}
         <div className="relative" ref={profileRef}>

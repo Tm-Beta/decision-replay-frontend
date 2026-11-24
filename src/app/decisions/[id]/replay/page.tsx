@@ -8,6 +8,7 @@
 
 "use client";
 
+import { BackLink } from "@/components/navigation/BackLink";
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -173,11 +174,7 @@ export default function ReplayComparisonPage() {
       <div className="space-y-6">
       {/* Back button */}
       <div className="flex items-center justify-between">
-        <Link href={`/decisions/${id}`}>
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to decision
-          </Button>
-        </Link>
+        <BackLink href={`/decisions/${id}`}>Decision</BackLink>
       </div>
 
       {replay ? (
@@ -294,7 +291,7 @@ export default function ReplayComparisonPage() {
         </div>
       ) : (
         /* PENDING OUTCOME ENTRY FORM */
-        <Card className="max-w-2xl mx-auto">
+        <Card className="mx-auto w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="text-lg">Record outcome</CardTitle>
           </CardHeader>
@@ -312,8 +309,9 @@ export default function ReplayComparisonPage() {
             </div>
 
             <div>
-              <details><summary>Add review details</summary>
-              <label>Personal rating (optional, 0–100)<input type="number" min="0" max="100" value={outcomeScore??""} onChange={e=>setOutcomeScore(e.target.value===""?null:Number(e.target.value))}/></label>
+              <details className="rounded-xl border border-border p-4"><summary className="cursor-pointer text-sm font-semibold">Add details (optional)</summary>
+              <div className="mt-4 grid gap-4">
+              <label className="grid gap-2 text-sm">Rating (0–100)<Input className="w-28 !bg-background !text-foreground !border-border" type="number" min="0" max="100" value={outcomeScore??""} onChange={e=>setOutcomeScore(e.target.value===""?null:Number(e.target.value))}/></label>
             {assumptions.some((a) => a.id) && (
               <div className="space-y-3">
                 <label className="text-xs font-semibold block">Were your assumptions correct?</label>
@@ -327,6 +325,8 @@ export default function ReplayComparisonPage() {
                         <p className="font-medium text-foreground">{a.statement}</p>
                         {a.metricTarget && <p className="text-muted-foreground">Target: {a.metricTarget}</p>}
                         <Input
+                          className="!bg-background !text-foreground !border-border"
+                          aria-label={"Actual result for " + a.statement}
                           placeholder="Actual result (optional)"
                           value={ev.actual}
                           onChange={(e) =>
@@ -362,22 +362,24 @@ export default function ReplayComparisonPage() {
             )}
 
             <div>
-              <label className="text-xs font-semibold block mb-1.5">
-                What did you learn about your reasoning?
+              <label htmlFor="outcome-reflection" className="text-sm font-semibold block mb-1.5">
+                What did you learn?
               </label>
               <Textarea
                 rows={3}
-                placeholder="Which assumption held? What unexpected factor surprised you?"
+                id="outcome-reflection"
+                className="!bg-background !text-foreground !border-border"
                 value={reflection}
                 onChange={(e) => setReflection(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold block mb-1.5">Anything unexpected? (optional)</label>
+              <label htmlFor="outcome-surprises" className="text-sm font-semibold block mb-1.5">Anything unexpected?</label>
               <Textarea
                 rows={2}
-                placeholder="Factors you did not anticipate..."
+                id="outcome-surprises"
+                className="!bg-background !text-foreground !border-border"
                 value={unexpectedFactors}
                 onChange={(e) => setUnexpectedFactors(e.target.value)}
               />
@@ -385,29 +387,31 @@ export default function ReplayComparisonPage() {
 
             <div>
               <label className="text-xs font-semibold block mb-2">
-                Would you repeat this decision with the same prior reasoning?
+                Would you make the same choice again?
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   type="button"
                   variant={wouldRepeat ? "default" : "outline"}
-                  onClick={() => setWouldRepeat(true)}
+                  aria-pressed={wouldRepeat === true}
+                  onClick={() => setWouldRepeat(wouldRepeat === true ? null : true)}
                   className="text-xs"
                 >
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Yes, would repeat
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Yes
                 </Button>
                 <Button
                   type="button"
                   variant={wouldRepeat===false ? "destructive" : "outline"}
-                  onClick={() => setWouldRepeat(false)}
+                  aria-pressed={wouldRepeat === false}
+                  onClick={() => setWouldRepeat(wouldRepeat === false ? null : false)}
                   className="text-xs"
                 >
-                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> No, course correct
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> No
                 </Button>
               </div>
             </div>
 
-              </details></div>
+              </div></details></div>
             {submitError && (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-foreground">
                 {submitError}

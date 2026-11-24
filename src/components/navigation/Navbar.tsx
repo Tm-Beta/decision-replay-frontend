@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Sun, Moon } from "lucide-react";
+import { Bell, Sun, Moon } from "lucide-react";
 
 interface DockRowProps {
   id: string;
@@ -94,7 +94,6 @@ function DockRow({
         aria-current={isActive ? "page" : undefined}
       >
         {content}
-        {!isExpanded && <span aria-hidden="true" className="text-[10px]">{label}</span>}
       </Link>
     );
   }
@@ -120,48 +119,23 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Home", icon: "dashboard" as const },
-    { href: "/decisions", label: "Projects", icon: "history" as const },
+    { href: "/decisions", label: "Collections", icon: "history" as const },
     { href: "/dna", label: "Chat", icon: "dna" as const },
   ];
 
   return (
     <>
-      {/* ========================================================================= */}
-      {/* MOBILE TOP HEADER BAR (< md)                                              */}
-      {/* ========================================================================= */}
-      <header className="flex md:hidden sticky top-0 z-40 items-center justify-between px-4 py-2.5 bg-card/85 backdrop-blur-xl border-b border-border/60 shadow-xs">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900/60 dark:bg-muted/70 text-cream-50 dark:text-foreground border border-border/70">
-            <AnimatedIcon name="compass" size={16} className="text-spring-400 dark:text-spring-400" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-spring-500" />
-          </div>
-          <span className="font-display text-sm font-bold text-foreground">Decision Replay</span>
+      <header className="relative grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 py-4">
+        <Link href="/" aria-label="Decision Replay home"
+          className="col-start-2 inline-flex items-center gap-2 font-display text-sm font-bold text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+          <AnimatedIcon name="compass" size={19} className="text-spring-500" />
+          <span>Decision Replay</span>
         </Link>
-
-        <div className="flex items-center gap-2">
+        <div className="col-start-3 flex items-center justify-self-end gap-1 md:hidden">
           <ThemeToggle />
           <UserMenu side="bottom" />
         </div>
       </header>
-
-      {/* ========================================================================= */}
-      {/* DESKTOP TOP-LEFT BRAND IDENTITY (md: & Wide Screens)                       */}
-      {/* Positioned at the very top-left corner ("mullatama") of the viewport       */}
-      {/* ========================================================================= */}
-      <div className="hidden md:flex fixed top-4 sm:top-5 left-4 sm:left-6 z-40">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2.5 px-3 py-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl shrink-0"
-        >
-          <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900/60 dark:bg-muted/70 text-cream-50 dark:text-foreground border border-border/70 shrink-0">
-            <AnimatedIcon name="compass" size={17} className="text-spring-400 dark:text-spring-400" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-spring-500" />
-          </div>
-          <span className="font-display text-sm font-bold tracking-tight text-foreground whitespace-nowrap">
-            Decision Replay
-          </span>
-        </Link>
-      </div>
 
       {/* ========================================================================= */}
       {/* DESKTOP TOP-RIGHT CONTROLS FOR PUBLIC / LANDING PAGE (!isAuthenticated)  */}
@@ -238,6 +212,16 @@ export function Navbar() {
                 />
               );
             })}
+            <DockRow
+              id="notifications"
+              label="Notifications"
+              icon={<Bell size={17} />}
+              isExpanded={dockExpanded}
+              hoveredRow={hoveredRow}
+              setHoveredRow={setHoveredRow}
+              href="/notifications"
+              isActive={pathname === "/notifications"}
+            />
           </div>
 
           {/* Bottom Utility Controls (Clean Icon-Only Buttons, No Text Expansion) */}

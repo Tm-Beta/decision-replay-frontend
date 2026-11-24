@@ -1,4 +1,5 @@
 "use client";
+import { BackLink } from "@/components/navigation/BackLink";
 import { formatReminder } from "@/lib/utils";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -72,6 +73,7 @@ export default function DecisionsListPage() {
         animate={{ opacity: 1 }}
         className="space-y-6"
       >
+      <BackLink href="/decisions">Collections</BackLink>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

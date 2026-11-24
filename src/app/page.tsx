@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, BarChart3, Folder, Plus } from "lucide-react";
 import { AuthGate } from "@/components/auth/AuthGate";
-import { JournalArt } from "@/components/illustrations/JournalArt";
+import { FloatingDetails, JournalArt } from "@/components/illustrations/JournalArt";
 import { DecisionReplayLoader } from "@/components/ui/DecisionReplayLoader";
 import { apiClient } from "@/services/apiClient";
 import { decisionService } from "@/services/decisionService";
@@ -66,7 +66,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="journal-dashboard branch-workspace">
+    <div className="journal-dashboard branch-workspace illustrated-area"><FloatingDetails kind="journal" />
       <div className="journal-heading">
         <h1>Decision journal</h1>
         <Link className="branch-primary inline-flex items-center gap-2" href="/decisions/new">
@@ -77,9 +77,9 @@ export default function DashboardPage() {
       {!data && !error && <DecisionReplayLoader size="md" />}
       {data && <>
         <section className="journal-overview branch-report" aria-label="Decision activity">
-          <JournalArt kind="journal" />
+          <JournalArt kind="journal" reaction={tracked > 0 && completed === tracked ? "celebrating" : pending > 0 ? "due" : "idle"} />
           <div className="journal-metrics">
-            <div><strong>{data.projects.length}</strong><span>Active projects</span></div>
+            <div><strong>{data.projects.length}</strong><span>Collections</span></div>
             <div><strong>{pending}</strong><span>Awaiting outcome</span></div>
             <div><strong>{completed}</strong><span>Outcomes recorded</span></div>
           </div>
@@ -90,15 +90,15 @@ export default function DashboardPage() {
         </section>
         <div className="journal-columns">
           <section className="branch-report">
-            <div className="journal-section-heading"><h2>Recent projects</h2><Link href="/decisions">All projects <ArrowUpRight size={14} /></Link></div>
-            {data.projects.length === 0 && <p>No active projects yet.</p>}
+            <div className="journal-section-heading"><h2>Recent collections</h2><Link href="/decisions">All collections <ArrowUpRight size={14} /></Link></div>
+            {data.projects.length === 0 && <p>No collections yet.</p>}
             {recentProjects.slice(0, 4).map(project => <Link className="journal-row" key={project.id} href={"/decisions/groups/" + project.id}>
               <Folder size={18} /><div><strong>{project.name}</strong><small>{project._count.decisions} decisions · {byProject.get(project.id) ?? 0} {byProject.get(project.id) === 1 ? "outcome" : "outcomes"}</small></div><ArrowUpRight size={15} />
             </Link>)}
           </section>
           <section className="branch-report">
             <div className="journal-section-heading"><h2>Individual decisions</h2><Link href="/decisions/ledger">Journal <ArrowUpRight size={14} /></Link></div>
-            {individual.length === 0 && <Link className="journal-row" href="/decisions/new"><Plus size={17} /> Add a decision without a project</Link>}
+            {individual.length === 0 && <Link className="journal-row" href="/decisions/new"><Plus size={17} /> Add a decision without a collection</Link>}
             {individual.slice(0, 4).map(decision => <Link className="journal-row" key={decision.id} href={"/decisions/" + decision.id}>
               <div><strong>{decision.title}</strong><small>{decision.outcome ? "Outcome recorded" : "Awaiting outcome"}</small></div><ArrowUpRight size={15} />
             </Link>)}

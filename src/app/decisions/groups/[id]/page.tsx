@@ -1,10 +1,12 @@
 "use client";
+import { BackLink } from "@/components/navigation/BackLink";
 import Link from "next/link";
+import { ProjectAnalysis } from "@/components/reports/ProjectAnalysis";
 import { Plus, Settings2, GitBranch, CalendarDays, BarChart3, Route } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
-import { apiClient } from "@/services/apiClient";
+import { ApiError, apiClient } from "@/services/apiClient";
 import { decisionService } from "@/services/decisionService";
 import type { Decision } from "@/types/decision.types";
 
@@ -93,6 +95,7 @@ function Workspace({ id }: { id: string }) {
   const recorded = new Map(
     decisions.filter((d) => d.planId).map((d) => [d.planId, d]),
   );
+  const plansById = new Map(plans.map(plan => [plan.id, plan]));
   const byId = new Map(decisions.map((d) => [d.id, d]));
   const planned = view === "Planned tree";
   // Keep the recorded path to each planning point, including historical roots.
@@ -144,17 +147,31 @@ function Workspace({ id }: { id: string }) {
     setError("");
   }
   const newUrl = "/decisions/new?group=" + id;
-  function startWorksheet(parent: string, plan?: Plan) {
-    const query = new URLSearchParams({ group: id, parent });
+  function startWorksheet(parent?: string, plan?: Plan) {
+    const query = new URLSearchParams({ group: id });
+    if (parent) query.set("parent", parent);
     if (plan) query.set("plan", plan.id);
     router.push("/decisions/new?" + query);
+  }
+  function findStartingDecision(plan: Plan): string | undefined {
+    const visited = new Set<string>();
+    let current: Plan | undefined = plan;
+
+    while (current && !visited.has(current.id)) {
+      visited.add(current.id);
+      if (current.originId && byId.has(current.originId)) return current.originId;
+      if (!current.parentPlanId) break;
+
+      const parentDecision = recorded.get(current.parentPlanId);
+      if (parentDecision) return parentDecision.id;
+      current = plansById.get(current.parentPlanId);
+    }
+    return undefined;
   }
   function renderNode(n: Node, depth = 0): React.ReactNode {
     const folded = foldOverrides[n.id] ?? depth >= 5;
     const entry = n.planned ? recorded.get(n.id) : byId.get(n.id);
-    const plan = n.planned ? plans.find((p) => p.id === n.id) : undefined;
-    const plannedParent =
-      plan?.originId || recorded.get(plan?.parentPlanId || "")?.id;
+    const plan = n.planned ? plansById.get(n.id) : undefined;
     const descendants = children.get(n.id);
     return (
       <li key={n.id}>
@@ -175,7 +192,7 @@ function Workspace({ id }: { id: string }) {
             {entry && !entry.outcome && <Link href={"/decisions/" + entry.id + "/replay"}>Record what happened</Link>}
             {entry && <button onClick={() => open("change", entry.id)}>Add a progress note</button>}
             {entry && <button onClick={() => open("plan", n.id)}>Plan a possible next step</button>}
-            {plan && plan.status === "OPEN" && !entry && plannedParent && <button onClick={() => startWorksheet(plannedParent, plan)}>Record this decision</button>}
+            {plan && plan.status === "OPEN" && !entry && <button onClick={() => startWorksheet(findStartingDecision(plan), plan)}>Record this decision</button>}
             {plan && !entry && <>
               <button onClick={() => open("editPlan", plan.id)}>Edit plan</button>
               <button onClick={() => open("deletePlan", plan.id)}>Delete plan</button>
@@ -189,7 +206,7 @@ function Workspace({ id }: { id: string }) {
   }
   return (
     <section className="branch-workspace">
-      <Link href="/decisions">← Decision groups</Link>
+      <BackLink href="/decisions">Collections</BackLink>
       <header>
         <h1>
           {group.name}
@@ -210,7 +227,7 @@ function Workspace({ id }: { id: string }) {
             <Plus size={15} /> New decision
           </Link>
         )}
-        <details className="project-settings"><summary><Settings2 size={15} /> Project settings</summary>
+        <details className="project-settings"><summary><Settings2 size={15} /> Collection settings</summary>
         <button onClick={() => open("rename")}>Rename</button>
         {group.status === "ARCHIVED" ? (
           <button onClick={handleRestore} disabled={busy}>
@@ -255,9 +272,11 @@ function Workspace({ id }: { id: string }) {
       ) : view === "Report" ? (
         <section className="branch-report">
           <div className="branch-tools">
-            <h2>Group report</h2><div className="report-stats"><div><strong>{decisions.length}</strong><span>Decisions</span></div><div><strong>{decisions.filter(d => d.outcome).length}</strong><span>Outcomes recorded</span></div><div><strong>{decisions.filter(d => !d.outcome).length}</strong><span>Awaiting outcome</span></div><div><strong>{plans.filter(p => p.status === "OPEN" && !recorded.has(p.id)).length}</strong><span>Open plans</span></div></div><div className="report-bar" role="img" aria-label={`${decisions.filter(d => d.outcome).length} of ${decisions.length} outcomes recorded`}><span style={{width: decisions.length ? `${100 * decisions.filter(d => d.outcome).length / decisions.length}%` : "0%"}} /></div>
+            <h2>Collection report</h2>
             <button onClick={() => window.print()}>Print / save PDF</button>
           </div>
+          <ProjectAnalysis decisions={decisions} now={now} openPlans={plans.filter(plan => plan.status === "OPEN" && !recorded.has(plan.id)).length} />
+          {!!decisions.length && <h3>Decision records</h3>}
           {decisions.map((d) => (
             <article key={d.id}>
               <small>
@@ -393,7 +412,18 @@ function Workspace({ id }: { id: string }) {
                 });
                 if (action === "deletePlan") await apiClient(endpoint + "/plans/" + selected, { method: "DELETE" });
                 if(action === "editDecision") await apiClient("/decisions/"+selected+"/details",{method:"PATCH",body:JSON.stringify({title:value("name"),choice:value("choice"),expectedOutcome:value("expectedOutcome"),decisionReason:value("decisionReason"),beliefRationale:value("beliefRationale"),confidence:value("confidence") ? Number(value("confidence")) : null,reviewDate:value("reviewDate") ? new Date(value("reviewDate")).toISOString() : null})});
-                if(action === "deleteDecision") await apiClient("/decisions/"+selected,{method:"DELETE"});
+                if (action === "deleteDecision") {
+                  try {
+                    await apiClient("/decisions/" + selected, { method: "DELETE" });
+                  } catch (error) {
+                    if (!(error instanceof ApiError) || error.status !== 404) throw error;
+                    const refreshed = await apiClient<Group>(endpoint);
+                    if (refreshed.decisions.some(decision => decision.id === selected)) throw error;
+                    setGroup(refreshed);
+                    setAction(null);
+                    return;
+                  }
+                }
                 if (action === "delete") {
                   await apiClient(endpoint, { method: "DELETE" });
                   router.push("/decisions");
