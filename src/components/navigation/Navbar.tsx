@@ -127,14 +127,12 @@ export function Navbar() {
       {/* MOBILE TOP HEADER BAR (< md)                                              */}
       {/* ========================================================================= */}
       <header className="flex md:hidden sticky top-0 z-40 items-center justify-between px-4 py-2.5 bg-card/85 backdrop-blur-xl border-b border-border/60 shadow-xs">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-xl bg-plum-900 text-cream-50 dark:bg-primary dark:text-plum-950 shadow-soft">
-            <AnimatedIcon name="compass" size={16} className="text-spring-400 dark:text-plum-950" />
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900/60 dark:bg-muted/70 text-cream-50 dark:text-foreground border border-border/70">
+            <AnimatedIcon name="compass" size={16} className="text-spring-400 dark:text-spring-400" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-spring-500" />
           </div>
           <span className="font-display text-sm font-bold text-foreground">Decision Replay</span>
-          <span className="text-[9px] font-mono font-semibold px-1 py-0.2 rounded bg-muted text-muted-foreground border border-border/70">
-            Tm-Beta
-          </span>
         </Link>
 
         <div className="flex items-center gap-2">
@@ -150,25 +148,15 @@ export function Navbar() {
       <div className="hidden md:flex fixed top-4 sm:top-5 left-4 sm:left-6 z-40">
         <Link
           href="/"
-          className="group inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl hover:border-spring-500/40 hover:shadow-[0_0_15px_rgba(34,197,94,0.12)] transition-all duration-200 shrink-0"
+          className="inline-flex items-center gap-2.5 px-3 py-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl shrink-0"
         >
-          <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900 text-cream-50 shadow-soft transition-transform group-hover:scale-105 dark:bg-primary dark:text-plum-950 shrink-0">
-            <AnimatedIcon name="compass" size={17} className="text-spring-400 dark:text-plum-950" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-spring-500 ring-2 ring-background" />
+          <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900/60 dark:bg-muted/70 text-cream-50 dark:text-foreground border border-border/70 shrink-0">
+            <AnimatedIcon name="compass" size={17} className="text-spring-400 dark:text-spring-400" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-spring-500" />
           </div>
-          <div className="flex flex-col shrink-0">
-            <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="font-display text-sm font-bold tracking-tight text-foreground transition-colors group-hover:text-primary whitespace-nowrap">
-                Decision Replay
-              </span>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/70 shrink-0">
-                Tm-Beta
-              </span>
-            </div>
-            <span className="text-[9px] font-medium tracking-wider text-muted-foreground uppercase whitespace-nowrap">
-              Prospective Metacognition
-            </span>
-          </div>
+          <span className="font-display text-sm font-bold tracking-tight text-foreground whitespace-nowrap">
+            Decision Replay
+          </span>
         </Link>
       </div>
 
