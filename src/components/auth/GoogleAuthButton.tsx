@@ -72,18 +72,26 @@ export function GoogleAuthButton() {
               size: "large",
               text: "continue_with",
               shape: "pill",
-              width: 280,
+              width: 300,
+              logo_alignment: "left",
             });
 
-            // Also prompt One-Tap popup on supported browsers
+            // Prompt One-Tap popup on supported browsers
             window.google.accounts.id.prompt();
           } catch (e) {
             console.error("GIS initialization error:", e);
           }
         }
-      }, 200);
+      }, 150);
 
-      return () => clearInterval(interval);
+      const safetyTimeout = setTimeout(() => {
+        clearInterval(interval);
+      }, 4000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(safetyTimeout);
+      };
     }
   }, [clientId, loginWithGoogleCredential]);
 
@@ -104,7 +112,7 @@ export function GoogleAuthButton() {
       {/* Container for official Google Identity Services rendered button */}
       <div
         ref={googleBtnContainerRef}
-        className={hasGoogleClient ? "block min-h-[44px]" : "hidden"}
+        className={hasGoogleClient ? "flex items-center justify-center min-h-[44px] transition-all" : "hidden"}
       />
 
       {/* High-visibility Brand Button (shown when custom GIS button not rendered or as direct CTA) */}
@@ -146,3 +154,4 @@ export function GoogleAuthButton() {
     </div>
   );
 }
+

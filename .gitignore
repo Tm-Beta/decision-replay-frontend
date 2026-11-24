@@ -4,4 +4,6 @@ out
 build
 dist
 .env*.local
+.env
+.env.local
 *.log
