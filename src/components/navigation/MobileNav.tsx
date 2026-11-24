@@ -1,58 +1,86 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Plus, User as UserIcon } from "lucide-react";
+import { Plus, User as UserIcon, LogOut, HelpCircle, Shield } from "lucide-react";
+import { launchGoogleSignIn } from "@/lib/googleAuth";
 
 export function MobileNav() {
   const pathname = usePathname();
-  const { user, isAuthenticated, openAuthModal, openTourModal } = useAuthStore();
+  const router = useRouter();
+  const { user, isAuthenticated, openAuthModal, openTourModal, logout } = useAuthStore();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!isAuthenticated) {
     return null;
   }
 
+  const handleProfileClick = () => {
+    if (isAuthenticated && user) {
+      setProfileOpen((prev) => !prev);
+    } else {
+      launchGoogleSignIn();
+    }
+  };
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+    logout();
+    router.push("/");
+  };
+
+  const isHomeActive = pathname === "/";
+  const isDecisionsActive = pathname.startsWith("/decisions") && pathname !== "/decisions/new";
+  const isDnaActive = pathname.startsWith("/dna");
+
   return (
-    <div className="fixed bottom-3 inset-x-3 z-50 sm:hidden">
-      <nav className="glass-dock relative flex h-16 items-center justify-around rounded-2xl px-2 shadow-dock border border-border/80">
+    <div className="fixed bottom-3 inset-x-3 z-50 md:hidden">
+      <nav className="glass-dock relative flex h-16 items-center justify-around rounded-2xl px-2 shadow-dock border border-border/80 backdrop-blur-2xl">
         {/* Dashboard */}
         <Link
           href="/"
-          className={`flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold transition-colors ${
-            pathname === "/" ? "text-primary" : "text-muted-foreground"
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] transition-colors ${
+            isHomeActive ? "text-spring-400 font-bold" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <AnimatedIcon
             name="dashboard"
             size={18}
-            className={pathname === "/" ? "text-primary" : "text-muted-foreground"}
+            className={isHomeActive ? "text-spring-400" : "text-muted-foreground"}
           />
           <span>Home</span>
+          {isHomeActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
 
         {/* Decisions */}
         <Link
           href="/decisions"
-          className={`flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold transition-colors ${
-            pathname.startsWith("/decisions") && pathname !== "/decisions/new"
-              ? "text-primary"
-              : "text-muted-foreground"
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] transition-colors ${
+            isDecisionsActive ? "text-spring-400 font-bold" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <AnimatedIcon
             name="history"
             size={18}
-            className={
-              pathname.startsWith("/decisions") && pathname !== "/decisions/new"
-                ? "text-primary"
-                : "text-muted-foreground"
-            }
+            className={isDecisionsActive ? "text-spring-400" : "text-muted-foreground"}
           />
           <span>Decisions</span>
+          {isDecisionsActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
 
         {/* Center Floating Jewel Button: Record Decision */}
@@ -61,7 +89,7 @@ export function MobileNav() {
             <motion.div
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.9 }}
-              className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-spring ring-4 ring-background"
+              className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-[0_0_15px_rgba(34,197,94,0.35)] ring-4 ring-background"
             >
               <Plus className="h-6 w-6 stroke-[3]" />
             </motion.div>
@@ -69,13 +97,14 @@ export function MobileNav() {
           </Link>
         ) : (
           <button
+            type="button"
             onClick={openAuthModal}
             className="-mt-6 flex flex-col items-center cursor-pointer"
           >
             <motion.div
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.9 }}
-              className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-spring ring-4 ring-background"
+              className="grid h-12 w-12 place-items-center rounded-2xl bg-spring-500 text-plum-950 shadow-[0_0_15px_rgba(34,197,94,0.35)] ring-4 ring-background"
             >
               <Plus className="h-6 w-6 stroke-[3]" />
             </motion.div>
@@ -86,32 +115,94 @@ export function MobileNav() {
         {/* DNA */}
         <Link
           href="/dna"
-          className={`flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold transition-colors ${
-            pathname.startsWith("/dna") ? "text-primary" : "text-muted-foreground"
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] transition-colors ${
+            isDnaActive ? "text-spring-400 font-bold" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <AnimatedIcon
             name="dna"
             size={18}
-            className={pathname.startsWith("/dna") ? "text-primary" : "text-muted-foreground"}
+            className={isDnaActive ? "text-spring-400" : "text-muted-foreground"}
           />
           <span>DNA</span>
+          {isDnaActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
 
-        {/* Profile / Login */}
-        <button
-          onClick={() => (isAuthenticated ? openTourModal() : openAuthModal())}
-          className="flex flex-col items-center gap-1 py-1 px-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {isAuthenticated && user?.avatar ? (
-            <div className="h-5 w-5 rounded-full overflow-hidden border border-border">
-              <img src={user.avatar} alt="User" className="h-full w-full object-cover" />
-            </div>
-          ) : (
-            <UserIcon className="h-4 w-4" />
-          )}
-          <span>{isAuthenticated ? "Profile" : "Sign In"}</span>
-        </button>
+        {/* Profile / Menu Button with Popup */}
+        <div className="relative" ref={profileRef}>
+          <button
+            type="button"
+            onClick={handleProfileClick}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] transition-colors ${
+              profileOpen ? "text-spring-400 font-bold" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {isAuthenticated && user?.avatar ? (
+              <div
+                className={`h-5 w-5 rounded-full overflow-hidden border transition-all ${
+                  profileOpen ? "border-spring-400 ring-2 ring-spring-500/30" : "border-border"
+                }`}
+              >
+                <img src={user.avatar} alt="User" className="h-full w-full object-cover" />
+              </div>
+            ) : (
+              <UserIcon className="h-4 w-4" />
+            )}
+            <span>Profile</span>
+            {profileOpen && <span className="h-1 w-1 rounded-full bg-spring-400" />}
+          </button>
+
+          {/* Mobile Profile Dropdown Popup (Opens upwards above bottom nav) */}
+          <AnimatePresence>
+            {profileOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ duration: 0.15 }}
+                className="absolute bottom-full right-0 mb-3 w-64 rounded-2xl border border-border/80 bg-card p-2 shadow-dock z-50 text-foreground backdrop-blur-2xl"
+              >
+                {/* User Info Header */}
+                <div className="p-2.5 border-b border-border/60 mb-1">
+                  <div className="font-display text-xs font-bold text-foreground truncate">
+                    {user?.name || "User"}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground truncate font-mono">
+                    {user?.email || ""}
+                  </div>
+                  <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-spring-500/15 px-2 py-0.5 text-[10px] font-bold text-spring-400 border border-spring-500/30">
+                    <Shield className="h-3 w-3" />
+                    Verified Google ID
+                  </div>
+                </div>
+
+                {/* Menu Options */}
+                <div className="space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      openTourModal();
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors text-left"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5 text-primary" />
+                    <span>Take Product Tour</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors text-left"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </nav>
     </div>
   );

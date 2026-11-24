@@ -42,8 +42,8 @@ function DockRow({
     <div
       onMouseEnter={() => setHoveredRow(id)}
       onMouseLeave={() => setHoveredRow(null)}
-      className={`relative h-9 transition-all duration-150 cursor-pointer select-none rounded-xl flex items-center ${
-        isExpanded ? "w-full justify-between px-3" : "w-9 mx-auto justify-center"
+      className={`relative transition-all duration-150 cursor-pointer select-none rounded-xl flex items-center ${
+        isExpanded ? "h-10 w-full justify-between px-3" : "h-9 w-9 mx-auto justify-center"
       } ${
         isHovered
           ? isActive
@@ -65,8 +65,8 @@ function DockRow({
             className="flex items-center gap-2 overflow-hidden"
           >
             <span
-              className={`text-xs tracking-tight truncate ${
-                isActive ? "font-bold text-spring-400" : "font-semibold text-foreground"
+              className={`font-display text-xs tracking-tight truncate ${
+                isActive ? "font-bold text-spring-400" : "font-semibold text-foreground/90"
               }`}
             >
               {label}
@@ -150,7 +150,7 @@ export function Navbar() {
       <div className="hidden md:flex fixed top-4 sm:top-5 left-4 sm:left-6 z-40">
         <Link
           href="/"
-          className="group inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl hover:border-spring-500/40 transition-all duration-200 shrink-0"
+          className="group inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl hover:border-spring-500/40 hover:shadow-[0_0_15px_rgba(34,197,94,0.12)] transition-all duration-200 shrink-0"
         >
           <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900 text-cream-50 shadow-soft transition-transform group-hover:scale-105 dark:bg-primary dark:text-plum-950 shrink-0">
             <AnimatedIcon name="compass" size={17} className="text-spring-400 dark:text-plum-950" />
@@ -178,6 +178,7 @@ export function Navbar() {
       {/* ========================================================================= */}
       <motion.nav
         aria-label="Application navigation dock"
+        layout
         initial={false}
         animate={{ width: dockExpanded ? 220 : 54 }}
         transition={{ type: "spring", stiffness: 420, damping: 30 }}
@@ -188,7 +189,7 @@ export function Navbar() {
             setHoveredRow(null);
           }
         }}
-        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-center gap-1.5 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none min-h-[252px]"
+        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-center gap-2 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none"
       >
         {/* Top Navigation Links (Only when authenticated) */}
         <div className="w-full flex flex-col gap-1.5 items-center">

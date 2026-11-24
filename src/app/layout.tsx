@@ -63,8 +63,8 @@ export default function RootLayout({
             {/* Desktop Right Floating Dock & Mobile Header */}
             <Navbar />
 
-            {/* Main Application Container (with dedicated right clearance for the dock and top clearance for corner logo) */}
-            <main className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 md:pr-20 lg:pr-24 pb-6 sm:pb-8 pt-6 sm:pt-8 md:pt-16 lg:pt-16">
+            {/* Main Application Container (with dedicated right clearance for the dock, top clearance for corner logo, and bottom clearance for mobile nav) */}
+            <main className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 md:pr-20 lg:pr-24 pb-28 sm:pb-32 md:pb-16 pt-6 sm:pt-8 md:pt-16 lg:pt-16">
               {children}
             </main>
 
