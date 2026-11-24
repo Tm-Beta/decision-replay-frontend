@@ -4,6 +4,7 @@
 //Provides a quick inline form to append new evidence notes.
 
 "use client";
+import { formatReminder } from "@/lib/utils";
 
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -69,7 +70,7 @@ export function SnapshotTimeline({ decision, onEventAdded }: SnapshotTimelinePro
           <CardTitle className="text-xl sm:text-2xl mt-2">{decision.title}</CardTitle>
           <p className="text-xs text-muted-foreground">
             Locked on {formatDate(decision.lockedAt || decision.createdAt)} • Review date:{" "}
-            {formatDate(decision.reviewDate)} • {decision.confidence}% Initial Confidence
+            {formatReminder(decision.reviewDate)} • {decision.confidence==null?"Unspecified":decision.confidence+"%"} Initial Confidence
           </p>
         </CardHeader>
 

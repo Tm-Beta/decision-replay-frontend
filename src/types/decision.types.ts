@@ -44,10 +44,10 @@ export interface Outcome {
   id: string;
   decisionId: string;
   actualOutcome: string;
-  outcomeScore: number;
+  outcomeScore: number|null;
   predictionAccuracy?: number | null;
   reflection: string;
-  wouldRepeat: boolean;
+  wouldRepeat: boolean|null;
   unexpectedFactors?: string;
   recordedAt: string;
 }
@@ -72,12 +72,13 @@ export interface Decision {
   title: string;
   category: string;
   projectId?: string | null;
+  nextReminder?:string|null;
   choice: string;
   context: string;
   decisionReason?: string;
   beliefRationale?: string;
   expectedOutcome: string;
-  confidence: number;
+  confidence: number|null;
   status: DecisionStatus;
   reviewDate: string | null;
   createdAt: string;
@@ -99,9 +100,9 @@ export interface Decision {
 export interface ReplayOutcome {
   recordedAt: string;
   actualOutcome: string;
-  outcomeScore: number;
+  outcomeScore: number|null;
   reflection: string;
-  wouldRepeat: boolean;
+  wouldRepeat: boolean|null;
   unexpectedFactors?: string;
 }
 
@@ -110,14 +111,14 @@ export interface ReplayComparison {
   title: string;
   initialSnapshot: {
     lockedAt: string | null;
-    confidence: number;
+    confidence: number|null;
     expectedOutcome: string;
     decisionReason?: string;
   };
   outcome: ReplayOutcome;
   metrics: {
-    predictionAccuracy: number;
-    confidenceCalibrationDelta: number;
+    predictionAccuracy: number|null;
+    confidenceCalibrationDelta: number|null;
     assumptionsValidatedRatio: string;
   };
   assumptionDiffs: Array<{
@@ -189,9 +190,9 @@ export interface DecisionListResponse {
 export interface RecordOutcomeResponse {
   outcomeId: string;
   decisionId: string;
-  predictionAccuracy: number;
-  outcomeScore: number;
-  confidenceVariance: number;
+  predictionAccuracy: number|null;
+  outcomeScore: number|null;
+  confidenceVariance: number|null;
   assumptionAccuracyRate: number;
   preMortemMatched?: boolean;
   replaySummary?: {

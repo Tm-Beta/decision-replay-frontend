@@ -130,3 +130,47 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.5);
 }
+
+.branch-workspace {display:grid;gap:1.25rem;min-width:0;color:hsl(var(--foreground));font-family:system-ui,sans-serif}
+.branch-workspace header {display:grid;gap:.4rem}
+.branch-workspace h1 {font-size:clamp(2rem,5vw,3.25rem);font-weight:750;line-height:1.12;overflow-wrap:anywhere}
+.branch-workspace h2 {font-size:1.35rem;font-weight:700}
+.branch-workspace h3 {font-size:1.08rem;font-weight:700;overflow-wrap:anywhere}
+.branch-workspace p,.branch-workspace small,.group-tile span {color:hsl(var(--muted-foreground));overflow-wrap:anywhere}
+.branch-workspace label {display:grid;gap:.4rem;font-size:.9rem;font-weight:600}
+.branch-workspace :is(input,textarea,select) {border:1px solid hsl(var(--border));background:hsl(var(--background));color:inherit;border-radius:.65rem;padding:.65rem .85rem;min-width:0}
+.branch-workspace button,.branch-primary {border-radius:.65rem;padding:.55rem .85rem;font-weight:600;font-size:.85rem}
+.branch-workspace button:hover,.branch-workspace a:hover {text-decoration:underline}
+.branch-workspace button:disabled {opacity:.5}
+.branch-workspace .branch-primary {display:inline-block;background:hsl(var(--accent));color:hsl(var(--accent-foreground))}
+.branch-toolbar,.group-tile,.tree-canvas,.branch-report {border:1px solid hsl(var(--border));background:hsl(var(--card));border-radius:1.25rem;padding:clamp(1rem,3vw,2rem)}
+.branch-toolbar,.branch-tools,.branch-tabs {display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.branch-toolbar {align-items:flex-end}.branch-toolbar label {flex:1 1 12rem}
+.group-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.85rem}
+.group-tile {display:grid;gap:.5rem;position:relative}.group-tile svg:last-child {position:absolute;right:1rem;top:1rem}
+.branch-tools button,.branch-tabs {background:hsl(var(--secondary))}
+.branch-tabs {border-radius:.85rem;padding:.3rem;width:fit-content}
+.branch-tabs [aria-pressed=true] {background:hsl(var(--primary));color:hsl(var(--primary-foreground))}
+.tree-canvas {min-width:0;background-image:radial-gradient(hsl(var(--primary)/.14) 1px, transparent 1px);background-size:18px 18px}
+.tree-empty {display:grid;justify-items:center;gap:.9rem;padding:3rem 0;text-align:center}
+.tree-scroll {overflow:auto;max-height:75vh;padding:1rem 0}
+.branch-tree,.branch-tree ul {display:flex;justify-content:center;align-items:flex-end;width:max-content;margin:auto}
+.branch-tree li {display:flex;align-items:center;flex-direction:column;position:relative;padding:0 .4rem}
+.branch-tree ul {position:relative;padding-bottom:1.4rem}
+.branch-tree ul::after,.branch-tree ul>li::after {content:"";width:1px;height:1.4rem;background:hsl(var(--primary));display:block}
+.branch-tree ul::after {position:absolute;bottom:0;left:50%}
+.branch-tree ul>li::before {content:"";position:absolute;bottom:0;left:0;right:0;border-bottom:1px solid hsl(var(--primary))}
+.branch-tree ul>li:first-child::before {left:50%}.branch-tree ul>li:last-child::before {right:50%}
+.branch-tree article,.branch-report article {border:1px solid hsl(var(--border));background:hsl(var(--card));border-radius:1rem;padding:1rem}
+.branch-tree article {width:15rem;border-top:3px solid hsl(var(--primary));display:grid;gap:.4rem}
+.node-actions {display:flex;flex-wrap:wrap;gap:.25rem}.node-actions button {background:hsl(var(--secondary));padding:.35rem .55rem;font-size:.78rem}
+.branch-report,.branch-report article,.branch-dialog form {display:grid;gap:1rem}
+.report-columns {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(14rem,100%),1fr));gap:.75rem}
+.report-columns>div {padding:.85rem;border-left:3px solid hsl(var(--primary));background:hsl(var(--secondary)/.5)}.report-columns>div+div {border-color:hsl(var(--accent))}
+.branch-dialog {position:fixed;inset:0;margin:auto;z-index:80;width:min(28rem,94vw);max-height:85vh;overflow:auto;background:hsl(var(--card));color:inherit;border:1px solid hsl(var(--border));border-radius:1rem;padding:1.5rem}
+.branch-dialog::backdrop {background:#0008}
+@media print {
+ body:has(.branch-report,.decision-worksheet) {background:white;color:black}
+ body:has(.branch-report,.decision-worksheet) :is(nav,footer,button,.branch-workspace>a,.branch-report a),body:has(.branch-report,.decision-worksheet) [class*="fixed"] {display:none!important}
+ .branch-workspace,.branch-report {display:block}.branch-report article {break-inside:avoid;margin:1em 0}.branch-report p,.branch-report small {color:#333}
+}

@@ -18,3 +18,8 @@ export function formatDate(dateString: string | null | undefined): string {
         year: "numeric",
       });
 }
+
+export function formatReminder(value?: string | null): string {
+  if (!value) return "No reminder";
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}

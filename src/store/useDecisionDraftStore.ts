@@ -20,6 +20,13 @@ export interface PreMortem {
 }
 
 interface DraftData {
+  selectedPlan: string;
+  decidedOn: string;
+  outcomeKnown: boolean;
+  confidenceText: string;
+  influences: string[];
+
+  branchKey: string;
   currentStep: number; // 0, 1, 2
   title: string;
   category: string;
@@ -29,6 +36,7 @@ interface DraftData {
   beliefRationale: string;
   expectedOutcome: string;
   confidence: number;
+  reviewTime: string;
   reviewDate: string;
   assumptions: Assumption[];
   alternatives: Alternative[];
@@ -36,6 +44,8 @@ interface DraftData {
 }
 
 interface DraftStore extends DraftData {
+  switchBranch: (key: string, seed: Partial<DraftData>) => void;
+  saved: Record<string, Partial<DraftData>>;
   setField: <K extends keyof DraftData>(key: K, value: DraftData[K]) => void;
   updateField: <K extends keyof DraftData>(key: K, value: DraftData[K]) => void;
   nextStep: () => void;
@@ -51,6 +61,12 @@ interface DraftStore extends DraftData {
 }
 
 const initialState: DraftData = {
+  selectedPlan: "",
+  decidedOn: "",
+  outcomeKnown: false,
+  influences: [],
+  confidenceText: "",
+  branchKey: "",
   currentStep: 0,
   title: "",
   category: "",
@@ -61,6 +77,7 @@ const initialState: DraftData = {
   expectedOutcome: "",
   confidence: 50,
   reviewDate: "",
+  reviewTime: "09:00",
   assumptions: [],
   alternatives: [],
   preMortems: [],
@@ -71,25 +88,57 @@ export const useDecisionDraftStore = create<DraftStore>()(
     (set) => ({
       ...initialState,
 
+      saved: {},
+      switchBranch: (key, seed) =>
+        set((s) => {
+          if (s.branchKey === key) return {};
+          const saved = { ...s.saved };
+          if (s.branchKey)
+            saved[s.branchKey] = Object.fromEntries(
+              Object.keys(initialState).map((k) => [
+                k,
+                s[k as keyof DraftData],
+              ]),
+            );
+          const previous = saved[key];
+          delete saved[key];
+          return {
+            ...initialState,
+            ...seed,
+            ...previous,
+            branchKey: key,
+            saved,
+          };
+        }),
       setField: (key, value) => set({ [key]: value } as Partial<DraftStore>),
       updateField: (key, value) => set({ [key]: value } as Partial<DraftStore>),
 
-      nextStep: () => set((s) => ({ currentStep: Math.min(2, s.currentStep + 1) })),
-      prevStep: () => set((s) => ({ currentStep: Math.max(0, s.currentStep - 1) })),
+      nextStep: () =>
+        set((s) => ({ currentStep: Math.min(2, s.currentStep + 1) })),
+      prevStep: () =>
+        set((s) => ({ currentStep: Math.max(0, s.currentStep - 1) })),
       resetDraft: () => set(initialState),
 
-      addAssumption: (a) => set((s) => ({ assumptions: [...s.assumptions, a] })),
+      addAssumption: (a) =>
+        set((s) => ({ assumptions: [...s.assumptions, a] })),
       removeAssumption: (i) =>
-        set((s) => ({ assumptions: s.assumptions.filter((_, idx) => idx !== i) })),
+        set((s) => ({
+          assumptions: s.assumptions.filter((_, idx) => idx !== i),
+        })),
 
-      addAlternative: (alt) => set((s) => ({ alternatives: [...s.alternatives, alt] })),
+      addAlternative: (alt) =>
+        set((s) => ({ alternatives: [...s.alternatives, alt] })),
       removeAlternative: (i) =>
-        set((s) => ({ alternatives: s.alternatives.filter((_, idx) => idx !== i) })),
+        set((s) => ({
+          alternatives: s.alternatives.filter((_, idx) => idx !== i),
+        })),
 
       addPreMortem: (pm) => set((s) => ({ preMortems: [...s.preMortems, pm] })),
       removePreMortem: (i) =>
-        set((s) => ({ preMortems: s.preMortems.filter((_, idx) => idx !== i) })),
+        set((s) => ({
+          preMortems: s.preMortems.filter((_, idx) => idx !== i),
+        })),
     }),
-    { name: "decision-draft" }
-  )
+    { name: "decision-draft" },
+  ),
 );

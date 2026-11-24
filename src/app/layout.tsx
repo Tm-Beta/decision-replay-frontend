@@ -5,6 +5,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { ReviewAlerts } from "@/components/dashboard/ReviewAlerts";
 import { Navbar } from "@/components/navigation/Navbar";
 import { MobileNav } from "@/components/navigation/MobileNav";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -69,6 +70,7 @@ export default function RootLayout({
 
             {/* Main Application Container (with dedicated right clearance for the dock, top clearance for corner logo, and bottom clearance for mobile nav) */}
             <main className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 md:pr-20 lg:pr-24 pb-28 sm:pb-32 md:pb-16 pt-6 sm:pt-8 md:pt-16 lg:pt-16">
+              <ReviewAlerts/>
               {children}
             </main>
 

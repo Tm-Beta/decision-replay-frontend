@@ -13,14 +13,14 @@ import {
 
 export interface RecordOutcomeInput {
   actualOutcome: string;
-  outcomeScore: number;
+  outcomeScore: number|null;
   reflection: string;
-  wouldRepeat: boolean;
+  wouldRepeat: boolean|null;
   unexpectedFactors?: string;
   assumptionEvaluations: Array<{
     assumptionId: string;
     metricActual?: string;
-    validated: boolean;
+    validated?: boolean;
   }>;
 }
 

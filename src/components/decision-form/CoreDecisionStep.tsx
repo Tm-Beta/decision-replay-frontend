@@ -9,17 +9,6 @@ import {
   expectedOutcomeHint,
 } from "@/lib/validation";
 
-const CATEGORIES = [
-  "Career",
-  "Product",
-  "Finance",
-  "Hiring",
-  "Technology",
-  "Strategy",
-  "Personal",
-  "Other",
-];
-
 const baseInput =
   "w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm " +
   "placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 transition-all";
@@ -32,7 +21,6 @@ const hintClass = "text-xs text-muted-foreground mb-2";
 export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean }) {
   const {
     title,
-    category,
     choice,
     decisionReason,
     beliefRationale,
@@ -73,26 +61,6 @@ export function CoreDecisionStep({ showErrors = false }: { showErrors?: boolean 
           className={`${baseInput} ${titleError ? badInput : okInput}`}
         />
         {titleError && <p className="text-xs text-destructive mt-1">{titleError}</p>}
-      </div>
-
-      {/* Category */}
-      <div>
-        <label htmlFor="category" className={labelClass}>
-          Category
-        </label>
-        <select
-          id="category"
-          value={category}
-          onChange={(e) => setField("category", e.target.value)}
-          className={`${baseInput} ${okInput}`}
-        >
-          <option value="">Select a category...</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
       </div>
 
       {/* Choice */}

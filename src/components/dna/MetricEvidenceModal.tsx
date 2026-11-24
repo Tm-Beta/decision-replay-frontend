@@ -101,7 +101,7 @@ export function MetricEvidenceModal({ dimension, onClose }: MetricEvidenceModalP
                       <div className="space-y-0.5">
                         <span className="font-semibold text-foreground">{d.title}</span>
                         <p className="text-[11px] text-muted-foreground">
-                          Locked {formatDate(d.lockedAt)} · Confidence {d.confidence}%
+                          Locked {formatDate(d.lockedAt)} · Confidence {d.confidence==null?"Unspecified":d.confidence+"%"}
                           {d.outcome ? ` · Outcome ${d.outcome.outcomeScore}/100` : " · Not replayed yet"}
                           {typeof d.outcome?.predictionAccuracy === "number"
                             ? ` · Accuracy ${d.outcome.predictionAccuracy}%`
