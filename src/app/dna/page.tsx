@@ -309,6 +309,7 @@ export default function Page() {
         <div className="flex items-center gap-2 p-1 rounded-2xl bg-card border border-border/80 shadow-dock w-fit">
           <button
             type="button"
+            aria-pressed={activeTab === "chat"}
             onClick={() => setActiveTab("chat")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeTab === "chat"
@@ -321,6 +322,7 @@ export default function Page() {
           </button>
           <button
             type="button"
+            aria-pressed={activeTab === "dna"}
             onClick={() => setActiveTab("dna")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeTab === "dna"
@@ -333,7 +335,10 @@ export default function Page() {
           </button>
         </div>
 
-        {activeTab === "chat" ? <ThinkingSpace /> : <DnaProfileView />}
+        <div className="chat-tab-panel" hidden={activeTab !== "chat"}>
+          <ThinkingSpace />
+        </div>
+        {activeTab === "dna" && <DnaProfileView />}
       </div>
     </ProtectedGate>
   );

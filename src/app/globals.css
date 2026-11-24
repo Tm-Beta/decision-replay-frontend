@@ -237,13 +237,13 @@ body:has(.chat-mode) footer{display:none}
 @media(max-width:767px){.dna-workspace.chat-mode{height:calc(100dvh - 12rem)}.chat-mode .insights-suggestions button{padding:.65rem}.chat-mode .insights-message{max-width:100%}}
 
 .dna-workspace{margin:0 auto}
-body:has(.dna-workspace)>div main{padding-top:6rem}
+
 .chat-project-picker{position:relative;z-index:25}
 .chat-project-trigger{display:flex;align-items:center;gap:.65rem;border:1px solid hsl(var(--border));border-radius:.8rem;background:hsl(var(--card));padding:.6rem .85rem;font-size:.8rem}
 .chat-project-menu{position:absolute;right:0;top:calc(100% + .4rem);width:240px;max-height:280px;overflow:auto;border:1px solid hsl(var(--border));border-radius:.9rem;background:hsl(var(--card));box-shadow:0 12px 36px #0005;padding:.35rem}
 .chat-project-menu button,.chat-project-menu a{display:block;width:100%;text-align:left;padding:.65rem .75rem;border-radius:.5rem;font-size:.8rem}
 .chat-project-menu button:hover,.chat-project-menu a:hover{background:hsl(var(--secondary))}
-@media(max-width:767px){body:has(.dna-workspace)>div main{padding-top:5.5rem}.dna-workspace.chat-mode{height:calc(100dvh - 12rem)}}
+@media(max-width:767px){.dna-workspace.chat-mode{height:calc(100dvh - 12rem)}}
 
 .decision-simple { max-width: 42rem; width: 100%; margin-inline: auto; }
 .decision-simple h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); }
@@ -654,4 +654,21 @@ body:has(.dna-workspace)>div main{padding-top:6rem}
 @keyframes signin-card-float {
   0%,100% { translate:0 0; }
   50% { translate:0 -5px; }
+}
+
+.page-arrival { display:flex; flex:1; min-width:0; flex-direction:column; }
+.chat-tab-panel:not([hidden]) { display:flex; flex:1; min-height:0; flex-direction:column; }
+@media (prefers-reduced-motion:no-preference) {
+  .page-arrival {
+    --page-arrival-offset:4px;
+    position:relative;
+    animation:page-arrival 220ms cubic-bezier(.2,.75,.3,1) backwards;
+  }
+}
+@media (max-width:640px) and (prefers-reduced-motion:no-preference) {
+  .page-arrival { --page-arrival-offset:8px; }
+}
+@keyframes page-arrival {
+  from { top:var(--page-arrival-offset); opacity:.7; }
+  to { top:0; opacity:1; }
 }
