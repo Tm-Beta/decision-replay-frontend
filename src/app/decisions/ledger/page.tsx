@@ -76,10 +76,10 @@ export default function DecisionsListPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            All Prospective Decisions
+            All decisions
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Browse locked belief snapshots, verify timelines, and record empirical replays.
+            
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function DecisionsListPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {tab === "ALL" ? "All Decisions" : tab === "LOCKED" ? "Active Locked" : "Replayed"}
+              {tab === "ALL" ? "All Decisions" : tab === "LOCKED" ? "Awaiting outcome" : "Outcome recorded"}
             </button>
           ))}
         </div>
@@ -179,7 +179,7 @@ export default function DecisionsListPage() {
                       </Link>
                       {d.status === "REPLAYED" ? (
                         <Badge tone="spring">
-                          <AnimatedIcon name="replay" size={11} className="mr-1" /> Replayed
+                          <AnimatedIcon name="replay" size={11} className="mr-1" /> Outcome recorded
                         </Badge>
                       ) : (
                         <Badge tone="plum">

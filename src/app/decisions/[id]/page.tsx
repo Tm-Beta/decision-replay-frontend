@@ -67,17 +67,18 @@ export default function DecisionDetailPage() {
       <div className="decision-worksheet space-y-6">
       {/* Top Navigation */}
       <div className="flex items-center justify-between">
-        <Link href={decision.projectId ? "/decisions/groups/"+decision.projectId : "/decisions"}>
+        <Link href={decision.projectId ? "/decisions/groups/"+decision.projectId : "/decisions/ledger"}>
           <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> Group tree
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> {decision.projectId ? "Group tree" : "Journal"}
           </Button>
         </Link>
 
-        <Button size="sm" variant="ghost" onClick={() => window.print()}>Print worksheet</Button>
+        <Link className="text-sm text-primary" href={"/dna?decision="+encodeURIComponent(decision.id)}>Ask AI</Link>
+        <Button size="sm" variant="ghost" onClick={() => window.print()}>Print</Button>
         <Link href={`/decisions/${decision.id}/replay`}>
           <Button size="sm" variant={reviewDue || decision.outcome ? "default" : "outline"}>
             <GitCompare className="h-4 w-4 mr-1.5" />
-            {decision.outcome ? "View Replay Comparison" : "Record Outcome Replay"}
+            {decision.outcome ? "View outcome" : "Record outcome"}
           </Button>
         </Link>
       </div>
@@ -97,11 +98,6 @@ export default function DecisionDetailPage() {
         </div>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        This snapshot is frozen. It shows exactly what you believed on the day you decided,
-        and it can never be edited.
-      </p>
-
       {/* Snapshot and Timeline Engine */}
       <SnapshotTimeline
         decision={decision}
@@ -111,11 +107,11 @@ export default function DecisionDetailPage() {
       />
 
       {/* Assumptions, Alternatives, and Pre-Mortems Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {(!!decision.assumptions?.length || !!decision.preMortems?.length) && <details><summary>Assumptions and risks</summary><div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Testable Assumptions */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Assumptions & Testable Hypotheses</CardTitle>
+            <CardTitle className="text-sm">Assumptions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
             {decision.assumptions?.length === 0 ? (
@@ -151,7 +147,7 @@ export default function DecisionDetailPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-1.5">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <CardTitle className="text-sm">Pre-Mortem Failure Anticipations</CardTitle>
+              <CardTitle className="text-sm">Risks</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-2.5">
@@ -171,7 +167,7 @@ export default function DecisionDetailPage() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </div></details>}
 
       {/* Alternatives Weighed */}
       {decision.alternatives && decision.alternatives.length > 0 && (
@@ -179,7 +175,7 @@ export default function DecisionDetailPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-1.5">
               <Split className="h-4 w-4 text-primary" />
-              <CardTitle className="text-sm">Alternatives Considered at Commitment Time</CardTitle>
+              <CardTitle className="text-sm">Other options</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

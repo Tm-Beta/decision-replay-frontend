@@ -79,7 +79,7 @@ export function AiAnalystSidebar() {
             </div>
             <div>
               <CardTitle className="font-display text-sm font-bold text-foreground">
-                Socratic Mirror
+                Thinking prompts
               </CardTitle>
             </div>
           </div>
@@ -103,7 +103,7 @@ export function AiAnalystSidebar() {
         {challenge?.detectedBiases && challenge.detectedBiases.length > 0 && (
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
-              Detected Cognitive Vectors
+              Things to check
             </span>
             <div className="flex flex-wrap gap-1.5">
               {challenge.detectedBiases.map((bias) => (
@@ -139,7 +139,7 @@ export function AiAnalystSidebar() {
         ) : (
           <div className="text-center py-8 px-3 border border-dashed border-border rounded-2xl text-xs text-muted-foreground space-y-2">
             <HelpCircle className="h-6 w-6 mx-auto opacity-40 text-muted-foreground" />
-            <p className="font-medium">Socratic mirror is standing by.</p>
+            <p className="font-medium">Add a decision to get prompts.</p>
             <p className="text-[11px]">
               Type your choice or click &quot;Challenge&quot; to test your belief assumptions against cognitive bias patterns.
             </p>

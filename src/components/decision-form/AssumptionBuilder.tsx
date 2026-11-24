@@ -38,9 +38,9 @@ export function AssumptionBuilder() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold tracking-tight">Testable Assumptions (Hypotheses)</h3>
+          <h3 className="text-sm font-semibold tracking-tight">What needs to go right?</h3>
           <p className="text-xs text-muted-foreground">
-            What real-world conditions or performance metrics must hold true?
+            
           </p>
         </div>
         <span className="text-xs font-semibold px-2 py-1 bg-muted rounded-lg">
@@ -84,18 +84,18 @@ export function AssumptionBuilder() {
       {/* Add new assumption box */}
       <div className="p-4 rounded-xl border border-dashed border-border/80 bg-muted/20 space-y-3">
         <Input
-          placeholder="e.g. DynamoDB read latency over direct VPC gateway remains < 5ms"
+          placeholder="e.g. I can study 8 hours a week"
           value={statement}
           onChange={(e) => setStatement(e.target.value)}
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
-            placeholder="Metric target (e.g. < 5ms latency, $200/mo)"
+            placeholder="Target (e.g. 8 hours a week)"
             value={metricTarget}
             onChange={(e) => setMetricTarget(e.target.value)}
           />
           <Slider
-            label="Hypothesis Confidence"
+            label="How sure are you?"
             valueDisplay={`${confidence}%`}
             min={1}
             max={100}

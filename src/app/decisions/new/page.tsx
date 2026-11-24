@@ -2,7 +2,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import GroupPage from "../page";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
 import { AssumptionBuilder } from "@/components/decision-form/AssumptionBuilder";
 import { AlternativesInput } from "@/components/decision-form/AlternativesInput";
@@ -36,14 +35,18 @@ function Worksheet() {
     d = useDecisionDraftStore();
   const user = useAuthStore((s) => s.user?.id);
   const projectId = params.get("group"),
-    parentId = params.get("parent") || undefined,
-    planId = params.get("plan") || undefined;
+    parentId = (projectId && params.get("parent")) || undefined,
+    planId = (projectId && params.get("plan")) || undefined;
   const key = JSON.stringify([user, projectId, parentId, planId]);
   const [group, setGroup] = useState<Group>(),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId) {
+      useDecisionDraftStore.getState().switchBranch(key, { reviewDate: "" });
+      setGroup({ name: "Decision journal", decisions: [], plans: [] });
+      return;
+    }
     let active = true;
     apiClient<Group>("/groups/" + projectId)
       .then((g) => {
@@ -72,12 +75,11 @@ function Worksheet() {
       active = false;
     };
   }, [key, projectId, parentId, planId, router]);
-  if (!projectId) return <GroupPage />;
   if (!group || d.branchKey !== key)
     return <p>{error || "Loading worksheet…"}</p>;
   const field = d.setField;
   async function save() {
-    if (!d.choice.trim() || busy || !projectId) return;
+    if (!d.choice.trim() || busy) return;
     const reminder = d.reviewDate ? new Date(d.reviewDate + "T" + (d.reviewTime || "09:00")) : null;
     if (reminder && (!Number.isFinite(reminder.getTime()) || reminder.getTime() < Math.floor(Date.now()/60000)*60000)) {
       setError("Choose the current time or a later time for your reminder.");
@@ -87,7 +89,7 @@ function Worksheet() {
     setError("");
     try {
       await decisionService.createDecision({
-        projectId,
+        projectId: projectId ?? undefined,
         parentId,
         planId: planId || d.selectedPlan || undefined,
         title: d.title.trim() || d.choice.trim().slice(0, 100),
@@ -107,17 +109,17 @@ function Worksheet() {
       });
       d.resetDraft();
       window.dispatchEvent(new Event("reviews-changed"));
-      router.push("/decisions/groups/" + projectId);
+      router.push(projectId ? "/decisions/groups/" + projectId : "/decisions/ledger");
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
     }
   }
   return (
-    <section className="branch-workspace">
-      <Link href={"/decisions/groups/" + projectId}>← {group.name}</Link>
+    <section className="branch-workspace decision-simple">
+      <Link href={projectId ? "/decisions/groups/" + projectId : "/decisions/ledger"}>← {group.name}</Link>
       <header>
-        <h1>Decision worksheet</h1>
+        <h1>New decision</h1>
         {parentId && (
           <p>
             Following {group.decisions.find((x) => x.id === parentId)?.title}
@@ -140,6 +142,9 @@ function Worksheet() {
             onChange={(e) => field("expectedOutcome", e.target.value)}
           />
         </label>
+        <details>
+          <summary>Outcome reminder · {d.reviewDate || "Off"}</summary>
+          <div className="grid gap-3 pt-3">
         <label>
           Remind me to record the outcome
           <input
@@ -173,8 +178,10 @@ function Worksheet() {
             </button>
           ))}
         </div>
+          </div>
+        </details>
         <details>
-          <summary>Add details</summary>
+          <summary>More options</summary>
           <div className="grid gap-4 py-4">
             {!planId &&
               group.plans.some(
@@ -271,9 +278,9 @@ function Worksheet() {
                   ))}
               </details>
             )}
-            <AssumptionBuilder />
-            <AlternativesInput />
-            <PreMortemStep />
+            <details><summary>Assumptions</summary><AssumptionBuilder /></details>
+            <details><summary>Other options</summary><AlternativesInput /></details>
+            <details><summary>Risks</summary><PreMortemStep /></details>
             <details>
               <summary>Reflection prompts</summary>
               <AiAnalystSidebar />

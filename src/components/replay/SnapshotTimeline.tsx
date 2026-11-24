@@ -1,4 +1,4 @@
-// FEATURE: Combined Immutable Snapshot & Append-Only Timeline Component
+// FEATURE: Combined Immutable Snapshot & History Component
 //Renders the immutable snapshot card with the SHA-256 verification badge.
 //Renders the append-only timeline events, in the order the page provides them.
 //Provides a quick inline form to append new evidence notes.
@@ -22,6 +22,15 @@ interface SnapshotTimelineProps {
 }
 
 export function SnapshotTimeline({ decision, onEventAdded }: SnapshotTimelineProps) {
+  let original: Partial<Decision> = {};
+  try {
+    const payload = (decision.snapshot as unknown as {payloadJson?:string} | null)?.payloadJson;
+    if(payload) original = JSON.parse(payload);
+  } catch {}
+  const originalChoice = original.choice ?? decision.choice;
+  const originalExpectedOutcome = original.expectedOutcome ?? decision.expectedOutcome;
+  const originalReason = original.decisionReason ?? decision.decisionReason;
+  const originalConfidence = original.confidence !== undefined ? original.confidence : decision.confidence;
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,68 +59,51 @@ export function SnapshotTimeline({ decision, onEventAdded }: SnapshotTimelinePro
       {/* Immutable Snapshot Header Card */}
       <Card className="border-primary/20">
         <CardHeader className="pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Badge tone="violet">
-                <Lock className="h-3 w-3 mr-1" />
-                Snapshot Locked
-              </Badge>
-              {decision.isVerified !== false && (
-                <Badge tone="green">
-                  <ShieldCheck className="h-3 w-3 mr-1" />
-                  SHA-256 Verified
-                </Badge>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground font-mono">
-              Hash: {decision.snapshotHash?.slice(0, 16)}...
-            </span>
-          </div>
           <CardTitle className="text-xl sm:text-2xl mt-2">{decision.title}</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Locked on {formatDate(decision.lockedAt || decision.createdAt)} • Review date:{" "}
-            {formatReminder(decision.reviewDate)} • {decision.confidence==null?"Unspecified":decision.confidence+"%"} Initial Confidence
+            Recorded {formatDate(decision.lockedAt || decision.createdAt)} • Review date:{" "}
+            {formatReminder(decision.reviewDate)} • {originalConfidence==null?"Unspecified":originalConfidence+"%"} confidence
           </p>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-primary block mb-1">
-              Committed Choice
+              Decision
             </span>
-            <p className="text-sm font-medium leading-relaxed">{decision.choice}</p>
+            <p className="text-sm font-medium leading-relaxed">{originalChoice}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
               <span className="font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                Trigger & Context
+                Reason
               </span>
-              <p className="leading-relaxed text-foreground/80">{decision.decisionReason || decision.context}</p>
+              <p className="leading-relaxed text-foreground/80">{originalReason || decision.context}</p>
             </div>
             <div>
               <span className="font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                Expected Observable Outcome
+                Expected outcome
               </span>
-              <p className="leading-relaxed text-foreground/80">{decision.expectedOutcome}</p>
+              <p className="leading-relaxed text-foreground/80">{originalExpectedOutcome || "Not recorded"}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Append-Only Timeline Section */}
+      {/* History Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" />
-            <h3 className="text-base font-semibold">Append-Only Timeline</h3>
+            <h3 className="text-base font-semibold">History</h3>
           </div>
           <Button
             size="sm"
             variant="outline"
             onClick={() => setShowNoteForm(!showNoteForm)}
           >
-            <Plus className="h-3.5 w-3.5 mr-1" /> Append Evidence
+            <Plus className="h-3.5 w-3.5 mr-1" /> Add note
           </Button>
         </div>
 
