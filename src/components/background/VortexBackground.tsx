@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useAuthStore } from "@/store/useAuthStore";
 
 /**
  * Lightweight, Ultra-fast 2D Simplex Noise Implementation (Mulberry32 PRNG)
@@ -197,23 +198,27 @@ class FlowParticle {
 export function VortexBackground() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { theme } = useTheme();
+  const { isAuthenticated } = useAuthStore();
   const isDark = theme === "dark";
 
   useEffect(() => {
+    // Only animate on the public landing page/auth gate; never distract inside the app
+    if (isAuthenticated) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
 
-    // Vortex Preset Parameters tuned for Decision Replay
+    // Subtle, elegant Vortex Parameters for the Landing Page
     const config = {
       seed: 1407,
-      density: 2000,
-      speed: 1.6,
-      noiseScale: 0.0036,
-      mouseRadius: 160,
-      strokeWidth: 1.05,
+      density: 1500,
+      speed: 1.2,
+      noiseScale: 0.0032,
+      mouseRadius: 150,
+      strokeWidth: 0.85,
     };
 
     // Check prefers-reduced-motion
@@ -221,7 +226,7 @@ export function VortexBackground() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) {
-      config.speed = 0.3;
+      config.speed = 0.25;
     }
 
     const simplex = createSimplexNoise(config.seed);
@@ -239,7 +244,7 @@ export function VortexBackground() {
       active: false,
     };
 
-    // Color definitions for light and dark themes
+    // Color definitions for light and dark themes (delicate & non-intrusive)
     const getColors = (): {
       trailFill: string;
       solidFill: string;
@@ -247,22 +252,22 @@ export function VortexBackground() {
     } => {
       if (isDark) {
         return {
-          trailFill: "rgba(18, 12, 22, 0.08)", // Fading trail velvet obsidian
+          trailFill: "rgba(18, 12, 22, 0.06)", // Soft fading trail
           solidFill: "#120C16",
           strokes: [
-            "rgba(34, 197, 94, 0.30)", // Spring Green
-            "rgba(216, 140, 212, 0.25)", // Luminous Orchid Plum
-            "rgba(250, 245, 232, 0.18)", // Soft Cream
+            "rgba(34, 197, 94, 0.16)", // Delicate Spring Green
+            "rgba(216, 140, 212, 0.14)", // Soft Orchid Plum
+            "rgba(250, 245, 232, 0.10)", // Subtle Cream
           ],
         };
       } else {
         return {
-          trailFill: "rgba(250, 246, 237, 0.08)", // Fading trail butter cream
+          trailFill: "rgba(250, 246, 237, 0.06)",
           solidFill: "#FAF6ED",
           strokes: [
-            "rgba(49, 20, 48, 0.20)", // Deep Velvet Plum
-            "rgba(16, 149, 80, 0.24)", // Emerald Green
-            "rgba(107, 88, 106, 0.15)", // Warm Muted Plum
+            "rgba(49, 20, 48, 0.12)", // Soft Velvet Plum
+            "rgba(16, 149, 80, 0.14)", // Gentle Emerald
+            "rgba(107, 88, 106, 0.09)", // Warm Muted Plum
           ],
         };
       }
@@ -394,7 +399,11 @@ export function VortexBackground() {
       window.removeEventListener("touchend", onTouchEnd);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [isDark]);
+  }, [isDark, isAuthenticated]);
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div
