@@ -14,6 +14,7 @@ import { GoogleOAuthListener } from "@/components/auth/GoogleOAuthListener";
 const displayFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-display",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -47,7 +48,7 @@ export default function RootLayout({
         {/* Official Google Identity Services SDK */}
         <Script
           src="https://accounts.google.com/gsi/client"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
         <ThemeProvider>
           {/* Subtle Ambient Lighting */}
