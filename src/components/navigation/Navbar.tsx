@@ -174,11 +174,10 @@ export function Navbar() {
 
       {/* ========================================================================= */}
       {/* VERTICAL RIGHT-SIDE FLOATING DOCK (md: & Wide Screens)                    */}
-      {/* Seamless unified container that expands width-wise on hover               */}
+      {/* Seamless unified container with locked height (no lag/jitter on expand)   */}
       {/* ========================================================================= */}
       <motion.nav
         aria-label="Application navigation dock"
-        layout
         initial={false}
         animate={{ width: dockExpanded ? 220 : 54 }}
         transition={{ type: "spring", stiffness: 420, damping: 30 }}
@@ -189,10 +188,10 @@ export function Navbar() {
             setHoveredRow(null);
           }
         }}
-        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-center gap-2 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none"
+        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-center p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none h-[260px]"
       >
         {/* Top Navigation Links (Only when authenticated) */}
-        <div className="w-full flex flex-col gap-1.5 items-center">
+        <div className="w-full flex flex-col gap-2 items-center">
           {isAuthenticated &&
             navLinks.map((link) => {
               const isActive =
