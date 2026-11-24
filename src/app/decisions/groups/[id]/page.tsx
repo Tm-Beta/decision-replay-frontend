@@ -38,7 +38,7 @@ type Node = {
   summary: string;
   planned: boolean;
 };
-type Action = "editDecision" | "deleteDecision" | "plan" | "change" | "rename" | "delete" | "archive" | null;
+type Action = "editPlan" | "deletePlan" | "editDecision" | "deleteDecision" | "plan" | "change" | "rename" | "delete" | "archive" | null;
 
 function Workspace({ id }: { id: string }) {
   const endpoint = "/groups/" + id;
@@ -176,6 +176,10 @@ function Workspace({ id }: { id: string }) {
             {entry && <button onClick={() => open("change", entry.id)}>Add a progress note</button>}
             {entry && <button onClick={() => open("plan", n.id)}>Plan a possible next step</button>}
             {plan && plan.status === "OPEN" && !entry && plannedParent && <button onClick={() => startWorksheet(plannedParent, plan)}>Record this decision</button>}
+            {plan && !entry && <>
+              <button onClick={() => open("editPlan", plan.id)}>Edit plan</button>
+              <button onClick={() => open("deletePlan", plan.id)}>Delete plan</button>
+            </>}
             {plan && !entry && <select aria-label={"Status of " + plan.title} value={plan.status} onChange={async e => { try { await apiClient(endpoint + "/plans/" + plan.id, {method:"PATCH",body:JSON.stringify({status:e.target.value})}); setGroup(await apiClient<Group>(endpoint)); } catch(err) { setError((err as Error).message); } }}><option value="OPEN">Open</option><option value="DEFERRED">Deferred</option><option value="DROPPED">Dropped</option></select>}
             {descendants && <button onClick={() => setFoldOverrides(prev => ({...prev, [n.id]: !folded}))}>{folded ? "Show branches" : "Hide branches"}</button>}
           </div>}
@@ -383,6 +387,11 @@ function Workspace({ id }: { id: string }) {
               const data = new FormData(e.currentTarget);
               const value = (k: string) => String(data.get(k) || "").trim();
               try {
+                if (action === "editPlan") await apiClient(endpoint + "/plans/" + selected, {
+                  method: "PATCH",
+                  body: JSON.stringify({ title: value("name"), expectedOutcome: value("detail") }),
+                });
+                if (action === "deletePlan") await apiClient(endpoint + "/plans/" + selected, { method: "DELETE" });
                 if(action === "editDecision") await apiClient("/decisions/"+selected+"/details",{method:"PATCH",body:JSON.stringify({title:value("name"),choice:value("choice"),expectedOutcome:value("expectedOutcome"),decisionReason:value("decisionReason"),beliefRationale:value("beliefRationale"),confidence:value("confidence") ? Number(value("confidence")) : null,reviewDate:value("reviewDate") ? new Date(value("reviewDate")).toISOString() : null})});
                 if(action === "deleteDecision") await apiClient("/decisions/"+selected,{method:"DELETE"});
                 if (action === "delete") {
@@ -427,6 +436,8 @@ function Workspace({ id }: { id: string }) {
             <h2>
               {
                 {
+                  editPlan: "Edit plan",
+                  deletePlan: "Delete plan?",
                   editDecision: "Edit decision",
                   deleteDecision: "Delete decision?",
                   plan: "Plan a branch",
@@ -481,6 +492,13 @@ function Workspace({ id }: { id: string }) {
                 )}
               </div>
             )}
+            {action === "editPlan" && <>
+              <label>Planned step<input name="name" required defaultValue={plans.find(p => p.id === selected)?.title} /></label>
+              <label>Expected outcome<textarea name="detail" required defaultValue={plans.find(p => p.id === selected)?.expectedOutcome} /></label>
+            </>}
+            {action === "deletePlan" && <p>
+              This permanently deletes this plan.{plans.some(p => p.parentPlanId === selected) && " Its follow-up plans will move to its starting point."}
+            </p>}
             {action === "deleteDecision" && <p>This permanently deletes this decision and its outcome and notes. Its next decisions will connect to {byId.get(selected)?.parentId ? "its parent decision" : "the group as independent starting decisions"}.</p>}
             {action === "delete" && (
               <p>
@@ -498,7 +516,7 @@ function Workspace({ id }: { id: string }) {
                   busy
                 }
               >
-                {action === "deleteDecision" ? "Delete decision" : action === "delete"
+                {action === "deletePlan" ? "Delete plan" : action === "deleteDecision" ? "Delete decision" : action === "delete"
                   ? "Delete group"
                   : action === "archive"
                   ? "Archive group"
