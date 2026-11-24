@@ -9,40 +9,6 @@ export interface UserProfile {
   avatar?: string | null;
 }
 
-export interface GoogleAccountOption {
-  name: string;
-  email: string;
-  role: string;
-  avatar: string;
-}
-
-export const GOOGLE_TEAM_ACCOUNTS: GoogleAccountOption[] = [
-  {
-    name: "Chamath Adithya",
-    email: "achamath1@gmail.com",
-    role: "Team Lead & System Architect",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Chamath%20Adithya",
-  },
-  {
-    name: "Dilu Gamage",
-    email: "diluimasha13@gmail.com",
-    role: "Frontend Engineer (Member B)",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Dilu%20Gamage",
-  },
-  {
-    name: "Divyanjali Kawshalya",
-    email: "divyanjalimeethalawa@gmail.com",
-    role: "Backend Engines Lead (Member C)",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Divyanjali%20Kawshalya",
-  },
-  {
-    name: "HJSR Sewwandi",
-    email: "ict24929@fot.sjp.ac.lk",
-    role: "Analytics & Services (Member D)",
-    avatar: "https://api.dicebear.com/7.x/initials/svg?seed=HJSR%20Sewwandi",
-  },
-];
-
 interface AuthState {
   user: UserProfile | null;
   token: string | null;
@@ -54,8 +20,9 @@ interface AuthState {
 
   // Actions
   setHasHydrated: (state: boolean) => void;
-  loginWithGoogle: (data?: { email: string; name: string; avatar?: string; credential?: string }) => Promise<{ isNewUser: boolean }>;
+  loginWithGoogleAccessToken: (accessToken: string) => Promise<{ isNewUser: boolean }>;
   loginWithGoogleCredential: (credential: string) => Promise<{ isNewUser: boolean }>;
+  loginWithGoogle: (data: { email: string; name: string; avatar?: string }) => Promise<{ isNewUser: boolean }>;
   logout: () => void;
   openAuthModal: () => void;
   closeAuthModal: () => void;
@@ -77,20 +44,14 @@ export const useAuthStore = create<AuthState>()(
 
       setHasHydrated: (state: boolean) => set({ isHydrated: state }),
 
-      loginWithGoogle: async (data) => {
-        const payload = data || {
-          email: GOOGLE_TEAM_ACCOUNTS[0].email,
-          name: GOOGLE_TEAM_ACCOUNTS[0].name,
-          avatar: GOOGLE_TEAM_ACCOUNTS[0].avatar,
-        };
-
+      loginWithGoogleAccessToken: async (accessToken: string) => {
         try {
           const res = await apiClient<{
             status: string;
             data: { user: UserProfile; token: string; isNewUser: boolean };
           }>("/auth/google", {
             method: "POST",
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ accessToken }),
           });
 
           const { user, token, isNewUser } = res.data;
@@ -100,13 +61,12 @@ export const useAuthStore = create<AuthState>()(
             token,
             isAuthenticated: true,
             showAuthModal: false,
-            // If new user or hasn't completed tour yet, launch tour
             showTourModal: isNewUser || !get().hasSeenTour,
           });
 
           return { isNewUser };
         } catch (error) {
-          console.error("Google authentication failed:", error);
+          console.error("Google access token login failed:", error);
           throw error;
         }
       },
@@ -134,6 +94,33 @@ export const useAuthStore = create<AuthState>()(
           return { isNewUser };
         } catch (error) {
           console.error("Google credential login failed:", error);
+          throw error;
+        }
+      },
+
+      loginWithGoogle: async (data: { email: string; name: string; avatar?: string }) => {
+        try {
+          const res = await apiClient<{
+            status: string;
+            data: { user: UserProfile; token: string; isNewUser: boolean };
+          }>("/auth/google", {
+            method: "POST",
+            body: JSON.stringify(data),
+          });
+
+          const { user, token, isNewUser } = res.data;
+
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+            showAuthModal: false,
+            showTourModal: isNewUser || !get().hasSeenTour,
+          });
+
+          return { isNewUser };
+        } catch (error) {
+          console.error("Google authentication failed:", error);
           throw error;
         }
       },

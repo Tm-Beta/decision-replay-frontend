@@ -9,6 +9,7 @@ import { Navbar } from "@/components/navigation/Navbar";
 import { MobileNav } from "@/components/navigation/MobileNav";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { WelcomeTourModal } from "@/components/onboarding/WelcomeTourModal";
+import { GoogleOAuthListener } from "@/components/auth/GoogleOAuthListener";
 
 const displayFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -72,6 +73,7 @@ export default function RootLayout({
             <MobileNav />
 
             {/* Authentication & Onboarding Modals */}
+            <GoogleOAuthListener />
             <AuthModal />
             <WelcomeTourModal />
           </div>

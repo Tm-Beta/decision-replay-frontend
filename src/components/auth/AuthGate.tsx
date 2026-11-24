@@ -1,42 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import { useAuthStore, GOOGLE_TEAM_ACCOUNTS, GoogleAccountOption } from "@/store/useAuthStore";
+import React from "react";
 import { motion } from "framer-motion";
-import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
-import { Button } from "@/components/ui/button";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import {
   ShieldCheck,
   Lock,
-  ArrowRight,
   Fingerprint,
   TrendingUp,
   BrainCircuit,
 } from "lucide-react";
 
 export function AuthGate() {
-  const { loginWithGoogle } = useAuthStore();
-  const [loadingEmail, setLoadingEmail] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSignIn = async (account?: GoogleAccountOption) => {
-    const target = account || GOOGLE_TEAM_ACCOUNTS[0];
-    setLoadingEmail(target.email);
-    setError(null);
-    try {
-      await loginWithGoogle({
-        email: target.email,
-        name: target.name,
-        avatar: target.avatar,
-      });
-    } catch {
-      setError("Unable to authenticate with Google. Ensure backend service is reachable on port 4000.");
-    } finally {
-      setLoadingEmail(null);
-    }
-  };
-
   return (
     <div className="py-6 sm:py-12 space-y-12">
       {/* Hero Welcome Card */}
@@ -79,21 +54,14 @@ export function AuthGate() {
             Human retrospect edits past memory to fit what happened. Decision Replay locks your explicit reasoning into a cryptographic SHA-256 snapshot, so you discover your true prediction accuracy without hindsight bias.
           </motion.p>
 
-          {error && (
-            <div className="p-3 rounded-2xl bg-destructive/10 border border-destructive/20 text-xs text-destructive max-w-md mx-auto">
-              {error}
-            </div>
-          )}
-
-          {/* Google Sign-in CTA Container */}
+          {/* Real Google Sign-in Action */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="pt-2 flex flex-col items-center gap-4"
+            className="pt-4 flex flex-col items-center gap-4"
           >
-            {/* Real Google Auth Button with GIS SDK & One Tap */}
-            <GoogleAuthButton />
+            <GoogleAuthButton size="large" />
 
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
@@ -105,17 +73,6 @@ export function AuthGate() {
                 <Lock className="h-3.5 w-3.5 text-primary" />
                 User-isolated encrypted database
               </span>
-            </div>
-
-            {/* Switch Account link */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => useAuthStore.getState().openAuthModal()}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors underline font-medium"
-              >
-                Sign in with another Google workspace account
-              </button>
             </div>
           </motion.div>
         </div>
@@ -165,4 +122,3 @@ export function AuthGate() {
     </div>
   );
 }
-

@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, HelpCircle, Shield, ChevronDown } from "lucide-react";
+import { launchGoogleSignIn } from "@/lib/googleAuth";
 
 export function UserMenu() {
   const router = useRouter();
-  const { user, isAuthenticated, isHydrated, logout, openAuthModal, openTourModal } = useAuthStore();
+  const { user, isAuthenticated, isHydrated, logout, openTourModal } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -35,8 +36,8 @@ export function UserMenu() {
       <motion.button
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.96 }}
-        onClick={openAuthModal}
-        className="flex items-center gap-2 h-9 px-3 rounded-xl border border-border/90 bg-card hover:bg-muted font-semibold text-xs text-foreground shadow-sm transition-colors"
+        onClick={() => launchGoogleSignIn()}
+        className="flex items-center gap-2 h-9 px-3.5 rounded-xl border border-border/90 bg-card hover:border-spring-500 hover:bg-muted font-semibold text-xs text-foreground shadow-sm transition-all cursor-pointer"
       >
         <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">
           <path
