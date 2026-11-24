@@ -174,3 +174,16 @@
  body:has(.branch-report,.decision-worksheet) :is(nav,footer,button,.branch-workspace>a,.branch-report a),body:has(.branch-report,.decision-worksheet) [class*="fixed"] {display:none!important}
  .branch-workspace,.branch-report {display:block}.branch-report article {break-inside:avoid;margin:1em 0}.branch-report p,.branch-report small {color:#333}
 }
+.tree-canvas-head {display:flex;align-items:center;justify-content:space-between;font-weight:700;gap:1rem}
+.tree-fullscreen {position:fixed;inset:0;z-index:70;overflow:auto;border-radius:0;background-color:hsl(var(--background))}
+.tree-node {position:relative;min-height:6rem;box-shadow:0 8px 28px #0002;transition:transform .2s,border-color .2s}
+.tree-node:hover,.tree-node:focus-within {transform:translateY(-4px)}
+.tree-node.waiting {border-top-color:#f2b858}.tree-node.done {border-top-color:#36d99b}.tree-node.planned {border-top-color:#b98cff}
+.tree-node-title {text-align:left;font-size:1rem!important;padding:0!important;overflow-wrap:anywhere}
+.tree-node small {font-size:.73rem}
+.tree-add {position:absolute;top:-1rem;right:-.8rem;width:2.3rem;height:2.3rem;display:grid;place-items:center;border-radius:50%!important;background:#63e2af;color:#142719;font-size:1.5rem!important;line-height:1;padding:0!important;opacity:.3;transform:scale(.8);transition:opacity .2s,transform .2s}
+.tree-node:hover .tree-add,.tree-node:focus-within .tree-add {opacity:1;transform:scale(1)}
+.tree-details {display:grid;gap:.5rem;padding-top:.6rem;border-top:1px solid hsl(var(--border));font-size:.8rem}.tree-details button,.tree-details a {text-align:left;padding:.35rem!important;color:hsl(var(--primary))}
+.report-stats {display:flex;flex-wrap:wrap;gap:.7rem;width:100%}.report-stats div {flex:1 1 8rem;padding:1rem;border-radius:1rem;background:hsl(var(--secondary));display:grid}.report-stats strong {font-size:1.7rem;color:hsl(var(--primary))}.report-stats span {font-size:.75rem}
+.report-bar {width:100%;height:.7rem;background:hsl(var(--secondary));border-radius:1rem;overflow:hidden}.report-bar span {display:block;background:hsl(var(--accent));height:100%}
+@media (hover:none) {.tree-add {opacity:1;transform:none}}

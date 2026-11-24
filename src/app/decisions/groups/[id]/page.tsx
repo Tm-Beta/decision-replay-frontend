@@ -50,6 +50,10 @@ function Workspace({ id }: { id: string }) {
   const [foldOverrides, setFoldOverrides] = useState<Record<string, boolean>>(
     {},
   );
+  const [activeNode, setActiveNode] = useState<string | null>(null);
+  const [fullScreen, setFullScreen] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
 
@@ -149,87 +153,22 @@ function Workspace({ id }: { id: string }) {
         {descendants && !folded && (
           <ul>{descendants.map((child) => renderNode(child, depth + 1))}</ul>
         )}
-        <article>
-          <small>
-            {entry ? (
-              entry.outcome ? (
-                <span style={{ color: "hsl(var(--accent))", fontWeight: 600 }}>● Outcome recorded</span>
-              ) : (
-                <span style={{ color: "#f59e0b", fontWeight: 600 }}>◐ Awaiting outcome</span>
-              )
-            ) : (
-              <span style={{ color: "#a855f7", fontWeight: 600 }}>
-                ○ Planned{plan?.status && plan.status !== "OPEN" ? ` · ${plan.status.toLowerCase()}` : ""}
-              </span>
-            )}
-          </small>
-          <h3>
-            {entry ? (
-              <Link href={"/decisions/" + entry.id}>{n.title}</Link>
-            ) : (
-              n.title
-            )}
-          </h3>
-          <p>{n.summary}</p>
-          {!planned && entry && entry.events.length > 0 && (
-            <small>
-              Latest update ·{" "}
-              {entry.events[entry.events.length - 1].detail}
-            </small>
-          )}
-          <div className="node-actions">
-            {descendants && (
-              <button
-                onClick={() =>
-                  setFoldOverrides((prev) => ({ ...prev, [n.id]: !folded }))
-                }
-              >
-                {folded ? "Show branches" : "Fold branches"}
-              </button>
-            )}
-            {entry && (
-              <button onClick={() => startWorksheet(entry.id)}>
-                + Decision
-              </button>
-            )}
-            {plan && plan.status === "OPEN" && !entry && plannedParent && (
-              <button onClick={() => startWorksheet(plannedParent, plan)}>
-                Take this step
-              </button>
-            )}
-            <button onClick={() => open("plan", n.id)}>+ Plan</button>
-            {plan && !entry && (
-              <select
-                aria-label={"Status of " + plan.title}
-                value={plan.status}
-                onChange={async (e) => {
-                  try {
-                    await apiClient(endpoint + "/plans/" + plan.id, {
-                      method: "PATCH",
-                      body: JSON.stringify({ status: e.target.value }),
-                    });
-                    setGroup(await apiClient<Group>(endpoint));
-                  } catch (err) {
-                    setError((err as Error).message);
-                  }
-                }}
-              >
-                <option value="OPEN">Open</option>
-                <option value="DEFERRED">Deferred</option>
-                <option value="DROPPED">Dropped</option>
-              </select>
-            )}
-            {entry && !entry.outcome && (
-              <Link href={"/decisions/" + entry.id + "/replay"}>
-                Record outcome
-              </Link>
-            )}
-            {entry && (
-              <button onClick={() => open("change", entry.id)}>
-                Add update
-              </button>
-            )}
-          </div>
+        <article className={"tree-node " + (entry?.outcome ? "done" : n.planned ? "planned" : "waiting")}>
+          <button className="tree-node-title" onClick={() => setActiveNode(activeNode === n.id ? null : n.id)} aria-expanded={activeNode === n.id}>{n.title}</button>
+          {entry && !entry.outcome && <small>{entry.nextReminder || entry.reviewDate ? (() => { const minutes = Math.ceil((new Date(entry.nextReminder || entry.reviewDate!).getTime() - now) / 60000); return minutes <= 0 ? "Outcome due" : minutes < 60 ? `Due in ${minutes} min` : minutes < 1440 ? `Due in ${Math.ceil(minutes / 60)} hr` : `Due in ${Math.ceil(minutes / 1440)} days`; })() : "Awaiting outcome · no reminder"}</small>}
+          {entry?.outcome && <small>Outcome recorded</small>}
+          {plan && !entry && <small>Planned · {plan.status.toLowerCase()}</small>}
+          <button className="tree-add" aria-label={planned ? "Plan a next step from " + n.title : "Add a decision after " + n.title} onClick={() => planned ? open("plan", n.id) : entry && startWorksheet(entry.id)}>+</button>
+          {activeNode === n.id && <div className="tree-details">
+            <p>{n.summary || "No details recorded yet."}</p>
+            {entry && <Link href={"/decisions/" + entry.id}>Open worksheet</Link>}
+            {entry && !entry.outcome && <Link href={"/decisions/" + entry.id + "/replay"}>Record what happened</Link>}
+            {entry && <button onClick={() => open("change", entry.id)}>Add a progress note</button>}
+            {entry && <button onClick={() => open("plan", n.id)}>Plan a possible next step</button>}
+            {plan && plan.status === "OPEN" && !entry && plannedParent && <button onClick={() => startWorksheet(plannedParent, plan)}>Record this decision</button>}
+            {plan && !entry && <select aria-label={"Status of " + plan.title} value={plan.status} onChange={async e => { try { await apiClient(endpoint + "/plans/" + plan.id, {method:"PATCH",body:JSON.stringify({status:e.target.value})}); setGroup(await apiClient<Group>(endpoint)); } catch(err) { setError((err as Error).message); } }}><option value="OPEN">Open</option><option value="DEFERRED">Deferred</option><option value="DROPPED">Dropped</option></select>}
+            {descendants && <button onClick={() => setFoldOverrides(prev => ({...prev, [n.id]: !folded}))}>{folded ? "Show branches" : "Hide branches"}</button>}
+          </div>}
         </article>
       </li>
     );
@@ -300,7 +239,7 @@ function Workspace({ id }: { id: string }) {
       ) : view === "Report" ? (
         <section className="branch-report">
           <div className="branch-tools">
-            <h2>Group report</h2>
+            <h2>Group report</h2><div className="report-stats"><div><strong>{decisions.length}</strong><span>Decisions</span></div><div><strong>{decisions.filter(d => d.outcome).length}</strong><span>Outcomes recorded</span></div><div><strong>{decisions.filter(d => !d.outcome).length}</strong><span>Awaiting outcome</span></div><div><strong>{plans.filter(p => p.status === "OPEN" && !recorded.has(p.id)).length}</strong><span>Open plans</span></div></div><div className="report-bar" role="img" aria-label={`${decisions.filter(d => d.outcome).length} of ${decisions.length} outcomes recorded`}><span style={{width: decisions.length ? `${100 * decisions.filter(d => d.outcome).length / decisions.length}%` : "0%"}} /></div>
             <button onClick={() => window.print()}>Print / save PDF</button>
           </div>
           {decisions.map((d) => (
@@ -387,7 +326,8 @@ function Workspace({ id }: { id: string }) {
           )}
         </section>
       ) : (
-        <section className="tree-canvas">
+        <section className={"tree-canvas " + (fullScreen ? "tree-fullscreen" : "")}>
+          <div className="tree-canvas-head"><span>{planned ? "Your possible next steps" : "Your decisions"}</span><button onClick={() => setFullScreen(!fullScreen)}>{fullScreen ? "Exit full screen" : "Full screen"}</button></div>
           {nodes.length ? (
             <>
               <p>
