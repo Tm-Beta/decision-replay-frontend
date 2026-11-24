@@ -10,11 +10,11 @@ export function findWelcomeRoute(
   obstacles: DOMRect[],
   previous: Point | undefined,
   visited: Point[],
-  sprintPast: DOMRect[] = [],
+  stopObstacles: DOMRect[] = [],
 ): Point[] {
   const right = viewport.width - guide.width - gap;
   const bottom = viewport.height - guide.height - gap;
-  const topLimit = Math.max(gap, Math.min(Math.round(viewport.height * .6), bottom));
+  const topLimit = gap;
   const isClear = ({ x, y }: Point) =>
     x >= gap && y >= topLimit && x <= right && y <= bottom &&
     obstacles.every(box =>
@@ -36,10 +36,43 @@ export function findWelcomeRoute(
     return Math.round(x) + ":" + Math.round(y);
   }
 
-  const available = [...points.values()];
+  const canStop = (point: Point) => stopObstacles.every(box =>
+    point.x + guide.width + gap <= box.left || point.x - gap >= box.right ||
+    point.y + guide.height + gap <= box.top || point.y - gap >= box.bottom,
+  );
+  const available = [...points.values()].filter(canStop);
   if (!available.length) return [];
   if (!previous || !isClear(previous)) {
     return [available[Math.floor(Math.random() * available.length)]];
+  }
+
+  const clearSegment = (from: Point, to: Point) => obstacles.every(box =>
+    Math.min(from.x, to.x) - gap >= box.right ||
+    Math.max(from.x, to.x) + guide.width + gap <= box.left ||
+    Math.min(from.y, to.y) - gap >= box.bottom ||
+    Math.max(from.y, to.y) + guide.height + gap <= box.top,
+  );
+  const freshStops = available.filter(point =>
+    Math.hypot(point.x - previous.x, point.y - previous.y) > spacing * 4 &&
+    visited.every(stop => Math.hypot(point.x - stop.x, point.y - stop.y) > spacing * 2),
+  );
+
+  // Prefer a single soft arc when it fits, then use the grid around controls.
+  for (let attempt = 0; attempt < 12 && freshStops.length; attempt++) {
+    const end = freshStops[Math.floor(Math.random() * freshStops.length)];
+    const dx = end.x - previous.x;
+    const dy = end.y - previous.y;
+    const bend = (Math.random() < .5 ? -1 : 1) * .18;
+    const control = { x: previous.x + dx / 2 - dy * bend, y: previous.y + dy / 2 + dx * bend };
+    const arc = Array.from({ length: 17 }, (_, index) => {
+      const t = index / 16;
+      const u = 1 - t;
+      return {
+        x: u * u * previous.x + 2 * u * t * control.x + t * t * end.x,
+        y: u * u * previous.y + 2 * u * t * control.y + t * t * end.y,
+      };
+    });
+    if (arc.every((point, index) => isClear(point) && (!index || clearSegment(arc[index - 1], point)))) return arc;
   }
 
   const queue = [previous];
@@ -54,14 +87,7 @@ export function findWelcomeRoute(
     for (const [dx, dy] of directions) {
       const next = points.get(key({ x: point.x + dx * spacing, y: point.y + dy * spacing }));
       if (!next || parents.has(key(next))) continue;
-      const left = Math.min(point.x, next.x);
-      const top = Math.min(point.y, next.y);
-      const rightEdge = Math.max(point.x, next.x) + guide.width;
-      const bottomEdge = Math.max(point.y, next.y) + guide.height;
-      if (obstacles.some(box =>
-        left - gap < box.right && rightEdge + gap > box.left &&
-        top - gap < box.bottom && bottomEdge + gap > box.top,
-      )) continue;
+      if (!clearSegment(point, next)) continue;
       parents.set(key(next), point);
       queue.push(next);
     }
@@ -72,17 +98,10 @@ export function findWelcomeRoute(
     Math.abs(point.y - previous.y) >= spacing * 2 &&
     visited.every(stop => Math.hypot(point.x - stop.x, point.y - stop.y) > spacing * 2),
   );
-  const candidates = sprintPast.length
-    ? queue.slice(1).filter(point => {
-        const leftSide = previous.x < viewport.width / 2;
-        const oppositeSide = leftSide ? point.x > viewport.width * .64 : point.x < viewport.width * .32;
-        return oppositeSide && sprintPast.every(box =>
-          point.x + guide.width + gap <= box.left || point.x - gap >= box.right ||
-          point.y + guide.height + gap <= box.top || point.y - gap >= box.bottom,
-        );
-      })
-    : destinations.length ? destinations : queue.slice(1);
-  let point: Point | null = candidates[Math.floor(Math.random() * candidates.length)] ?? previous;
+  const candidates = (destinations.length ? destinations : queue.slice(1)).filter(canStop);
+  const fallback = queue.slice(1).filter(canStop);
+  const stops = candidates.length ? candidates : fallback;
+  let point: Point | null = stops[Math.floor(Math.random() * stops.length)] ?? (canStop(previous) ? previous : null);
   const route: Point[] = [];
   while (point) {
     route.push(point);

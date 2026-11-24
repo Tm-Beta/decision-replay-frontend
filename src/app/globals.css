@@ -645,3 +645,13 @@ body:has(.dna-workspace)>div main{padding-top:6rem}
   .signin-feature-2 { grid-area:after; align-self:end; }
   .signin-feature-3 { grid-area:next; align-self:start; }
 }
+
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference) {
+  .signin-feature { animation:signin-card-float 9s ease-in-out infinite; }
+  .signin-feature-2 { animation-delay:-3s; }
+  .signin-feature-3 { animation-delay:-6s; }
+}
+@keyframes signin-card-float {
+  0%,100% { translate:0 0; }
+  50% { translate:0 -5px; }
+}

@@ -64,17 +64,16 @@ export function WelcomeSprout() {
         .filter(node => node.getClientRects().length > 0)
         .map(node => node.getBoundingClientRect());
       const controls = visibleBounds("header, footer, button, a, [data-google-welcome]");
-      const cards = visibleBounds("[data-sprout-obstacle]");
+      const cards = visibleBounds("[data-sprout-obstacle]").map(box =>
+        new DOMRect(box.x, box.y - 5, box.width, box.height + 10),
+      );
       const viewport = { width: document.documentElement.clientWidth, height: window.innerHeight };
       const size = { width: element.offsetWidth, height: element.offsetHeight };
-      const dash = position && (current === 2 || Math.random() < .24)
-        ? findWelcomeRoute(viewport, size, controls, position, recent, cards)
-        : [];
-      const sprint = dash.length > 1 && dash.some(point => cards.some(card =>
+      const route = findWelcomeRoute(viewport, size, controls, position, recent, cards);
+      const sprint = route.length > 1 && route.some(point => cards.some(card =>
         point.x < card.right && point.x + size.width > card.left &&
         point.y < card.bottom && point.y + size.height > card.top,
       ));
-      const route = sprint ? dash : findWelcomeRoute(viewport, size, [...cards, ...controls], position, recent);
       const destination = route.at(-1);
       element.style.visibility = destination ? "visible" : "hidden";
       if (!destination) {
@@ -103,17 +102,16 @@ export function WelcomeSprout() {
 
       element.dataset.walking = "true";
       element.dataset.sprint = String(sprint);
-      walking = element.animate(route.map((point, index) => {
-        const previousPoint = route[index - 1];
-        const nextPoint = route[index + 1];
-        const changesDirection = previousPoint && nextPoint &&
-          (point.x - previousPoint.x !== nextPoint.x - point.x ||
-           point.y - previousPoint.y !== nextPoint.y - point.y);
-        return { transform: transform(point), easing: changesDirection ? "ease-out" : "linear" };
-      }), {
-        duration: sprint ? Math.max(1100, (route.length - 1) * 48) : Math.max(1050, (route.length - 1) * 83),
-        easing: "ease-in-out",
+      let distance = 0;
+      const frames = route.map((point, index) => {
+        const previous = route[index - 1];
+        if (previous) distance += Math.hypot(point.x - previous.x, point.y - previous.y);
+        return { transform: transform(point), distance };
       });
+      walking = element.animate(
+        frames.map(frame => ({ transform: frame.transform, offset: frame.distance / distance })),
+        { duration: Math.max(1100, distance * (sprint ? 4.2 : 5.4)), easing: "ease-in-out" },
+      );
       walking.onfinish = arrive;
     }
 
