@@ -4,7 +4,6 @@
 //Provides a quick inline form to append new evidence notes.
 
 "use client";
-import { formatReminder } from "@/lib/utils";
 
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -61,34 +60,34 @@ export function SnapshotTimeline({ decision, onEventAdded }: SnapshotTimelinePro
         <CardHeader className="pb-4">
           <CardTitle className="text-xl sm:text-2xl mt-2">{decision.title}</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Recorded {formatDate(decision.lockedAt || decision.createdAt)} • Review date:{" "}
-            {formatReminder(decision.reviewDate)} • {originalConfidence==null?"Unspecified":originalConfidence+"%"} confidence
+            Recorded {formatDate(decision.lockedAt || decision.createdAt)}
+            {originalConfidence != null && ` · ${originalConfidence}% confidence`}
           </p>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+        {(originalChoice !== decision.title || originalReason || decision.context || originalExpectedOutcome) && <CardContent className="space-y-4">
+          {originalChoice !== decision.title && <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-primary block mb-1">
               Decision
             </span>
             <p className="text-sm font-medium leading-relaxed">{originalChoice}</p>
-          </div>
+          </div>}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div>
+            {(originalReason || decision.context) && <div>
               <span className="font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                 Reason
               </span>
               <p className="leading-relaxed text-foreground/80">{originalReason || decision.context}</p>
-            </div>
-            <div>
+            </div>}
+            {originalExpectedOutcome && <div>
               <span className="font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                 Expected outcome
               </span>
               <p className="leading-relaxed text-foreground/80">{originalExpectedOutcome || "Not recorded"}</p>
-            </div>
+            </div>}
           </div>
-        </CardContent>
+        </CardContent>}
       </Card>
 
       {/* History Section */}

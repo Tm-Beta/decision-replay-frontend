@@ -1,4 +1,6 @@
 "use client";
+import { BackLink } from "@/components/navigation/BackLink";
+import { FloatingDetails, JournalArt } from "@/components/illustrations/JournalArt";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,11 +15,16 @@ export function ReviewAlerts() {
     [error, setError] = useState("");
   const [available, setAvailable] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const isInbox = path === "/notifications";
+  const [loaded, setLoaded] = useState(false);
   const [notificationError, setNotificationError] = useState("");
   useEffect(() => {
     const supported = window.isSecureContext && "Notification" in window && "serviceWorker" in navigator;
     setAvailable(supported);
-    setEnabled(supported && Notification.permission === "granted");
+    const syncPermission = () => setEnabled(supported && Notification.permission === "granted");
+    syncPermission();
+    window.addEventListener("focus", syncPermission);
+    return () => window.removeEventListener("focus", syncPermission);
   }, []);
   useEffect(() => {
     if (!user || !enabled || !rows.length) return;
@@ -46,6 +53,7 @@ export function ReviewAlerts() {
     let active = true,
       request = 0;
     setRows([]);
+    setLoaded(false);
     setError("");
     if (!user) return;
     async function refresh() {
@@ -54,6 +62,7 @@ export function ReviewAlerts() {
         const data = await apiClient<Due[]>("/decisions/due-reviews");
         if (active && current === request) {
           setRows(data);
+          setLoaded(true);
           setError("");
         }
       } catch {
@@ -64,21 +73,28 @@ export function ReviewAlerts() {
     void refresh();
     const interval = setInterval(refresh, 60000);
     window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
     window.addEventListener("reviews-changed", refresh);
     return () => {
       active = false;
       clearInterval(interval);
       window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
       window.removeEventListener("reviews-changed", refresh);
     };
   }, [user, path]);
-  if (!user || (!rows.length && !error && !(path === "/" && available && !enabled))) return null;
+  if (!user || (!isInbox && (path !== "/" || (!rows.length && !error)))) return null;
   return (
     <aside
-      className="branch-workspace review-alerts mb-4 print:hidden"
+      className="branch-workspace review-alerts mb-4 print:hidden illustrated-area"
       aria-label="Outcome reminders"
     >
-      {available && !enabled && <div className="branch-tools">
+      {isInbox && <FloatingDetails kind="notifications" />}
+      {isInbox && <BackLink href="/">Home</BackLink>}
+      {isInbox && <header className="collection-heading"><h1>Notifications</h1><JournalArt kind="notifications" reaction={rows.length ? "due" : "resting"} /></header>}
+      {isInbox && enabled && <p>Browser reminders are on. Keep Decision Replay open to receive them.</p>}
+      {isInbox && !available && <p>Browser reminders are unavailable here. Due reviews still appear below.</p>}
+      {isInbox && available && !enabled && <div className="branch-tools">
         <button type="button" className="inline-flex items-center gap-2" onClick={async () => {
           try {
             const permission = await Notification.requestPermission();
@@ -91,12 +107,13 @@ export function ReviewAlerts() {
       </div>}
       {notificationError && <p role="status">{notificationError}</p>}
       {error && <p role="status">{error}</p>}
-      {!!rows.length && (
-        <details className="review-alert-panel">
+      {(isInbox || !!rows.length) && (
+        <details className="review-alert-panel" open={isInbox || undefined}>
           <summary className="cursor-pointer font-semibold">
-            {rows.length} outcome{" "}
-            {rows.length === 1 ? "review is" : "reviews are"} due
+            {isInbox && !loaded ? "Outcome reviews" : <>{rows.length} outcome{" "}
+            {rows.length === 1 ? "review is" : "reviews are"} due</>}
           </summary>
+          {!rows.length && !error && <p className="mt-2 text-sm">{loaded ? "No reviews are due." : "Checking reminders…"}</p>}
           <ul className="review-alert-list">
           {rows.map((r) => (
             <li className="review-alert-row" key={r.id}>

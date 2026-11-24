@@ -1,4 +1,5 @@
 "use client";
+import { BackLink } from "@/components/navigation/BackLink";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -14,7 +15,7 @@ import { decisionService } from "@/services/decisionService";
 
 type Group = {
   name: string;
-  decisions: { id: string; title: string }[];
+  decisions: { id: string; title: string; parentId?: string | null }[];
   plans: {
     id: string;
     title: string;
@@ -34,10 +35,14 @@ function Worksheet() {
     router = useRouter(),
     d = useDecisionDraftStore();
   const user = useAuthStore((s) => s.user?.id);
+  const journalUrl = params.get("from") === "individual" ? "/decisions?view=individual" : "/decisions/ledger";
   const projectId = params.get("group"),
     parentId = (projectId && params.get("parent")) || undefined,
     planId = (projectId && params.get("plan")) || undefined;
+  const [placementKey, setPlacementKey] = useState<string>();
+  const [parentOverride, setParentOverride] = useState<{ key: string; id: string }>();
   const key = JSON.stringify([user, projectId, parentId, planId]);
+  const targetParent = parentOverride?.key === key ? parentOverride.id || undefined : parentId;
   const [group, setGroup] = useState<Group>(),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -90,7 +95,7 @@ function Worksheet() {
     try {
       await decisionService.createDecision({
         projectId: projectId ?? undefined,
-        parentId,
+        parentId: targetParent,
         planId: planId || d.selectedPlan || undefined,
         title: d.title.trim() || d.choice.trim().slice(0, 100),
         choice: d.choice.trim(),
@@ -109,22 +114,56 @@ function Worksheet() {
       });
       d.resetDraft();
       window.dispatchEvent(new Event("reviews-changed"));
-      router.push(projectId ? "/decisions/groups/" + projectId : "/decisions/ledger");
+      router.push(projectId ? "/decisions/groups/" + projectId : journalUrl);
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
     }
   }
+  const needsPlacement = Boolean(projectId && group.decisions.length);
+  if (needsPlacement && placementKey === key) {
+    const ids = new Set(group.decisions.map(decision => decision.id));
+    const branches = new Map<string | null, Group["decisions"]>();
+    for (const decision of group.decisions) {
+      const parent = decision.parentId && ids.has(decision.parentId) ? decision.parentId : null;
+      const siblings = branches.get(parent);
+      if (siblings) siblings.push(decision);
+      else branches.set(parent, [decision]);
+    }
+    function renderBranch(decision: Group["decisions"][number]): React.ReactNode {
+      const children = branches.get(decision.id);
+      return <li key={decision.id}>
+        {children && <ul>{children.map(renderBranch)}</ul>}
+        <button type="button" aria-pressed={targetParent === decision.id}
+          className="placement-node"
+          onClick={() => setParentOverride({ key, id: decision.id })}>{decision.title}</button>
+      </li>;
+    }
+
+    return <section className="branch-workspace">
+      <div className="branch-tools">
+        <BackLink disabled={busy} onClick={() => setPlacementKey(undefined)}>Decision details</BackLink>
+      </div>
+      <header><h1>Place in tree</h1><p>Choose the decision this follows.</p></header>
+      <div className="tree-canvas">
+        <div className="tree-scroll placement-scroll" tabIndex={0} aria-label="Choose a branch in the project tree">
+          <ul className="branch-tree">{branches.get(null)?.map(renderBranch)}</ul>
+        </div>
+      </div>
+      <div className="branch-tools">
+        <button type="button" aria-pressed={!targetParent}
+          onClick={() => setParentOverride({ key, id: "" })}>Start a separate branch</button>
+        <span aria-live="polite">{targetParent ? "After " + group.decisions.find(decision => decision.id === targetParent)?.title : "Separate branch"}</span>
+        <button type="button" className="branch-primary" disabled={busy} onClick={save}>{busy ? "Saving…" : "Save decision"}</button>
+      </div>
+      {error && <p role="alert">{error}</p>}
+    </section>;
+  }
   return (
     <section className="branch-workspace decision-simple">
-      <Link href={projectId ? "/decisions/groups/" + projectId : "/decisions/ledger"}>← {group.name}</Link>
+      <BackLink href={projectId ? "/decisions/groups/" + projectId : journalUrl}>{projectId ? group.name : "Journal"}</BackLink>
       <header>
         <h1>New decision</h1>
-        {parentId && (
-          <p>
-            Following {group.decisions.find((x) => x.id === parentId)?.title}
-          </p>
-        )}
       </header>
       <div className="branch-report">
         <label>
@@ -252,11 +291,11 @@ function Worksheet() {
                 </span>
               </label>
             )}
-            {group.decisions.some((x) => x.id !== parentId) && (
+            {group.decisions.some((x) => x.id !== targetParent) && (
               <details>
                 <summary>Other decisions that influenced this</summary>
                 {group.decisions
-                  .filter((x) => x.id !== parentId)
+                  .filter((x) => x.id !== targetParent)
                   .map((x) => (
                     <label key={x.id}>
                       <span>
@@ -300,9 +339,12 @@ function Worksheet() {
               (+d.confidenceText < 1 || +d.confidenceText > 100)
             )
           }
-          onClick={save}
+          onClick={() => {
+            if (needsPlacement) { setError(""); setPlacementKey(key); window.scrollTo(0, 0); }
+            else void save();
+          }}
         >
-          {busy ? "Saving…" : "Save decision"}
+          {busy ? "Saving…" : needsPlacement ? "Next →" : "Save decision"}
         </button>
       </div>
     </section>

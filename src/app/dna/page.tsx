@@ -1,6 +1,7 @@
 "use client";
 
-import { JournalArt } from "@/components/illustrations/JournalArt";
+import { BackLink } from "@/components/navigation/BackLink";
+import { FloatingDetails, JournalArt } from "@/components/illustrations/JournalArt";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUp, MessageCircle, Sparkles, FolderOpen, Award, ShieldAlert } from "lucide-react";
@@ -20,6 +21,7 @@ type Message = { id: string; role: "user" | "assistant"; content: string };
 type History = { messages: Message[]; remaining: number; limit: number };
 
 function ThinkingSpace() {
+  const [composerFocused, setComposerFocused] = useState(false);
   const [decisionId,setDecisionId]=useState<string>();
   useEffect(()=>{setDecisionId(new URLSearchParams(window.location.search).get("decision") || undefined)},[]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -99,17 +101,18 @@ function ThinkingSpace() {
         <div className="insights-chatbar">
           <span className="chat-credit-count">{remaining === null ? "—" : remaining} credits left today</span>
           <div className="chat-project-picker">
-            <button type="button" className="chat-project-trigger" disabled={sending} aria-expanded={projectMenu} aria-label="Choose project context" onClick={()=>setProjectMenu(!projectMenu)}><FolderOpen size={16}/>{projects.find(p=>p.id===project)?.name || (decisionId ? "Selected decision" : "All decisions")}<span>⌄</span></button>
-            {projectMenu && <div className="chat-project-menu"><button type="button" onClick={()=>{setDecisionId(undefined);setProject("");setProjectMenu(false)}}>All decisions {project===""?"✓":""}</button>{projects.map(p=><button key={p.id} type="button" onClick={()=>{setDecisionId(undefined);setProject(p.id);setProjectMenu(false)}}>{p.name}{project===p.id?" ✓":""}</button>)}{projects.length===0&&<Link href="/decisions">Create a project ↗</Link>}</div>}
+            <button type="button" className="chat-project-trigger" disabled={sending} aria-expanded={projectMenu} aria-label="Choose a collection" onClick={()=>setProjectMenu(!projectMenu)}><FolderOpen size={16}/>{projects.find(p=>p.id===project)?.name || (decisionId ? "Selected decision" : "All decisions")}<span>⌄</span></button>
+            {projectMenu && <div className="chat-project-menu"><button type="button" onClick={()=>{setDecisionId(undefined);setProject("");setProjectMenu(false)}}>All decisions {project===""?"✓":""}</button>{projects.map(p=><button key={p.id} type="button" onClick={()=>{setDecisionId(undefined);setProject(p.id);setProjectMenu(false)}}>{p.name}{project===p.id?" ✓":""}</button>)}{projects.length===0&&<Link href="/decisions">Create a collection ↗</Link>}</div>}
           </div>
         </div>
 
-        <div ref={scroll} className="insights-messages" aria-live="polite">
+        <div ref={scroll} className="insights-messages illustrated-area" aria-live="polite">
+          {!messages.length && <FloatingDetails kind="chat" />}
           {loading ? (
             <p className="insights-loading">Loading your conversation…</p>
           ) : messages.length === 0 ? (
             <div className="insights-empty">
-              <JournalArt kind="chat" />
+              <JournalArt kind="chat" reaction={composerFocused || text.trim() ? "listening" : "idle"} />
               <h2>What’s on your mind?</h2>
               
               <div className="insights-suggestions">
@@ -128,9 +131,7 @@ function ThinkingSpace() {
             messages.map((m) => (
               <div key={m.id} className={"insights-message " + m.role}>
                 {m.role === "assistant" && (
-                  <span className="insights-avatar">
-                    <Sparkles size={15} />
-                  </span>
+                  <JournalArt kind="chat" reaction="celebrating" compact />
                 )}
                 <div>
                   <span className="insights-message-label">
@@ -143,9 +144,7 @@ function ThinkingSpace() {
           )}
           {sending && (
             <div className="insights-message assistant">
-              <span className="insights-avatar">
-                <Sparkles size={15} />
-              </span>
+              <JournalArt kind="chat" reaction="thinking" compact />
               <div>
                 <span className="insights-message-label">REFLECTION</span>
                 <p>Thinking through your question…</p>
@@ -168,6 +167,8 @@ function ThinkingSpace() {
           >
             <textarea
               aria-label="Your message"
+              onFocus={() => setComposerFocused(true)}
+              onBlur={() => setComposerFocused(false)}
               placeholder="What's on your mind? (Press Enter to send)"
               rows={2}
               maxLength={4000}
@@ -188,8 +189,8 @@ function ThinkingSpace() {
             </button>
           </form>
           <p>
-            Uses the records in your selected projects to help you reflect.{" "}
-            <Link href="/decisions">Open your projects ↗</Link>
+            Uses the records in your selected collections to help you reflect.{" "}
+            <Link href="/decisions">Browse collections ↗</Link>
           </p>
         </div>
       </div>
@@ -247,7 +248,7 @@ function DnaProfileView() {
           </p>
         </div>
 
-        <JournalArt kind="insights" />
+        <JournalArt kind="insights" reaction={measured.length ? "celebrating" : "idle"} />
       </div>
 
       {loading && <p role="status">Loading your insights…</p>}
@@ -303,6 +304,7 @@ export default function Page() {
   return (
     <ProtectedGate>
       <div className={"dna-workspace " + (activeTab === "chat" ? "chat-mode" : "")}>
+      <BackLink href="/">Home</BackLink>
         {/* Navigation Mode Selector */}
         <div className="flex items-center gap-2 p-1 rounded-2xl bg-card border border-border/80 shadow-dock w-fit">
           <button

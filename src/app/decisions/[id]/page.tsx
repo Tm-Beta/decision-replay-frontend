@@ -6,6 +6,7 @@
 // ==============================================================================
 
 "use client";
+import { BackLink } from "@/components/navigation/BackLink";
 import { formatReminder } from "@/lib/utils";
 
 import React, { useEffect, useState } from "react";
@@ -66,14 +67,9 @@ export default function DecisionDetailPage() {
     <ProtectedGate>
       <div className="decision-worksheet space-y-6">
       {/* Top Navigation */}
-      <div className="flex items-center justify-between">
-        <Link href={decision.projectId ? "/decisions/groups/"+decision.projectId : "/decisions/ledger"}>
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> {decision.projectId ? "Group tree" : "Journal"}
-          </Button>
-        </Link>
-
-        <Link className="text-sm text-primary" href={"/dna?decision="+encodeURIComponent(decision.id)}>Ask AI</Link>
+      <div className="flex flex-wrap items-center gap-2">
+        <BackLink href={decision.projectId ? "/decisions/groups/" + decision.projectId : "/decisions?view=individual"}>{decision.projectId ? "Project tree" : "Individual decisions"}</BackLink>
+        <Link className="ml-auto rounded-xl px-3 py-2 text-sm font-semibold text-primary hover:bg-muted" href={"/dna?decision="+encodeURIComponent(decision.id)}>Ask AI</Link>
         <Button size="sm" variant="ghost" onClick={() => window.print()}>Print</Button>
         <Link href={`/decisions/${decision.id}/replay`}>
           <Button size="sm" variant={reviewDue || decision.outcome ? "default" : "outline"}>
