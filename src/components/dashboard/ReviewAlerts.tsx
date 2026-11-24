@@ -107,7 +107,7 @@ export function ReviewAlerts() {
       document.removeEventListener("visibilitychange", refresh);
       window.removeEventListener("reviews-changed", refresh);
     };
-  }, [user, path]);
+  }, [user]);
   if (!user || (!isInbox && (path !== "/" || (!rows.length && !error)))) return null;
   return (
     <aside
