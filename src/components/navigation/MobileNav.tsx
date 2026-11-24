@@ -143,7 +143,12 @@ export function MobileNav() {
                   profileOpen ? "border-spring-400 ring-2 ring-spring-500/30" : "border-border"
                 }`}
               >
-                <img src={user.avatar} alt="User" className="h-full w-full object-cover" />
+                <img
+                  src={user.avatar}
+                  alt={user.name || "User"}
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-cover"
+                />
               </div>
             ) : (
               <UserIcon className="h-4 w-4" />
@@ -162,17 +167,33 @@ export function MobileNav() {
                 transition={{ duration: 0.15 }}
                 className="absolute bottom-full right-0 mb-3 w-64 rounded-2xl border border-border/80 bg-card p-2 shadow-dock z-50 text-foreground backdrop-blur-2xl"
               >
-                {/* User Info Header */}
-                <div className="p-2.5 border-b border-border/60 mb-1">
-                  <div className="font-display text-xs font-bold text-foreground truncate">
-                    {user?.name || "User"}
+                {/* User Info Header with Avatar */}
+                <div className="p-2.5 border-b border-border/60 mb-1 flex items-center gap-2.5">
+                  <div className="relative h-9 w-9 rounded-full overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center ring-1 ring-border/80 shrink-0">
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name || "User"}
+                        referrerPolicy="no-referrer"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="font-bold text-xs text-plum-950 dark:text-cream-50 select-none">
+                        {user?.name ? user.name.slice(0, 2).toUpperCase() : "CA"}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-[11px] text-muted-foreground truncate font-mono">
-                    {user?.email || ""}
-                  </div>
-                  <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-spring-500/15 px-2 py-0.5 text-[10px] font-bold text-spring-400 border border-spring-500/30">
-                    <Shield className="h-3 w-3" />
-                    Verified Google ID
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display text-xs font-bold text-foreground truncate">
+                      {user?.name || "User"}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate font-mono">
+                      {user?.email || ""}
+                    </div>
+                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-spring-500/15 px-2 py-0.5 text-[9px] font-bold text-spring-400 border border-spring-500/30">
+                      <Shield className="h-2.5 w-2.5" />
+                      Verified Google ID
+                    </div>
                   </div>
                 </div>
 

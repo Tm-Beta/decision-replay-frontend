@@ -26,6 +26,10 @@ export function UserMenu({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setImgError(false);
+  }, [user?.avatar]);
+
+  useEffect(() => {
     setMounted(true);
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -89,11 +93,12 @@ export function UserMenu({
                 <img
                   src={user.avatar}
                   alt={user.name}
+                  referrerPolicy="no-referrer"
                   className="h-full w-full object-cover"
                   onError={() => setImgError(true)}
                 />
               ) : (
-                <span className="font-bold text-[11px] text-primary dark:text-primary-foreground select-none">
+                <span className="font-bold text-[11px] text-plum-950 dark:text-cream-50 select-none">
                   {initials}
                 </span>
               )}
@@ -130,17 +135,33 @@ export function UserMenu({
               transition={{ duration: 0.15 }}
               className="absolute right-full bottom-0 mr-3.5 w-64 rounded-2xl border border-border/80 bg-card p-2 shadow-dock z-50 text-foreground backdrop-blur-2xl"
             >
-              {/* User Info Header */}
-              <div className="p-2.5 border-b border-border/60 mb-1">
-                <div className="font-display text-xs font-bold text-foreground truncate">
-                  {user?.name || "User"}
+              {/* User Info Header with Avatar */}
+              <div className="p-2.5 border-b border-border/60 mb-1 flex items-center gap-2.5">
+                <div className="relative h-9 w-9 rounded-full overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center ring-1 ring-border/80 shrink-0">
+                  {user?.avatar && !imgError ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name || "User"}
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="font-bold text-xs text-plum-950 dark:text-cream-50 select-none">
+                      {initials}
+                    </span>
+                  )}
                 </div>
-                <div className="text-[11px] text-muted-foreground truncate font-mono">
-                  {user?.email || ""}
-                </div>
-                <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-spring-500/15 px-2 py-0.5 text-[10px] font-bold text-spring-700 dark:text-spring-400">
-                  <Shield className="h-3 w-3" />
-                  Verified Google ID
+                <div className="flex-1 min-w-0">
+                  <div className="font-display text-xs font-bold text-foreground truncate">
+                    {user?.name || "User"}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground truncate font-mono">
+                    {user?.email || ""}
+                  </div>
+                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-spring-500/15 px-2 py-0.5 text-[9px] font-bold text-spring-700 dark:text-spring-400">
+                    <Shield className="h-2.5 w-2.5" />
+                    Verified Google ID
+                  </div>
                 </div>
               </div>
 
@@ -214,16 +235,17 @@ export function UserMenu({
         className="flex items-center gap-1.5 h-9 px-2 py-1 rounded-xl border border-border/80 bg-card hover:border-primary/40 text-foreground shadow-sm transition-all cursor-pointer"
         aria-label="User profile"
       >
-        <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center shrink-0">
+        <div className="relative h-7 w-7 rounded-full overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center ring-1 ring-border/80 shrink-0">
           {user.avatar && !imgError ? (
             <img
               src={user.avatar}
               alt={user.name}
+              referrerPolicy="no-referrer"
               className="h-full w-full object-cover"
               onError={() => setImgError(true)}
             />
           ) : (
-            <span className="font-bold text-[11px] text-primary dark:text-primary-foreground select-none">
+            <span className="font-bold text-[11px] text-plum-950 dark:text-cream-50 select-none">
               {initials}
             </span>
           )}
@@ -243,17 +265,33 @@ export function UserMenu({
               side === "left" ? "right-full bottom-0 mr-3.5" : "right-0 mt-2"
             }`}
           >
-            {/* User Info Header */}
-            <div className="p-2.5 border-b border-border/60 mb-1">
-              <div className="font-display text-xs font-bold text-foreground truncate">
-                {user.name}
+            {/* User Info Header with Avatar */}
+            <div className="p-2.5 border-b border-border/60 mb-1 flex items-center gap-2.5">
+              <div className="relative h-9 w-9 rounded-full overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center ring-1 ring-border/80 shrink-0">
+                {user.avatar && !imgError ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    referrerPolicy="no-referrer"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="font-bold text-xs text-plum-950 dark:text-cream-50 select-none">
+                    {initials}
+                  </span>
+                )}
               </div>
-              <div className="text-[11px] text-muted-foreground truncate font-mono">
-                {user.email}
-              </div>
-              <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-spring-500/15 px-2 py-0.5 text-[10px] font-bold text-spring-700 dark:text-spring-400">
-                <Shield className="h-3 w-3" />
-                Verified Google ID
+              <div className="flex-1 min-w-0">
+                <div className="font-display text-xs font-bold text-foreground truncate">
+                  {user.name}
+                </div>
+                <div className="text-[11px] text-muted-foreground truncate font-mono">
+                  {user.email}
+                </div>
+                <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-spring-500/15 px-2 py-0.5 text-[9px] font-bold text-spring-700 dark:text-spring-400">
+                  <Shield className="h-2.5 w-2.5" />
+                  Verified Google ID
+                </div>
               </div>
             </div>
 
