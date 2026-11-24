@@ -146,8 +146,9 @@ export function Navbar() {
 
       {/* ========================================================================= */}
       {/* DESKTOP TOP-LEFT BRAND IDENTITY (md: & Wide Screens)                       */}
+      {/* Positioned at the very top-left corner ("mullatama") of the viewport       */}
       {/* ========================================================================= */}
-      <div className="hidden md:flex items-center w-full max-w-6xl mx-auto px-4 sm:px-6 md:pr-20 lg:pr-24 pt-4 sm:pt-6">
+      <div className="hidden md:flex fixed top-4 sm:top-5 left-4 sm:left-6 z-40">
         <Link
           href="/"
           className="group inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl hover:border-spring-500/40 transition-all duration-200 shrink-0"
@@ -186,7 +187,7 @@ export function Navbar() {
           setIsExpanded(false);
           setHoveredRow(null);
         }}
-        className="fixed right-3 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-end gap-1 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-hidden select-none"
+        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-end gap-1 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-hidden select-none"
       >
         {/* Primary Navigation Links (Only when authenticated) */}
         {isAuthenticated &&
