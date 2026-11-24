@@ -10,6 +10,7 @@ import { MobileNav } from "@/components/navigation/MobileNav";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { WelcomeTourModal } from "@/components/onboarding/WelcomeTourModal";
 import { GoogleOAuthListener } from "@/components/auth/GoogleOAuthListener";
+import { VortexBackground } from "@/components/background/VortexBackground";
 
 const displayFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -51,15 +52,18 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
         <ThemeProvider>
-          {/* Subtle Ambient Lighting */}
-          <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+          {/* Algorithmic Vortex Vector Field Canvas Background */}
+          <VortexBackground />
+
+          {/* Subtle Ambient Lighting & Paper Texture */}
+          <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-plum-800/5 dark:bg-primary/5 blur-[120px] rounded-full" />
             <div className="absolute top-1/3 -right-40 w-[450px] h-[300px] bg-spring-500/5 blur-[100px] rounded-full" />
             <div className="absolute bottom-10 -left-40 w-[500px] h-[300px] bg-plum-500/5 blur-[120px] rounded-full" />
-            <div className="absolute inset-0 noise opacity-40 pointer-events-none" />
+            <div className="absolute inset-0 noise opacity-35 pointer-events-none" />
           </div>
 
-          <div className="flex min-h-screen flex-col justify-between overflow-x-hidden">
+          <div className="relative z-10 flex min-h-screen flex-col justify-between overflow-x-hidden">
             {/* Desktop Right Floating Dock & Mobile Header */}
             <Navbar />
 
