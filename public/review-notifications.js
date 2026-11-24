@@ -10,3 +10,15 @@ self.addEventListener("notificationclick", (event) => {
     else await self.clients.openWindow(url);
   })());
 });
+
+self.addEventListener("push", (event) => {
+  let decisionId;
+  try { decisionId = event.data?.json()?.decisionId; } catch { return; }
+  if (typeof decisionId !== "string" || !/^[\w-]+$/.test(decisionId)) return;
+  event.waitUntil(self.registration.showNotification("Decision review due", {
+    body: "Open Decision Replay to record your outcome.",
+    icon: "/favicon.ico",
+    tag: "review:" + decisionId,
+    data: { path: "/decisions/" + decisionId + "/replay" },
+  }));
+});
