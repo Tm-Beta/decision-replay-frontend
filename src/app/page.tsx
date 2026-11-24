@@ -138,8 +138,33 @@ export default function DashboardPage() {
             <BlindSpotAlert patterns={summary?.detectedPatterns ?? []} />
           </div>
 
-          {/* Prospective Cycle Explainer Infographic */}
-          <DecisionLoopIllustration />
+          {/* Philosophy Card with Decision Loop Illustration */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-3xl border border-border/80 p-6 sm:p-8 bg-card/60 shadow-soft backdrop-blur-sm"
+          >
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+              <div className="space-y-2 max-w-xl text-center lg:text-left">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-plum-100 dark:bg-plum-900/50 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                  <AnimatedIcon name="target" size={12} />
+                  Scientific Metacognition
+                </div>
+                <h3 className="font-display text-lg sm:text-xl font-bold text-foreground">
+                  The Prospective Decision Cycle
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Human retrospectives suffer from hindsight bias: the human mind naturally edits past memories to match known results. Decision Replay locks your explicit belief snapshot with a cryptographic SHA-256 seal. When reality arrives, you uncover your true estimation accuracy without revisionism.
+                </p>
+              </div>
+
+              {/* Bespoke SVG Loop Illustration */}
+              <div className="w-full lg:w-auto shrink-0">
+                <DecisionLoopIllustration className="w-full max-w-md mx-auto" />
+              </div>
+            </div>
+          </motion.div>
         </>
       )}
     </motion.div>

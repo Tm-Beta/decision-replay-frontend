@@ -12,6 +12,7 @@ export function UserMenu() {
   const { user, isAuthenticated, isHydrated, logout, openTourModal } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,9 +38,9 @@ export function UserMenu() {
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.96 }}
         onClick={() => launchGoogleSignIn()}
-        className="flex items-center gap-2 h-9 px-3.5 rounded-xl border border-border/90 bg-card hover:border-spring-500 hover:bg-muted font-semibold text-xs text-foreground shadow-sm transition-all cursor-pointer"
+        className="flex items-center gap-2 h-9 px-3.5 rounded-xl border border-border/90 bg-card hover:border-spring-500 hover:bg-muted font-semibold text-xs text-foreground shadow-sm transition-all cursor-pointer shrink-0"
       >
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">
+        <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
           <path
             fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -57,7 +58,7 @@ export function UserMenu() {
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
           />
         </svg>
-        <span>Sign In</span>
+        <span className="whitespace-nowrap">Sign In</span>
       </motion.button>
     );
   }
@@ -76,22 +77,29 @@ export function UserMenu() {
   };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative shrink-0" ref={menuRef}>
       <motion.button
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 h-9 p-1 rounded-xl border border-border/80 bg-card hover:border-primary/40 text-foreground shadow-sm transition-all"
+        className="flex items-center gap-1.5 h-9 px-2 py-1 rounded-xl border border-border/80 bg-card hover:border-primary/40 text-foreground shadow-sm transition-all cursor-pointer"
         aria-label="User profile"
       >
-        <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center">
-          {user.avatar ? (
-            <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+        <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center shrink-0">
+          {user.avatar && !imgError ? (
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="h-full w-full object-cover"
+              onError={() => setImgError(true)}
+            />
           ) : (
-            <span>{initials}</span>
+            <span className="font-bold text-[11px] text-primary dark:text-primary-foreground select-none">
+              {initials}
+            </span>
           )}
         </div>
-        <ChevronDown className="h-3 w-3 text-muted-foreground mr-1" />
+        <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
       </motion.button>
 
       {/* Profile Dropdown */}

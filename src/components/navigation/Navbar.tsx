@@ -21,24 +21,24 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-3 z-40 mx-auto w-full max-w-5xl px-3 sm:px-6">
+    <header className="sticky top-3 z-40 mx-auto w-full max-w-6xl px-3 sm:px-6">
       <nav className="glass-dock relative flex h-14 items-center justify-between rounded-2xl px-3.5 sm:px-5">
         {/* Left: Brand Identity */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-plum-900 text-cream-50 shadow-soft transition-transform group-hover:scale-105 dark:bg-primary dark:text-plum-950">
+        <Link href="/" className="group flex items-center gap-2.5 shrink-0">
+          <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-plum-900 text-cream-50 shadow-soft transition-transform group-hover:scale-105 dark:bg-primary dark:text-plum-950 shrink-0">
             <AnimatedIcon name="compass" size={19} className="text-spring-400 dark:text-plum-950" />
             <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-spring-500 ring-2 ring-background" />
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-display text-sm font-bold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-base">
+          <div className="flex flex-col shrink-0">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="font-display text-sm font-bold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-base whitespace-nowrap">
                 Decision Replay
               </span>
-              <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground border border-border/70">
+              <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/70 shrink-0">
                 Tm-Beta
               </span>
             </div>
-            <span className="hidden text-[10px] font-medium tracking-wider text-muted-foreground uppercase sm:inline-block">
+            <span className="hidden text-[10px] font-medium tracking-wider text-muted-foreground uppercase sm:inline-block whitespace-nowrap">
               Prospective Metacognition
             </span>
           </div>
@@ -46,7 +46,7 @@ export function Navbar() {
 
         {/* Center: Desktop Navigation Links with animated active pill (Only when authenticated) */}
         {isAuthenticated && (
-          <div className="hidden items-center gap-1 sm:flex">
+          <div className="hidden items-center gap-1 sm:flex shrink-0">
             {navLinks.map((link) => {
               const isActive =
                 link.href === "/"
@@ -57,7 +57,7 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`relative flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors shrink-0 ${
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -85,10 +85,10 @@ export function Navbar() {
         )}
 
         {/* Right Actions: System Beacon, Theme Switcher & Record CTA */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Live Calibration Beacon (Only when authenticated) */}
           {isAuthenticated && (
-            <div className="hidden items-center gap-1.5 rounded-full border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground md:flex">
+            <div className="hidden items-center gap-1.5 rounded-full border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground lg:flex shrink-0">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spring-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-spring-500" />
@@ -103,7 +103,7 @@ export function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             title="Tm-Beta on GitHub"
-            className="grid h-9 w-9 place-items-center rounded-xl bg-card border border-border/80 text-muted-foreground hover:text-foreground hover:border-spring-500/50 hover:bg-muted/60 transition-all shadow-xs"
+            className="grid h-9 w-9 place-items-center rounded-xl bg-card border border-border/80 text-muted-foreground hover:text-foreground hover:border-spring-500/50 hover:bg-muted/60 transition-all shadow-xs shrink-0"
           >
             <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -114,17 +114,19 @@ export function Navbar() {
             </svg>
           </a>
 
-          <ThemeToggle />
+          <div className="shrink-0">
+            <ThemeToggle />
+          </div>
 
           <UserMenu />
 
           {/* Primary CTA Button (Only when authenticated) */}
           {isAuthenticated && (
-            <Link href="/decisions/new">
+            <Link href="/decisions/new" className="shrink-0">
               <motion.div
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-1.5 rounded-xl bg-spring-500 px-3 py-1.5 text-xs font-bold text-plum-950 shadow-spring transition-shadow hover:bg-spring-400 sm:px-4 sm:py-2 sm:text-xs"
+                className="flex items-center gap-1.5 rounded-xl bg-spring-500 px-3 py-1.5 text-xs font-bold text-plum-950 shadow-spring transition-shadow hover:bg-spring-400 sm:px-4 sm:py-2 sm:text-xs shrink-0"
               >
                 <Plus className="h-3.5 w-3.5 stroke-[3]" />
                 <span className="hidden sm:inline">Record Decision</span>
