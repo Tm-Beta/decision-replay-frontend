@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { Plus, Settings2, GitBranch, CalendarDays, BarChart3, Route } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
@@ -37,7 +38,7 @@ type Node = {
   summary: string;
   planned: boolean;
 };
-type Action = "plan" | "change" | "rename" | "delete" | "archive" | null;
+type Action = "editDecision" | "deleteDecision" | "plan" | "change" | "rename" | "delete" | "archive" | null;
 
 function Workspace({ id }: { id: string }) {
   const endpoint = "/groups/" + id;
@@ -130,8 +131,13 @@ function Workspace({ id }: { id: string }) {
         planned: true,
       });
   const children = new Map<string | null, Node[]>();
-  for (const node of nodes)
-    children.set(node.parent, [...(children.get(node.parent) || []), node]);
+  const visibleIds = new Set(nodes.map(node => node.id));
+  for (const node of nodes) {
+    const parent = node.parent && visibleIds.has(node.parent) ? node.parent : null;
+    const siblings = children.get(parent);
+    if (siblings) siblings.push(node);
+    else children.set(parent, [node]);
+  }
   function open(next: Action, key = "") {
     setAction(next);
     setSelected(key);
@@ -164,6 +170,8 @@ function Workspace({ id }: { id: string }) {
           {activeNode === n.id && <div className="tree-details">
             <p>{n.summary || "No details recorded yet."}</p>
             {entry && <Link href={"/decisions/" + entry.id}>Open worksheet</Link>}
+            {entry && <button onClick={()=>open("editDecision",entry.id)}>Edit decision</button>}
+            {entry && <button onClick={()=>open("deleteDecision",entry.id)}>Delete decision</button>}
             {entry && !entry.outcome && <Link href={"/decisions/" + entry.id + "/replay"}>Record what happened</Link>}
             {entry && <button onClick={() => open("change", entry.id)}>Add a progress note</button>}
             {entry && <button onClick={() => open("plan", n.id)}>Plan a possible next step</button>}
@@ -195,10 +203,11 @@ function Workspace({ id }: { id: string }) {
       <div className="branch-tools">
         {decisions.length > 0 && group.status !== "ARCHIVED" && (
           <Link className="branch-primary" href={newUrl}>
-            Start independent decision
+            <Plus size={15} /> New decision
           </Link>
         )}
-        <button onClick={() => open("rename")}>Rename group</button>
+        <details className="project-settings"><summary><Settings2 size={15} /> Project settings</summary>
+        <button onClick={() => open("rename")}>Rename</button>
         {group.status === "ARCHIVED" ? (
           <button onClick={handleRestore} disabled={busy}>
             Restore group
@@ -206,7 +215,7 @@ function Workspace({ id }: { id: string }) {
         ) : (
           <button onClick={() => open("archive")}>Archive group</button>
         )}
-        <button onClick={() => open("delete")}>Delete group</button>
+        <button onClick={() => open("delete")}>Delete project</button></details>
       </div>
       <nav className="branch-tabs" aria-label="Group views">
         {["Actual tree", "Planned tree", "Timeline", "Report"].map((v) => (
@@ -218,7 +227,8 @@ function Workspace({ id }: { id: string }) {
               setAction(null);
             }}
           >
-            {v}
+            {v === "Actual tree" ? <GitBranch size={15} /> : v === "Planned tree" ? <Route size={15} /> : v === "Timeline" ? <CalendarDays size={15} /> : <BarChart3 size={15} />}
+            {v === "Actual tree" ? "Tree" : v === "Planned tree" ? "Plans" : v}
           </button>
         ))}
       </nav>
@@ -282,7 +292,7 @@ function Workspace({ id }: { id: string }) {
                 })()}
               <div className="report-columns">
                 <div>
-                  <strong>Expected</strong>
+                  <strong>Current expectation</strong>
                   <p>{d.expectedOutcome || "No expectation recorded"}</p>
                 </div>
                 <div>
@@ -373,6 +383,8 @@ function Workspace({ id }: { id: string }) {
               const data = new FormData(e.currentTarget);
               const value = (k: string) => String(data.get(k) || "").trim();
               try {
+                if(action === "editDecision") await apiClient("/decisions/"+selected+"/details",{method:"PATCH",body:JSON.stringify({title:value("name"),choice:value("choice"),expectedOutcome:value("expectedOutcome"),decisionReason:value("decisionReason"),beliefRationale:value("beliefRationale"),confidence:value("confidence") ? Number(value("confidence")) : null,reviewDate:value("reviewDate") ? new Date(value("reviewDate")).toISOString() : null})});
+                if(action === "deleteDecision") await apiClient("/decisions/"+selected,{method:"DELETE"});
                 if (action === "delete") {
                   await apiClient(endpoint, { method: "DELETE" });
                   router.push("/decisions");
@@ -415,6 +427,8 @@ function Workspace({ id }: { id: string }) {
             <h2>
               {
                 {
+                  editDecision: "Edit decision",
+                  deleteDecision: "Delete decision?",
                   plan: "Plan a branch",
                   rename: "Rename group",
                   archive: "Archive group?",
@@ -430,17 +444,18 @@ function Workspace({ id }: { id: string }) {
                   plans.find((p) => p.id === selected)?.title}
               </p>
             )}
-            {(action === "plan" || action === "rename") && (
+            {(action === "plan" || action === "rename" || action === "editDecision") && (
               <label>
-                {action === "plan" ? "Planned choice" : "Group name"}
+                {action === "plan" ? "Planned choice" : action === "editDecision" ? "Decision name" : "Group name"}
                 <input
                   autoFocus
                   required
                   name="name"
-                  defaultValue={action === "rename" ? group.name : ""}
+                  defaultValue={action === "rename" ? group.name : action === "editDecision" ? byId.get(selected)?.title : ""}
                 />
               </label>
             )}
+            {action === "editDecision" && (()=>{const d=byId.get(selected);if(!d)return null;const date=d.reviewDate?new Date(new Date(d.reviewDate).getTime()-new Date(d.reviewDate).getTimezoneOffset()*60000).toISOString().slice(0,16):"";return <><p>The original record stays in the history. Your changes will be dated.</p><label>What did you decide?<textarea name="choice" required defaultValue={d.choice}/></label><label>Expected outcome<textarea name="expectedOutcome" defaultValue={d.expectedOutcome}/></label><label>Why did you decide this?<textarea name="decisionReason" defaultValue={d.decisionReason||""}/></label><label>What supports this choice?<textarea name="beliefRationale" defaultValue={d.beliefRationale||""}/></label><label>Confidence (optional)<input name="confidence" type="number" min="1" max="100" defaultValue={d.confidence??""}/></label><label>Outcome reminder (optional)<input name="reviewDate" type="datetime-local" defaultValue={date}/></label></>})()}
             {action==="change" && <label>Update type<select name="kind"><option value="progress">Progress note</option><option value="change">Changed expectation</option></select></label>}
             {(action === "plan" || action === "change") && (
               <label>
@@ -466,6 +481,7 @@ function Workspace({ id }: { id: string }) {
                 )}
               </div>
             )}
+            {action === "deleteDecision" && <p>This permanently deletes this decision and its outcome and notes. Its next decisions will connect to {byId.get(selected)?.parentId ? "its parent decision" : "the group as independent starting decisions"}.</p>}
             {action === "delete" && (
               <p>
                 This permanently deletes this group, its {decisions.length} decisions, {plans.length} planned steps, outcomes and reminders.
@@ -482,7 +498,7 @@ function Workspace({ id }: { id: string }) {
                   busy
                 }
               >
-                {action === "delete"
+                {action === "deleteDecision" ? "Delete decision" : action === "delete"
                   ? "Delete group"
                   : action === "archive"
                   ? "Archive group"

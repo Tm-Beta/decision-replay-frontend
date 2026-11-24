@@ -41,5 +41,10 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default function config(phase) {
+  // Keep production builds from replacing assets served by a running dev server.
+  return phase === "phase-development-server"
+    ? { ...nextConfig, distDir: ".next-dev" }
+    : nextConfig;
+}
 

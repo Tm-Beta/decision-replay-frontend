@@ -79,7 +79,7 @@ export function MobileNav() {
             size={18}
             className={isDecisionsActive ? "text-spring-400" : "text-muted-foreground"}
           />
-          <span>Decisions</span>
+          <span>Projects</span>
           {isDecisionsActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
 
@@ -93,7 +93,7 @@ export function MobileNav() {
             >
               <Plus className="h-6 w-6 stroke-[3]" />
             </motion.div>
-            <span className="mt-1 text-[10px] font-bold text-foreground">Record</span>
+            <span className="mt-1 text-[10px] font-bold text-foreground">New</span>
           </Link>
         ) : (
           <button
@@ -108,7 +108,7 @@ export function MobileNav() {
             >
               <Plus className="h-6 w-6 stroke-[3]" />
             </motion.div>
-            <span className="mt-1 text-[10px] font-bold text-foreground">Record</span>
+            <span className="mt-1 text-[10px] font-bold text-foreground">New</span>
           </button>
         )}
 
@@ -124,7 +124,7 @@ export function MobileNav() {
             size={18}
             className={isDnaActive ? "text-spring-400" : "text-muted-foreground"}
           />
-          <span>DNA</span>
+          <span>Chat</span>
           {isDnaActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
 

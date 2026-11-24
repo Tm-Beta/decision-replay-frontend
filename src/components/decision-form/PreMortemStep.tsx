@@ -56,7 +56,7 @@ export function PreMortemStep() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
-            <h3 className="text-sm font-semibold">Pre-Mortem Failure Modes</h3>
+            <h3 className="text-sm font-semibold">Possible problems</h3>
           </div>
           <span className="text-xs px-2 py-0.5 bg-muted rounded-full">{preMortems.length} Scenarios</span>
         </div>
@@ -86,18 +86,18 @@ export function PreMortemStep() {
 
         <div className="p-4 rounded-xl border border-dashed border-border/80 bg-muted/20 space-y-3">
           <Input
-            placeholder="Failure scenario (e.g. AWS connection pool saturation triggers cascading 504 timeouts)"
+            placeholder="e.g. Overtime cuts into my study time"
             value={failureScenario}
             onChange={(e) => setFailureScenario(e.target.value)}
           />
           <Input
-            placeholder="Preventive mitigation (e.g. Implement circuit breakers and fallback cache)"
+            placeholder="e.g. Set aside Saturday mornings"
             value={preventiveAction}
             onChange={(e) => setPreventiveAction(e.target.value)}
           />
           <div className="flex justify-end pt-1">
             <Button size="sm" onClick={handleAdd} disabled={!failureScenario.trim()}>
-              <Plus className="h-4 w-4 mr-1" /> Add Failure Mode
+              <Plus className="h-4 w-4 mr-1" /> Add risk
             </Button>
           </div>
         </div>

@@ -88,10 +88,13 @@ function DockRow({
         href={href}
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
-        className="w-full flex justify-center"
+        className="desktop-dock-link w-full flex flex-col items-center"
         title={label}
+        aria-label={label}
+        aria-current={isActive ? "page" : undefined}
       >
         {content}
+        {!isExpanded && <span aria-hidden="true" className="text-[10px]">{label}</span>}
       </Link>
     );
   }
@@ -116,9 +119,9 @@ export function Navbar() {
   const dockExpanded = isExpanded || isMenuOpen;
 
   const navLinks = [
-    { href: "/", label: "Dashboard", icon: "dashboard" as const },
-    { href: "/decisions", label: "Decisions Archive", icon: "history" as const },
-    { href: "/dna", label: "Decision DNA Profile", icon: "dna" as const },
+    { href: "/", label: "Home", icon: "dashboard" as const },
+    { href: "/decisions", label: "Projects", icon: "history" as const },
+    { href: "/dna", label: "Chat", icon: "dna" as const },
   ];
 
   return (
@@ -198,7 +201,6 @@ export function Navbar() {
           initial={false}
           animate={{ width: dockExpanded ? 220 : 54 }}
           transition={{ type: "spring", stiffness: 420, damping: 30 }}
-          style={{ height: 288 }}
           onMouseEnter={() => setIsExpanded(true)}
           onMouseLeave={() => {
             if (!isMenuOpen) {
@@ -206,7 +208,7 @@ export function Navbar() {
               setHoveredRow(null);
             }
           }}
-          className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-center px-2 py-3.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none h-[288px]"
+          className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-center px-2 py-3.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none h-[21rem] gap-3"
         >
           {/* Top Navigation Links */}
           <div className="w-full flex flex-col gap-1.5 items-center">

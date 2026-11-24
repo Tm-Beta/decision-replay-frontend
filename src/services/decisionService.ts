@@ -12,7 +12,7 @@ import {
 } from "../types/decision.types";
 
 export interface CreateDecisionInput {
-  projectId: string;
+  projectId?: string;
   parentId?: string;
   planId?: string;
   title: string;

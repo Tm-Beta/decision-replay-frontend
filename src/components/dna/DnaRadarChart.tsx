@@ -54,7 +54,7 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
                 Metacognitive Geometry
               </h3>
               <p className="text-xs text-muted-foreground">
-                6-dimensional empirical profile. Click any node to audit historical decision proof.
+                Select a metric to see its source.
               </p>
             </div>
             <div className="inline-flex items-center gap-1.5 rounded-full bg-spring-500/15 border border-spring-500/30 px-2.5 py-0.5 text-[11px] font-bold text-spring-700 dark:text-spring-400">
@@ -115,7 +115,7 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
                   key={dim.name}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${dim.label}: ${dim.score} out of 100. Inspect evidence`}
+                  aria-label={`${dim.label}: ${dim.score} out of 100. View records`}
                   className="cursor-pointer group focus:outline-none"
                   onClick={() => onSelectDimension(dim)}
                 >
@@ -180,9 +180,9 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
                   {dim.description}
                 </p>
                 <div className="flex items-center justify-between pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
-                  <span className="font-mono">{dim.evidenceDecisionIds.length} empirical decisions</span>
+                  <span className="font-mono">{dim.evidenceDecisionIds.length} decisions</span>
                   <span className="flex items-center gap-1 font-semibold text-primary group-hover:underline">
-                    Inspect evidence <ExternalLink className="h-3 w-3" />
+                    View records <ExternalLink className="h-3 w-3" />
                   </span>
                 </div>
               </CardContent>
@@ -191,22 +191,6 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
         ))}
       </div>
 
-      {/* Metacognitive Philosophy Card */}
-      <Card className="p-5 border-border/80 bg-gradient-to-br from-card via-card to-plum-50/40 dark:to-plum-950/20 shadow-soft">
-        <div className="flex items-start gap-3.5">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-plum-900 text-cream-50 dark:bg-primary dark:text-plum-950 shrink-0">
-            <AnimatedIcon name="dna" size={20} />
-          </div>
-          <div className="space-y-1">
-            <h4 className="font-display text-sm font-bold text-foreground">
-              Evidence-Based Decision DNA
-            </h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Decision DNA does not label your personality; it calculates mathematical calibration between prospective estimates and observed outcomes. Click any dimension above to audit the exact historical decision records that yielded the score.
-            </p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

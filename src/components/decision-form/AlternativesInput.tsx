@@ -38,9 +38,9 @@ export function AlternativesInput() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold tracking-tight">Alternatives Considered</h3>
+          <h3 className="text-sm font-semibold tracking-tight">Other options</h3>
           <p className="text-xs text-muted-foreground">
-            Weighing options prevents tunnel vision and builds Alternative Breadth.
+            
           </p>
         </div>
         <span className="text-xs font-semibold px-2 py-1 bg-muted rounded-lg">
@@ -75,20 +75,20 @@ export function AlternativesInput() {
       {/* Add alternative drawer */}
       <div className="p-4 rounded-xl border border-dashed border-border/80 bg-muted/20 space-y-3">
         <Input
-          placeholder="Alternative title (e.g. Scale Redis cluster with Redis Sentinel)"
+          placeholder="e.g. Study on my own"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Textarea
             rows={2}
-            placeholder="Upsides / Pros"
+            placeholder="What works well?"
             value={pros}
             onChange={(e) => setPros(e.target.value)}
           />
           <Textarea
             rows={2}
-            placeholder="Downsides / Trade-offs"
+            placeholder="What might be harder?"
             value={cons}
             onChange={(e) => setCons(e.target.value)}
           />

@@ -1,4 +1,5 @@
 "use client";
+import { JournalArt } from "@/components/illustrations/JournalArt";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -25,9 +26,9 @@ function Groups() {
   return (
     <main className="branch-workspace">
       <header>
-        <FolderTree size={32} />
-        <h1>Decision groups</h1>
-        <p>Open a group to see where your decisions led.</p>
+        <JournalArt kind="projects" />
+        <h1>Projects</h1>
+
       </header>
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button

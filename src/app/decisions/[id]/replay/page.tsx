@@ -175,12 +175,9 @@ export default function ReplayComparisonPage() {
       <div className="flex items-center justify-between">
         <Link href={`/decisions/${id}`}>
           <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to Snapshot
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to decision
           </Button>
         </Link>
-        <Badge tone="blue">
-          <GitCompare className="h-3 w-3 mr-1" /> Replay Engine
-        </Badge>
       </div>
 
       {replay ? (
@@ -192,12 +189,12 @@ export default function ReplayComparisonPage() {
             <Card className="border-border">
               <CardHeader className="pb-3 border-b border-border/80">
                 <div className="flex items-center justify-between">
-                  <Badge tone="violet">THEN · PROSPECTIVE BELIEF</Badge>
+                  <Badge tone="violet">Before</Badge>
                   <span className="text-xs text-muted-foreground font-semibold">
                     {replay.initialSnapshot.confidence!=null ? replay.initialSnapshot.confidence+"% confidence" : "Confidence not recorded"}
                   </span>
                 </div>
-                <CardTitle className="text-base mt-2">What Was Expected</CardTitle>
+                <CardTitle className="text-base mt-2">Expected outcome</CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Locked on {formatDate(replay.initialSnapshot.lockedAt)}
                 </p>
@@ -228,12 +225,12 @@ export default function ReplayComparisonPage() {
             <Card className="border-primary/30 bg-primary/5">
               <CardHeader className="pb-3 border-b border-primary/20">
                 <div className="flex items-center justify-between">
-                  <Badge tone="green">NOW · OBSERVED REALITY</Badge>
+                  <Badge tone="green">After</Badge>
                   <span className="text-xs text-foreground font-semibold">
                     {replay.outcome.outcomeScore!=null ? replay.outcome.outcomeScore+"/100 personal rating" : "No personal rating"}
                   </span>
                 </div>
-                <CardTitle className="text-base mt-2">What Actually Transpired</CardTitle>
+                <CardTitle className="text-base mt-2">Actual outcome</CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Recorded on {formatDate(replay.outcome.recordedAt)}
                 </p>
@@ -249,7 +246,7 @@ export default function ReplayComparisonPage() {
                 </div>
                 <div>
                   <span className="font-semibold text-muted-foreground uppercase block mb-1">
-                    Metacognitive Reflection & Learning
+                    What I learned
                   </span>
                   <p className="leading-relaxed text-muted-foreground">
                     {replay.outcome.reflection || "No reflection recorded"}
@@ -261,17 +258,18 @@ export default function ReplayComparisonPage() {
           </div>
 
           {/* Assumption Hypothesis Testing Diff Table */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Hypothesis Testing Results (Assumption Diffs)</h3>
+          {replay.assumptionDiffs.length > 0 && (<details><summary>Assumption results</summary>          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">Assumptions</h3>
             <AssumptionDiffTable assumptions={replay.assumptionDiffs} />
           </div>
 
-          {/* AI Post-Mortem Variance Audit */}
-          <Card className="p-5 border-dashed border-primary/40 bg-card">
+</details>)}
+          {/* Reflection */}
+          {(analysis || analysisLoading || analysisFailed) && <Card className="p-5 border-dashed border-primary/40 bg-card">
             <div className="flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
               <div className="space-y-2 text-xs">
-                <h4 className="font-semibold text-sm text-foreground">AI Post-Mortem Variance Audit</h4>
+                <h4 className="font-semibold text-sm text-foreground">Reflection</h4>
                 {analysisLoading && <p className="text-muted-foreground">Analysing variance...</p>}
                 {analysisFailed && (
                   <p className="text-muted-foreground">
@@ -292,24 +290,22 @@ export default function ReplayComparisonPage() {
                 )}
               </div>
             </div>
-          </Card>
+          </Card>}
         </div>
       ) : (
         /* PENDING OUTCOME ENTRY FORM */
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-lg">Close the Loop: Record Reality</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Record what happened when the outcome is known.
-            </p>
+            <CardTitle className="text-lg">Record outcome</CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-5">
             <div>
-              <label className="text-xs font-semibold block mb-1.5">What actually happened?</label>
+              <label htmlFor="actual-outcome" className="text-sm font-semibold block mb-1.5">What happened?</label>
               <Textarea
                 rows={3}
-                placeholder="Describe the real-world outcome with observable metrics..."
+                id="actual-outcome"
+                className="!bg-background !text-foreground !border-border"
                 value={actualOutcome}
                 onChange={(e) => setActualOutcome(e.target.value)}
               />

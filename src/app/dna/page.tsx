@@ -1,5 +1,6 @@
 "use client";
 
+import { JournalArt } from "@/components/illustrations/JournalArt";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUp, MessageCircle, Sparkles, FolderOpen, Award, ShieldAlert } from "lucide-react";
@@ -19,6 +20,8 @@ type Message = { id: string; role: "user" | "assistant"; content: string };
 type History = { messages: Message[]; remaining: number; limit: number };
 
 function ThinkingSpace() {
+  const [decisionId,setDecisionId]=useState<string>();
+  useEffect(()=>{setDecisionId(new URLSearchParams(window.location.search).get("decision") || undefined)},[]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [project, setProject] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,6 +31,7 @@ function ThinkingSpace() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const scroll = useRef<HTMLDivElement>(null);
+  const [projectMenu,setProjectMenu]=useState(false);
 
   useEffect(() => {
     apiClient<Project[]>("/groups")
@@ -72,7 +76,7 @@ function ThinkingSpace() {
     try {
       const result = await apiClient<{ answer: string; remaining: number }>("/chat", {
         method: "POST",
-        body: JSON.stringify({ message, projectId: project || null }),
+        body: JSON.stringify({ message, decisionId, projectId: project || null }),
       });
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== "pending"),
@@ -91,51 +95,13 @@ function ThinkingSpace() {
 
   return (
     <section className="insights-page">
-      <header className="insights-header">
-        <div>
-          <div className="insights-eyebrow">
-            <Sparkles size={16} /> YOUR THINKING SPACE
-          </div>
-          <h1>Think it through.</h1>
-          <p>Explore your decisions, understand what happened, and find your next step.</p>
-        </div>
-        <div className="insights-credits">
-          <span>DAILY CREDITS</span>
-          <strong>
-            {remaining === null ? "—" : remaining} <small>left</small>
-          </strong>
-          <p>Refreshes each day</p>
-        </div>
-      </header>
-
       <div className="insights-chat">
         <div className="insights-chatbar">
-          <div className="insights-chat-title">
-            <span>
-              <MessageCircle size={18} />
-            </span>
-            <div>
-              <strong>Your conversation</strong>
-              <p>Based on your recorded decisions</p>
-            </div>
+          <span className="chat-credit-count">{remaining === null ? "—" : remaining} credits left today</span>
+          <div className="chat-project-picker">
+            <button type="button" className="chat-project-trigger" disabled={sending} aria-expanded={projectMenu} aria-label="Choose project context" onClick={()=>setProjectMenu(!projectMenu)}><FolderOpen size={16}/>{projects.find(p=>p.id===project)?.name || (decisionId ? "Selected decision" : "All decisions")}<span>⌄</span></button>
+            {projectMenu && <div className="chat-project-menu"><button type="button" onClick={()=>{setDecisionId(undefined);setProject("");setProjectMenu(false)}}>All decisions {project===""?"✓":""}</button>{projects.map(p=><button key={p.id} type="button" onClick={()=>{setDecisionId(undefined);setProject(p.id);setProjectMenu(false)}}>{p.name}{project===p.id?" ✓":""}</button>)}{projects.length===0&&<Link href="/decisions">Create a project ↗</Link>}</div>}
           </div>
-          <label>
-            <FolderOpen size={16} />
-            <span className="sr-only">Choose project context</span>
-            <select
-              value={project}
-              disabled={sending}
-              onChange={(e) => setProject(e.target.value)}
-            >
-              <option value="">All projects</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                  {p.status === "ARCHIVED" ? " (archived)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
 
         <div ref={scroll} className="insights-messages" aria-live="polite">
@@ -143,11 +109,9 @@ function ThinkingSpace() {
             <p className="insights-loading">Loading your conversation…</p>
           ) : messages.length === 0 ? (
             <div className="insights-empty">
-              <div className="insights-orb">
-                <Sparkles size={26} />
-              </div>
-              <h2>A little clarity starts here.</h2>
-              <p>Ask a question about your projects, decisions, or what you want to do next.</p>
+              <JournalArt kind="chat" />
+              <h2>What’s on your mind?</h2>
+              
               <div className="insights-suggestions">
                 {[
                   "What patterns do you see in my decisions?",
@@ -210,7 +174,7 @@ function ThinkingSpace() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   send();
                 }
@@ -263,10 +227,8 @@ function DnaProfileView() {
     }
   }, [isAuthenticated, loadData]);
 
-  const lowestDimension =
-    profile && profile.totalDecisions > 0 && profile.dimensions?.length > 0
-      ? profile.dimensions.reduce((lowest, d) => (d.score < lowest.score ? d : lowest))
-      : null;
+  const measured = profile?.dimensions.filter(d => (d as DnaDimension & {hasData?:boolean}).hasData && Number.isFinite(d.score)) || [];
+
 
   return (
     <div className="space-y-6">
@@ -277,31 +239,18 @@ function DnaProfileView() {
               <AnimatedIcon name="dna" size={17} />
             </div>
             <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground">
-              Cognitive DNA Dimensions
+              Decision insights
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xl">
-            Mathematical breakdown of your estimation variance, cognitive foresight, and calibration.
+            Review the evidence from your recorded decisions and outcomes.
           </p>
         </div>
 
-        {profile && (
-          <div className="flex items-center gap-3 self-start sm:self-auto">
-            <div className="px-4 py-2 rounded-2xl bg-card border border-border/80 shadow-soft flex items-center gap-2.5">
-              <Award className="h-5 w-5 text-spring-500" />
-              <div>
-                <div className="font-display text-lg font-extrabold leading-none text-foreground">
-                  {profile.overallDnaScore}/100
-                </div>
-                <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                  DNA Index
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <JournalArt kind="insights" />
       </div>
 
+      {loading && <p role="status">Loading your insights…</p>}
       {loadError && (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-soft">
           <p className="text-foreground font-medium">{loadError}</p>
@@ -311,47 +260,27 @@ function DnaProfileView() {
         </div>
       )}
 
-      {profile && profile.totalDecisions === 0 && (
+      {profile && measured.length === 0 && (
         <Card className="text-center py-16 px-6 border-dashed border-border/80 bg-card/60 rounded-3xl shadow-soft">
           <div className="max-w-md mx-auto space-y-3">
             <div className="grid h-12 w-12 mx-auto place-items-center rounded-2xl bg-plum-100 dark:bg-plum-900/40 text-primary">
               <AnimatedIcon name="dna" size={24} />
             </div>
             <h3 className="font-display text-base font-bold text-foreground">
-              No Replay Data Recorded Yet
+              No insights yet
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Your Decision DNA profile synthesizes calibration, estimation accuracy, risk foresight, and alternative breadth once you record real outcomes on completed decisions.
+              Record an outcome to get started.
             </p>
           </div>
         </Card>
       )}
 
-      {profile && profile.totalDecisions > 0 && (
+      {profile && measured.length > 0 && (
         <DnaRadarChart
-          dimensions={profile.dimensions}
+          dimensions={measured}
           onSelectDimension={(dim) => setSelectedDimension(dim)}
         />
-      )}
-
-      {lowestDimension && (
-        <Card className="border-amber-500/30 bg-amber-500/5 p-5 rounded-2xl shadow-soft">
-          <div className="flex items-start gap-3">
-            <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div className="text-xs space-y-1">
-              <h4 className="font-display font-bold text-amber-900 dark:text-amber-200 text-sm">
-                Cognitive Calibration Insight
-              </h4>
-              <p className="text-muted-foreground leading-relaxed">
-                Your lowest scoring dimension is{" "}
-                <strong className="text-foreground">
-                  {lowestDimension.label} ({lowestDimension.score}/100)
-                </strong>
-                . {lowestDimension.description}
-              </p>
-            </div>
-          </div>
-        </Card>
       )}
 
       {selectedDimension && (
@@ -366,10 +295,14 @@ function DnaProfileView() {
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState<"chat" | "dna">("chat");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "insights") setActiveTab("dna");
+  }, []);
+
 
   return (
     <ProtectedGate>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className={"dna-workspace " + (activeTab === "chat" ? "chat-mode" : "")}>
         {/* Navigation Mode Selector */}
         <div className="flex items-center gap-2 p-1 rounded-2xl bg-card border border-border/80 shadow-dock w-fit">
           <button
@@ -382,7 +315,7 @@ export default function Page() {
             }`}
           >
             <Sparkles size={14} className={activeTab === "chat" ? "text-primary-foreground" : "text-primary"} />
-            Thinking Space (AI Copilot)
+            Chat
           </button>
           <button
             type="button"
@@ -394,7 +327,7 @@ export default function Page() {
             }`}
           >
             <AnimatedIcon name="dna" size={14} />
-            Decision DNA Profile
+            Decision insights
           </button>
         </div>
 
