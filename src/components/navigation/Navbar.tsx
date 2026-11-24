@@ -287,14 +287,14 @@ export function Navbar() {
                   e.stopPropagation();
                   toggleTheme();
                 }}
-                className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors shrink-0"
+                className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors shrink-0 cursor-pointer"
                 title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
                 aria-label="Toggle theme"
               >
                 {isDark ? (
-                  <Moon className="h-4 w-4 text-spring-400" />
+                  <Moon className="h-4 w-4 text-spring-400 pointer-events-none" />
                 ) : (
-                  <Sun className="h-4 w-4 text-amber-500" />
+                  <Sun className="h-4 w-4 text-amber-500 pointer-events-none" />
                 )}
               </button>
 
@@ -304,9 +304,6 @@ export function Navbar() {
                 side="left"
                 onOpenChange={(open) => {
                   setIsMenuOpen(open);
-                  if (!open) {
-                    setIsExpanded(false);
-                  }
                 }}
               />
             </div>

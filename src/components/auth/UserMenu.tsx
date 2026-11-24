@@ -33,8 +33,13 @@ export function UserMenu({
     setMounted(true);
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpen(false);
-        onOpenChange?.(false);
+        setOpen((prev) => {
+          if (prev) {
+            onOpenChange?.(false);
+            return false;
+          }
+          return prev;
+        });
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
