@@ -15,7 +15,6 @@ interface DockRowProps {
   id: string;
   icon: React.ReactNode;
   label: string;
-  badge?: string;
   href?: string;
   isActive?: boolean;
   isExpanded: boolean;
@@ -29,7 +28,6 @@ function DockRow({
   id,
   icon,
   label,
-  badge,
   href,
   isActive = false,
   isExpanded,
@@ -44,44 +42,41 @@ function DockRow({
     <div
       onMouseEnter={() => setHoveredRow(id)}
       onMouseLeave={() => setHoveredRow(null)}
-      className={`relative h-10 w-full flex items-center justify-between rounded-xl px-2.5 transition-all duration-150 cursor-pointer select-none ${
+      className={`relative h-9 transition-all duration-150 cursor-pointer select-none rounded-xl flex items-center ${
+        isExpanded ? "w-full justify-between px-3" : "w-9 mx-auto justify-center"
+      } ${
         isHovered
-          ? "bg-spring-500/15 text-spring-400 border border-spring-500/40 shadow-[0_0_12px_rgba(34,197,94,0.18)]"
+          ? isActive
+            ? "bg-spring-500/20 text-spring-400 border border-spring-500/50 shadow-[0_0_12px_rgba(34,197,94,0.2)]"
+            : "bg-muted/70 text-foreground border border-border/60 shadow-xs"
           : isActive
-          ? "text-spring-400 bg-spring-500/10 border border-spring-500/25"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
+          ? "text-spring-400 bg-spring-500/15 border border-spring-500/35 shadow-[0_0_10px_rgba(34,197,94,0.12)]"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
       }`}
     >
-      {/* Left Label & Badge (Smoothly reveals when dock is expanded) */}
+      {/* Left Label (Smoothly reveals when dock is expanded) */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, x: -8 }}
+            initial={{ opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -6 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center gap-2 overflow-hidden pl-1"
+            className="flex items-center gap-2 overflow-hidden"
           >
-            <span className="text-xs font-semibold tracking-tight text-foreground truncate">
+            <span
+              className={`text-xs tracking-tight truncate ${
+                isActive ? "font-bold text-spring-400" : "font-semibold text-foreground"
+              }`}
+            >
               {label}
             </span>
-            {badge && (
-              <span
-                className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
-                  isActive || isHovered
-                    ? "bg-spring-500/20 text-spring-400 border-spring-500/40"
-                    : "bg-muted text-muted-foreground border-border/70"
-                }`}
-              >
-                {badge}
-              </span>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Right Icon Anchor */}
-      <div className={`h-8 w-8 grid place-items-center shrink-0 ${!isExpanded ? "mx-auto" : ""}`}>
+      <div className="h-8 w-8 grid place-items-center shrink-0">
         {icon}
       </div>
     </div>
@@ -93,7 +88,8 @@ function DockRow({
         href={href}
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
-        className="w-full block"
+        className="w-full flex justify-center"
+        title={label}
       >
         {content}
       </Link>
@@ -101,7 +97,7 @@ function DockRow({
   }
 
   return (
-    <button type="button" onClick={onClick} className="w-full block text-left">
+    <button type="button" onClick={onClick} className="w-full flex justify-center text-left" title={label}>
       {content}
     </button>
   );
@@ -192,10 +188,10 @@ export function Navbar() {
             setHoveredRow(null);
           }
         }}
-        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-end gap-1.5 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none min-h-[250px]"
+        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-center gap-1.5 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none min-h-[252px]"
       >
         {/* Top Navigation Links (Only when authenticated) */}
-        <div className="w-full flex flex-col gap-1">
+        <div className="w-full flex flex-col gap-1.5 items-center">
           {isAuthenticated &&
             navLinks.map((link) => {
               const isActive =
@@ -210,7 +206,6 @@ export function Navbar() {
                   href={link.href}
                   label={link.label}
                   isActive={isActive}
-                  badge={isActive ? "Active" : undefined}
                   isExpanded={dockExpanded}
                   hoveredRow={hoveredRow}
                   setHoveredRow={setHoveredRow}
@@ -227,7 +222,7 @@ export function Navbar() {
         </div>
 
         {/* Bottom Utility Controls (Clean Icon-Only Buttons, No Text Expansion) */}
-        <div className="w-full flex flex-col gap-1">
+        <div className="w-full flex flex-col gap-1.5 items-center">
           {/* Separator */}
           <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-0.5" />
 
@@ -235,7 +230,7 @@ export function Navbar() {
             className={`w-full flex ${
               dockExpanded
                 ? "flex-row items-center justify-around px-1 py-1 bg-muted/20 border border-border/40 rounded-xl"
-                : "flex-col items-center gap-1"
+                : "flex-col items-center gap-1.5"
             }`}
           >
             {/* GitHub Organization Link */}
