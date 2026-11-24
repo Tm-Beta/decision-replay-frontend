@@ -12,15 +12,18 @@ import {
 } from "../types/decision.types";
 
 export interface CreateDecisionInput {
-  projectId?: string;
+  projectId: string;
+  parentId?: string;
+  planId?: string;
   title: string;
-  category: string;
+  category?: string;
   choice: string;
   context: string;
   decisionReason?: string;
   beliefRationale?: string;
   expectedOutcome: string;
-  confidence: number;
+  confidence: number | null;
+  decidedOn?: string; outcomeKnown?: boolean; influences?: string[];
   reviewDate?: string;
   assumptions: Array<{ statement: string; metricTarget?: string; confidence: number }>;
   alternatives: Array<{ title: string; pros: string; cons: string }>;

@@ -45,9 +45,9 @@ export function PreMortemStep() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">3. Pre-Mortem & Calibration</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Risks</h2>
         <p className="text-sm text-muted-foreground">
-          Anticipate failure before committing, schedule your review, and state your confidence.
+          What might go wrong?
         </p>
       </div>
 
@@ -103,44 +103,6 @@ export function PreMortemStep() {
         </div>
       </div>
 
-      {/* Review Date and Calibration Slider */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-2xl border border-border bg-card/60">
-        <div>
-          <label className="text-sm font-medium flex items-center gap-1.5 mb-1.5">
-            <Calendar className="h-4 w-4 text-primary" /> Review Date
-          </label>
-          <p className="text-xs text-muted-foreground mb-2">When will reality have produced verifiable results?</p>
-          <Input
-            type="date"
-            value={reviewDate}
-            onChange={(e) => updateField("reviewDate", e.target.value)}
-
-          />
-                      {dateError && <p className="text-xs text-destructive mt-1">{dateError}</p>}
-
-        </div>
-        <div>
-          <Slider
-            label="Commitment Confidence"
-            valueDisplay={`${confidence}%`}
-            min={1}
-            max={100}
-            value={confidence}
-            onChange={(e) => updateField("confidence", Number(e.target.value))}
-          />
-          <p className="text-xs text-muted-foreground mt-2">
-            Stated confidence will be checked against empirical Brier calibration on review date.
-          </p>
-        </div>
-      </div>
-
-      {/* Immutability Invariant Notice */}
-      <div className="flex items-start gap-3 p-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 text-xs text-muted-foreground">
-        <Lock className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-        <p>
-          <strong className="text-foreground">Snapshot Immutability Guarantee:</strong> Once you click &quot;Lock Decision Snapshot&quot;, all fields above are cryptographically hashed with SHA-256 and frozen. Later discoveries cannot alter what you believed at this moment.
-        </p>
-      </div>
     </div>
   );
 }

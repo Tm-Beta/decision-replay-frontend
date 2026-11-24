@@ -6,6 +6,7 @@
 // ==============================================================================
 
 "use client";
+import { formatReminder } from "@/lib/utils";
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -38,55 +39,7 @@ export default function DecisionDetailPage() {
         const d = await decisionService.getDecisionById(id);
         setDecision(d);
       } catch {
-        // Fallback demo decision
-        setDecision({
-          id,
-          title: "Migrate search index from Elasticsearch to Meilisearch",
-          category: "INFRASTRUCTURE",
-          choice: "Deploy managed Meilisearch instance on production cluster",
-          context: "Elasticsearch heap exhaustion causing search downtime once per week.",
-          expectedOutcome: "Search latency < 20ms and memory usage reduced by 70%.",
-          confidence: 80,
-          status: "LOCKED",
-          reviewDate: new Date(Date.now() + 86400000 * 10).toISOString(),
-          createdAt: new Date().toISOString(),
-          lockedAt: new Date().toISOString(),
-          snapshotHash: "c4ca4238a0b923820dcc509a6f75849b...",
-          isVerified: true,
-          assumptions: [
-            {
-              statement: "Meilisearch typo-tolerance matches Elasticsearch quality",
-              confidence: 85,
-              metricTarget: "> 95% search relevance score",
-              validated: null,
-            },
-          ],
-          alternatives: [
-            {
-              title: "Upgrade Elasticsearch cluster memory",
-              pros: "Zero code changes",
-              cons: "Triples AWS monthly infrastructure costs",
-            },
-          ],
-          preMortems: [
-            {
-              failureScenario: "Large bulk re-indexing locks Meilisearch disk I/O",
-              preventiveAction: "Batch re-indexing in chunks of 500 records during low traffic",
-              severityScore: 80,
-            },
-          ],
-          events: [
-            {
-              id: "evt-1",
-              decisionId: id,
-              eventType: "EVIDENCE_NOTE",
-              title: "Snapshot Frozen",
-              detail: "Prospective reasoning, confidence, and pre-mortems locked permanently.",
-              createdAt: new Date().toISOString(),
-            },
-          ],
-          outcome: null,
-        });
+        setDecision(null);
       } finally {
         setLoading(false);
       }
@@ -106,20 +59,21 @@ export default function DecisionDetailPage() {
     );
   }
 
-  const daysLeft = daysUntil(decision.reviewDate);
+  const daysLeft = daysUntil(decision.nextReminder || decision.reviewDate);
   const reviewDue = daysLeft !== null && daysLeft <= 0;
 
   return (
     <ProtectedGate>
-      <div className="space-y-6">
+      <div className="decision-worksheet space-y-6">
       {/* Top Navigation */}
       <div className="flex items-center justify-between">
-        <Link href="/decisions">
+        <Link href={decision.projectId ? "/decisions/groups/"+decision.projectId : "/decisions"}>
           <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1.5" /> All Decisions
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> Group tree
           </Button>
         </Link>
 
+        <Button size="sm" variant="ghost" onClick={() => window.print()}>Print worksheet</Button>
         <Link href={`/decisions/${decision.id}/replay`}>
           <Button size="sm" variant={reviewDue || decision.outcome ? "default" : "outline"}>
             <GitCompare className="h-4 w-4 mr-1.5" />
@@ -129,7 +83,7 @@ export default function DecisionDetailPage() {
       </div>
 
       {/* Time until review */}
-      {decision.reviewDate && !decision.outcome && daysLeft !== null && (
+      {(decision.nextReminder || decision.reviewDate) && !decision.outcome && daysLeft !== null && (
         <div
           className={`rounded-xl border px-4 py-2.5 text-sm ${
             reviewDue
@@ -139,7 +93,7 @@ export default function DecisionDetailPage() {
         >
           {reviewDue
             ? "Review due: it is time to record what actually happened."
-            : `Review in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`}
+            : `Review scheduled for ${formatReminder(decision.nextReminder || decision.reviewDate)}.`}
         </div>
       )}
 

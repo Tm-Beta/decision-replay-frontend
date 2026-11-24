@@ -51,11 +51,11 @@ export function AiAnalystSidebar() {
       const res = await apiClient<SocraticChallengeResponse>("/ai-analyst/challenge", {
         method: "POST",
         body: JSON.stringify({
-          title: store.title,
+          title: store.title || store.choice,
           choice: store.choice,
           decisionReason: store.decisionReason,
           expectedOutcome: store.expectedOutcome,
-          confidence: store.confidence,
+          confidence: store.confidenceText ? Number(store.confidenceText) : undefined,
           assumptions: store.assumptions,
           alternatives: store.alternatives,
           preMortems: store.preMortems,

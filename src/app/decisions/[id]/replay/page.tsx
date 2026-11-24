@@ -37,11 +37,11 @@ export default function ReplayComparisonPage() {
 
   // Form states for outcome recording if pending
   const [actualOutcome, setActualOutcome] = useState("");
-  const [outcomeScore, setOutcomeScore] = useState(75);
+  const [outcomeScore, setOutcomeScore] = useState<number|null>(null);
   const [reflection, setReflection] = useState("");
-  const [wouldRepeat, setWouldRepeat] = useState(true);
+  const [wouldRepeat, setWouldRepeat] = useState<boolean|null>(null);
   const [unexpectedFactors, setUnexpectedFactors] = useState("");
-  const [evaluations, setEvaluations] = useState<Record<string, { actual: string; validated: boolean }>>({});
+  const [evaluations, setEvaluations] = useState<Record<string, { actual: string; validated?: boolean }>>({});
   const [submitting, setSubmitting] = useState(false);
   const [assumptions, setAssumptions] = useState<Assumption[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -63,9 +63,9 @@ export default function ReplayComparisonPage() {
           const d = await decisionService.getDecisionById(id);
           const decisionAssumptions = d.assumptions ?? [];
           setAssumptions(decisionAssumptions);
-          const initialEvals: Record<string, { actual: string; validated: boolean }> = {};
+          const initialEvals: Record<string, { actual: string; validated?: boolean }> = {};
           decisionAssumptions.forEach((a) => {
-            if (a.id) initialEvals[a.id] = { actual: "", validated: true };
+            if (a.id) initialEvals[a.id] = { actual: "", validated: undefined };
           });
           setEvaluations(initialEvals);
         } catch (decisionErr) {
@@ -87,7 +87,7 @@ export default function ReplayComparisonPage() {
 
   // Once a replay exists, ask the AI analyst for a neutral variance audit.
   useEffect(() => {
-    if (!replay) return;
+    if (!replay || replay.initialSnapshot.confidence==null || replay.outcome.outcomeScore==null) return;
     let cancelled = false;
     setAnalysisLoading(true);
     setAnalysisFailed(false);
@@ -118,14 +118,14 @@ export default function ReplayComparisonPage() {
   }, [replay, id]);
 
   const handleSubmitOutcome = async () => {
-    if (actualOutcome.trim().length < 5 || reflection.trim().length < 5) {
-      setSubmitError("Please describe what happened and what you learned (at least 5 characters each).");
+    if (!actualOutcome.trim()) {
+      setSubmitError("Describe what happened.");
       return;
     }
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const assumptionEvals = Object.entries(evaluations).map(([assumptionId, val]) => ({
+      const assumptionEvals = Object.entries(evaluations).filter(([,v])=>v.validated!==undefined||v.actual.trim()).map(([assumptionId, val]) => ({
         assumptionId,
         metricActual: val.actual,
         validated: val.validated,
@@ -140,6 +140,7 @@ export default function ReplayComparisonPage() {
         assumptionEvaluations: assumptionEvals,
       });
 
+      window.dispatchEvent(new Event("reviews-changed"));
       // Reload replay comparison
       const freshReplay = await replayService.getReplayComparison(id);
       setReplay(freshReplay);
@@ -185,13 +186,6 @@ export default function ReplayComparisonPage() {
       {replay ? (
         /* COMPLETED REPLAY VIEW: SIDE-BY-SIDE DIFF */
         <div className="space-y-6">
-          <ReplayScoreCard
-            predictionAccuracy={replay.metrics.predictionAccuracy}
-            outcomeScore={replay.outcome.outcomeScore}
-            confidenceDelta={replay.metrics.confidenceCalibrationDelta}
-            wouldRepeat={replay.outcome.wouldRepeat}
-          />
-
           {/* Side-by-side comparison: Then vs Now */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* THEN (Frozen Snapshot) */}
@@ -200,7 +194,7 @@ export default function ReplayComparisonPage() {
                 <div className="flex items-center justify-between">
                   <Badge tone="violet">THEN · PROSPECTIVE BELIEF</Badge>
                   <span className="text-xs text-muted-foreground font-semibold">
-                    {replay.initialSnapshot.confidence}% Confidence
+                    {replay.initialSnapshot.confidence!=null ? replay.initialSnapshot.confidence+"% confidence" : "Confidence not recorded"}
                   </span>
                 </div>
                 <CardTitle className="text-base mt-2">What Was Expected</CardTitle>
@@ -214,7 +208,7 @@ export default function ReplayComparisonPage() {
                     Expected Outcome
                   </span>
                   <p className="leading-relaxed text-foreground font-medium text-sm">
-                    {replay.initialSnapshot.expectedOutcome}
+                    {replay.initialSnapshot.expectedOutcome || "No expectation recorded"}
                   </p>
                 </div>
                 {replay.initialSnapshot.decisionReason && (
@@ -236,7 +230,7 @@ export default function ReplayComparisonPage() {
                 <div className="flex items-center justify-between">
                   <Badge tone="green">NOW · OBSERVED REALITY</Badge>
                   <span className="text-xs text-foreground font-semibold">
-                    {replay.outcome.outcomeScore}/100 Rating
+                    {replay.outcome.outcomeScore!=null ? replay.outcome.outcomeScore+"/100 personal rating" : "No personal rating"}
                   </span>
                 </div>
                 <CardTitle className="text-base mt-2">What Actually Transpired</CardTitle>
@@ -258,7 +252,8 @@ export default function ReplayComparisonPage() {
                     Metacognitive Reflection & Learning
                   </span>
                   <p className="leading-relaxed text-muted-foreground">
-                    {replay.outcome.reflection}
+                    {replay.outcome.reflection || "No reflection recorded"}
+                    {replay.outcome.wouldRepeat!==null && <span className="block">Would choose again · {replay.outcome.wouldRepeat?"Yes":"No"}</span>}
                   </p>
                 </div>
               </CardContent>
@@ -305,7 +300,7 @@ export default function ReplayComparisonPage() {
           <CardHeader>
             <CardTitle className="text-lg">Close the Loop: Record Reality</CardTitle>
             <p className="text-xs text-muted-foreground">
-              Compare your locked beliefs with what actually happened to calculate your prediction accuracy.
+              Record what happened when the outcome is known.
             </p>
           </CardHeader>
 
@@ -321,16 +316,8 @@ export default function ReplayComparisonPage() {
             </div>
 
             <div>
-              <Slider
-                label="Outcome Quality Score (How well did this turn out?)"
-                valueDisplay={`${outcomeScore}/100`}
-                min={0}
-                max={100}
-                value={outcomeScore}
-                onChange={(e) => setOutcomeScore(Number(e.target.value))}
-              />
-            </div>
-
+              <details><summary>Add review details</summary>
+              <label>Personal rating (optional, 0–100)<input type="number" min="0" max="100" value={outcomeScore??""} onChange={e=>setOutcomeScore(e.target.value===""?null:Number(e.target.value))}/></label>
             {assumptions.some((a) => a.id) && (
               <div className="space-y-3">
                 <label className="text-xs font-semibold block">Were your assumptions correct?</label>
@@ -338,7 +325,7 @@ export default function ReplayComparisonPage() {
                   .filter((a) => a.id)
                   .map((a) => {
                     const key = a.id as string;
-                    const ev = evaluations[key] ?? { actual: "", validated: true };
+                    const ev = evaluations[key] ?? { actual: "", validated: undefined };
                     return (
                       <div key={key} className="rounded-xl border border-border p-3 space-y-2 text-xs">
                         <p className="font-medium text-foreground">{a.statement}</p>
@@ -364,7 +351,7 @@ export default function ReplayComparisonPage() {
                           <Button
                             type="button"
                             size="sm"
-                            variant={!ev.validated ? "destructive" : "outline"}
+                            variant={ev.validated===false ? "destructive" : "outline"}
                             onClick={() =>
                               setEvaluations((prev) => ({ ...prev, [key]: { ...(prev[key] ?? ev), validated: false } }))
                             }
@@ -415,7 +402,7 @@ export default function ReplayComparisonPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant={!wouldRepeat ? "destructive" : "outline"}
+                  variant={wouldRepeat===false ? "destructive" : "outline"}
                   onClick={() => setWouldRepeat(false)}
                   className="text-xs"
                 >
@@ -424,6 +411,7 @@ export default function ReplayComparisonPage() {
               </div>
             </div>
 
+              </details></div>
             {submitError && (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-foreground">
                 {submitError}
@@ -432,7 +420,7 @@ export default function ReplayComparisonPage() {
 
             <div className="flex justify-end pt-4 border-t border-border">
               <Button onClick={handleSubmitOutcome} disabled={submitting || !actualOutcome.trim()}>
-                {submitting ? "Computing Accuracy..." : "Complete Replay & Calculate Accuracy"}
+                {submitting ? "Saving…" : "Save outcome"}
               </Button>
             </div>
           </CardContent>

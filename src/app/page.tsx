@@ -100,11 +100,11 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <Link href="/decisions/new">
+        <Link href="/decisions">
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}>
             <Button className="h-10 rounded-xl bg-spring-500 text-plum-950 font-bold shadow-spring hover:bg-spring-400">
               <Plus className="h-4 w-4 mr-1.5 stroke-[3]" />
-              Record New Decision
+              Open decision groups
             </Button>
           </motion.div>
         </Link>
@@ -124,20 +124,7 @@ export default function DashboardPage() {
         <DecisionReplayLoader size="md" />
       ) : (
         <>
-          {/* Top Metric Cards */}
-          <AccuracySummaryCard
-            activeCount={activeCount}
-            totalDecisions={replayCount}
-            predictionAccuracy={predictionAccuracy}
-            calibrationBias={summary?.calibrationBias}
-          />
-
-          {/* Decisions Pending Review + Reasoning Patterns */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <PendingReviewsList decisions={decisions} />
-            <BlindSpotAlert patterns={summary?.detectedPatterns ?? []} />
-          </div>
-
+          <section className="branch-report"><h2 className="text-xl font-semibold">Decision journal</h2><p>{activeCount} awaiting outcomes · {replayCount} outcomes recorded</p><Link href="/decisions/ledger">Browse decisions →</Link></section>
           {/* Philosophy Card with Decision Loop Illustration */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}

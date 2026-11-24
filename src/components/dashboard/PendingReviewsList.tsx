@@ -1,4 +1,5 @@
 "use client";
+import { formatReminder } from "@/lib/utils";
 
 import React from "react";
 import Link from "next/link";
@@ -69,7 +70,7 @@ export function PendingReviewsList({ decisions = [] }: PendingReviewsListProps) 
                     <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3 text-muted-foreground" />
-                        Due: {formatDate(d.reviewDate)}
+                        Due: {formatReminder(d.nextReminder || d.reviewDate)}
                       </span>
                       <span>•</span>
                       <span className="font-medium">
