@@ -40,7 +40,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <ThemeProvider>
-          {/* Cinematic Ambient Background Lighting */}
+          {/* Subtle Ambient Lighting */}
           <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
             <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-plum-800/5 dark:bg-primary/5 blur-[120px] rounded-full" />
             <div className="absolute top-1/3 -right-40 w-[450px] h-[300px] bg-spring-500/5 blur-[100px] rounded-full" />

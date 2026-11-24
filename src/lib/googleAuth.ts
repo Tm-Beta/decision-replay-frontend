@@ -106,3 +106,4 @@ export async function launchGoogleSignIn(onSuccess?: () => void, onError?: (msg:
     window.location.href = authUrl;
   }
 }
+
