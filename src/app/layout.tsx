@@ -60,11 +60,11 @@ export default function RootLayout({
           </div>
 
           <div className="flex min-h-screen flex-col justify-between overflow-x-hidden">
-            {/* Desktop Top Floating Navbar */}
+            {/* Desktop Right Floating Dock & Mobile Header */}
             <Navbar />
 
-            {/* Main Application Container */}
-            <main className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            {/* Main Application Container (with dedicated right clearance for the dock) */}
+            <main className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 md:pr-20 lg:pr-24 py-6 sm:py-8">
               {children}
             </main>
 

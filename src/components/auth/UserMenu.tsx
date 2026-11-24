@@ -7,7 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, HelpCircle, Shield, ChevronDown } from "lucide-react";
 import { launchGoogleSignIn } from "@/lib/googleAuth";
 
-export function UserMenu() {
+interface UserMenuProps {
+  side?: "bottom" | "left";
+}
+
+export function UserMenu({ side = "bottom" }: UserMenuProps) {
   const router = useRouter();
   const { user, isAuthenticated, isHydrated, logout, openTourModal } = useAuthStore();
   const [open, setOpen] = useState(false);
@@ -106,11 +110,13 @@ export function UserMenu() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.95, ...(side === "left" ? { x: 10 } : { y: 8 }) }}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, ...(side === "left" ? { x: 10 } : { y: 8 }) }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-64 rounded-2xl border border-border/80 bg-card p-2 shadow-dock z-50 text-foreground"
+            className={`absolute w-64 rounded-2xl border border-border/80 bg-card p-2 shadow-dock z-50 text-foreground ${
+              side === "left" ? "right-full bottom-0 mr-3.5" : "right-0 mt-2"
+            }`}
           >
             {/* User Info Header */}
             <div className="p-2.5 border-b border-border/60 mb-1">
