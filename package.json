@@ -2,6 +2,8 @@
   "name": "decision-replay-frontend",
   "version": "1.0.0",
   "private": true,
+  "author": "Tm-Beta <https://github.com/Tm-Beta>",
+  "homepage": "https://github.com/Tm-Beta/decision-replay-frontend",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

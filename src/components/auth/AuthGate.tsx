@@ -15,7 +15,7 @@ import {
 
 export function AuthGate() {
   return (
-    <div className="relative w-full min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center py-6 sm:py-10">
+    <div className="relative w-full flex-1 flex flex-col items-center justify-center py-2 sm:py-4 my-auto">
       {/* ========================================================================= */}
       {/* DESKTOP & WIDE ARENA STAGE (3-Column Zero-Collision Flanking Layout)     */}
       {/* ========================================================================= */}
@@ -38,29 +38,29 @@ export function AuthGate() {
             x: { duration: 0.6, delay: 0.1 },
           }}
           whileHover={{ scale: 1.03, rotate: 0 }}
-          className="hidden lg:flex flex-col justify-between w-72 h-[340px] rounded-3xl border border-border/80 bg-card/85 p-6 shadow-dock backdrop-blur-xl transition-all duration-300 hover:border-spring-500/50 hover:shadow-spring"
+          className="hidden lg:flex flex-col justify-between w-72 h-[320px] rounded-3xl border border-border/80 bg-card/85 p-5 shadow-dock backdrop-blur-xl transition-all duration-300 hover:border-spring-500/50 hover:shadow-spring shrink-0"
         >
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <div className="flex items-center justify-between">
-              <div className="h-11 w-11 rounded-2xl bg-plum-900 text-cream-50 dark:bg-primary dark:text-plum-950 grid place-items-center shadow-soft">
-                <Fingerprint className="h-6 w-6 text-spring-400 dark:text-plum-950" />
+              <div className="h-10 w-10 rounded-2xl bg-plum-900 text-cream-50 dark:bg-primary dark:text-plum-950 grid place-items-center shadow-soft">
+                <Fingerprint className="h-5 w-5 text-spring-400 dark:text-plum-950" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-spring-600 dark:text-spring-400 px-2.5 py-1 rounded-full bg-spring-500/10 border border-spring-500/20">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-spring-600 dark:text-spring-400 px-2.5 py-0.5 rounded-full bg-spring-500/10 border border-spring-500/20">
                 SHA-256 Seal
               </span>
             </div>
 
             <div>
-              <h3 className="font-display text-base font-bold text-foreground">
+              <h3 className="font-display text-sm font-bold text-foreground">
                 Cryptographic Snapshots
               </h3>
-              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                 Every choice, rationale, and assumption is locked into an immutable SHA-256 snapshot before reality happens.
               </p>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-border/60 space-y-2 text-[11px] font-mono text-muted-foreground">
+          <div className="pt-3 border-t border-border/60 space-y-1.5 text-[11px] font-mono text-muted-foreground">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-spring-500 animate-pulse" />
               <span>Invariants Enforced</span>
@@ -79,7 +79,7 @@ export function AuthGate() {
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 w-full max-w-xl rounded-3xl border border-border/90 bg-gradient-to-br from-card/95 via-card/90 to-plum-500/10 p-7 sm:p-11 shadow-dock backdrop-blur-2xl text-center space-y-6 overflow-hidden"
+          className="relative z-10 w-full max-w-xl rounded-3xl border border-border/90 bg-gradient-to-br from-card/95 via-card/90 to-plum-500/10 p-6 sm:p-9 md:p-10 shadow-dock backdrop-blur-2xl text-center space-y-5 overflow-hidden"
         >
           {/* Ambient Glows Inside Card */}
           <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-spring-500/15 blur-3xl pointer-events-none" />
@@ -105,10 +105,10 @@ export function AuthGate() {
           </p>
 
           {/* Google Sign-in Action */}
-          <div className="pt-3 flex flex-col items-center gap-4">
+          <div className="pt-2 flex flex-col items-center gap-3.5">
             <GoogleAuthButton size="large" />
 
-            <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-spring-500" />
                 Zero passwords or verification codes
@@ -118,6 +118,15 @@ export function AuthGate() {
                 <Lock className="h-3.5 w-3.5 text-primary" />
                 User-isolated encrypted database
               </span>
+              <span>•</span>
+              <a
+                href="https://github.com/Tm-Beta"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-2"
+              >
+                Tm-Beta
+              </a>
             </div>
           </div>
         </motion.div>
@@ -125,7 +134,7 @@ export function AuthGate() {
         {/* ----------------------------------------------------------------------- */}
         {/* RIGHT FLANK (Desktop): 2 Stacked Feature Satellites                     */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="hidden lg:flex flex-col gap-4 w-72">
+        <div className="hidden lg:flex flex-col gap-3.5 w-72 shrink-0">
           {/* Satellite Card 2: Empirical Replay Review */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}

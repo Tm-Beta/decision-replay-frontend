@@ -19,10 +19,10 @@ export function WelcomeTourModal() {
   const slides = [
     {
       title: "Welcome to Prospective Truth",
-      subtitle: "The antidote to hindsight bias & outcome bias",
+      subtitle: "The antidote to hindsight bias • Engineered by Tm-Beta",
       icon: "compass" as const,
       description:
-        "Human memory naturally rewrites history once an outcome is known. Decision Replay enforces the prospective cycle: capturing your exact belief, confidence, and expected metric before reality unfolds.",
+        "Human memory naturally rewrites history once an outcome is known. Decision Replay by Tm-Beta enforces the prospective cycle: capturing your exact belief, confidence, and expected metric before reality unfolds.",
       visual: <DecisionLoopIllustration className="py-2" />,
     },
     {

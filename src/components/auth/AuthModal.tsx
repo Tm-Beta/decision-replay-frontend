@@ -69,7 +69,17 @@ export function AuthModal() {
             </div>
             <div className="flex items-center gap-1.5">
               <Lock className="h-3 w-3 text-primary" />
-              <span>Cryptographically isolated database per user</span>
+              <span>
+                Cryptographically isolated database &middot;{" "}
+                <a
+                  href="https://github.com/Tm-Beta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-foreground hover:text-primary transition-colors underline underline-offset-2"
+                >
+                  Tm-Beta
+                </a>
+              </span>
             </div>
           </div>
         </motion.div>
