@@ -174,13 +174,14 @@ export function Navbar() {
 
       {/* ========================================================================= */}
       {/* VERTICAL RIGHT-SIDE FLOATING DOCK (md: & Wide Screens)                    */}
-      {/* Seamless unified container with locked height (no lag/jitter on expand)   */}
+      {/* Seamless unified container with locked height and safe area padding       */}
       {/* ========================================================================= */}
       <motion.nav
         aria-label="Application navigation dock"
         initial={false}
         animate={{ width: dockExpanded ? 220 : 54 }}
         transition={{ type: "spring", stiffness: 420, damping: 30 }}
+        style={{ height: 288 }}
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => {
           if (!isMenuOpen) {
@@ -188,10 +189,10 @@ export function Navbar() {
             setHoveredRow(null);
           }
         }}
-        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-center p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none h-[260px]"
+        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col justify-between items-center px-2 py-3.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-visible select-none h-[288px]"
       >
         {/* Top Navigation Links (Only when authenticated) */}
-        <div className="w-full flex flex-col gap-2 items-center">
+        <div className="w-full flex flex-col gap-1.5 items-center">
           {isAuthenticated &&
             navLinks.map((link) => {
               const isActive =
@@ -222,9 +223,9 @@ export function Navbar() {
         </div>
 
         {/* Bottom Utility Controls (Clean Icon-Only Buttons, No Text Expansion) */}
-        <div className="w-full flex flex-col gap-1.5 items-center">
+        <div className="w-full flex flex-col gap-1 items-center">
           {/* Separator */}
-          <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-0.5" />
+          <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-1" />
 
           <div
             className={`w-full flex ${

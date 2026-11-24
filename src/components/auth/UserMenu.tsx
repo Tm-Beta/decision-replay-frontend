@@ -84,7 +84,7 @@ export function UserMenu({
           aria-label="User profile"
         >
           {isAuthenticated && user ? (
-            <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center ring-1 ring-border/80">
+            <div className="relative h-7 w-7 rounded-full overflow-hidden bg-plum-100 dark:bg-plum-900/60 text-primary font-bold text-xs grid place-items-center ring-1 ring-border/80">
               {user.avatar && !imgError ? (
                 <img
                   src={user.avatar}
