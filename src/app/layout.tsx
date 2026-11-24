@@ -43,7 +43,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={displayFont.variable}
+      className={`${displayFont.variable} dark`}
     >
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-accent/30 selection:text-foreground">
         {/* Official Google Identity Services SDK */}
