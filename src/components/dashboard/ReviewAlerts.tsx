@@ -18,37 +18,62 @@ export function ReviewAlerts() {
   const isInbox = path === "/notifications";
   const [loaded, setLoaded] = useState(false);
   const [notificationError, setNotificationError] = useState("");
+  const subscriptionKey = user ? "review-push-enabled:" + user : "";
+  const [changingPermission, setChangingPermission] = useState(false);
+
   useEffect(() => {
-    const supported = window.isSecureContext && "Notification" in window && "serviceWorker" in navigator;
+    const supported = window.isSecureContext && "Notification" in window &&
+      "serviceWorker" in navigator && "PushManager" in window;
     setAvailable(supported);
-    const syncPermission = () => setEnabled(supported && Notification.permission === "granted");
+    const syncPermission = () => setEnabled(Boolean(
+      supported && user && Notification.permission === "granted" &&
+      localStorage.getItem(subscriptionKey),
+    ));
     syncPermission();
     window.addEventListener("focus", syncPermission);
     return () => window.removeEventListener("focus", syncPermission);
-  }, []);
-  useEffect(() => {
-    if (!user || !enabled || !rows.length) return;
-    let active = true;
-    async function notify() {
-      await navigator.serviceWorker.register("/review-notifications.js");
-      const worker = await navigator.serviceWorker.ready;
-      if (!active || Notification.permission !== "granted") return;
-      for (const row of rows) {
-        if (!active) return;
-        const key = `review-notified:${user}:${row.id}`;
-        const due = row.nextReminder || row.reviewDate || "due";
-        if (localStorage.getItem(key) === due) continue;
-        await worker.showNotification("Decision review due", {
-          body: "Open Decision Replay to record your outcome.",
-          tag: key,
-          data: { path: "/decisions/" + encodeURIComponent(row.id) + "/replay" },
-        });
-        localStorage.setItem(key, due);
+  }, [subscriptionKey, user]);
+
+  async function changeBrowserReminders() {
+    if (!available || !user || changingPermission) return;
+    setChangingPermission(true);
+    setNotificationError("");
+    try {
+      if (!enabled && await Notification.requestPermission() !== "granted") {
+        setNotificationError(Notification.permission === "denied"
+          ? "Allow notifications in your browser’s site settings."
+          : "Choose Allow to receive reminders.");
+        return;
       }
+      await navigator.serviceWorker.register("/review-notifications.js");
+      const registration = await navigator.serviceWorker.ready;
+      const current = await registration.pushManager.getSubscription();
+      if (enabled) {
+        if (current) {
+          await apiClient("/review-push/subscription", {
+            method: "DELETE", body: JSON.stringify({ endpoint: current.endpoint }),
+          });
+          await current.unsubscribe();
+        }
+        localStorage.removeItem(subscriptionKey);
+        setEnabled(false);
+        return;
+      }
+      const { publicKey } = await apiClient<{ publicKey: string }>("/review-push/key");
+      const key = Uint8Array.from(atob(publicKey.replace(/-/g, "+").replace(/_/g, "/")), char => char.charCodeAt(0));
+      const subscription = current ?? await registration.pushManager.subscribe({
+        userVisibleOnly: true, applicationServerKey: key,
+      });
+      await apiClient("/review-push/subscription", { method: "POST", body: JSON.stringify(subscription.toJSON()) });
+      localStorage.setItem(subscriptionKey, "true");
+      setEnabled(true);
+    } catch (error) {
+      setNotificationError(error instanceof Error ? error.message : "Could not update browser reminders.");
+    } finally {
+      setChangingPermission(false);
     }
-    void notify().catch(() => { if (active) setNotificationError("Browser notifications could not be shown."); });
-    return () => { active = false; };
-  }, [user, enabled, rows]);
+  }
+
   useEffect(() => {
     let active = true,
       request = 0;
@@ -92,18 +117,13 @@ export function ReviewAlerts() {
       {isInbox && <FloatingDetails kind="notifications" />}
       {isInbox && <BackLink href="/">Home</BackLink>}
       {isInbox && <header className="collection-heading"><h1>Notifications</h1><JournalArt kind="notifications" reaction={rows.length ? "due" : "resting"} /></header>}
-      {isInbox && enabled && <p>Browser reminders are on. Keep Decision Replay open to receive them.</p>}
       {isInbox && !available && <p>Browser reminders are unavailable here. Due reviews still appear below.</p>}
-      {isInbox && available && !enabled && <div className="branch-tools">
-        <button type="button" className="inline-flex items-center gap-2" onClick={async () => {
-          try {
-            const permission = await Notification.requestPermission();
-            setEnabled(permission === "granted");
-            setNotificationError(permission === "denied" ? "Allow notifications in your browser’s site settings." : "");
-          } catch {
-            setNotificationError("Browser notifications could not be enabled.");
-          }
-        }}><Bell size={16} /> Enable browser reminders</button>
+      {isInbox && available && <div className="branch-tools">
+        <button type="button" className="inline-flex items-center gap-2"
+          disabled={changingPermission} onClick={changeBrowserReminders}>
+          <Bell size={16} /> {changingPermission ? "Updating…" : enabled ? "Turn off browser reminders" : "Enable browser reminders"}
+        </button>
+        {enabled && <span role="status">Browser reminders are on</span>}
       </div>}
       {notificationError && <p role="status">{notificationError}</p>}
       {error && <p role="status">{error}</p>}
