@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/useAuthStore";
+import { Sun, Moon } from "lucide-react";
 
 interface DockItemProps {
   icon: React.ReactNode;
@@ -32,33 +34,90 @@ function DockItem({
 
   return (
     <div
-      className="relative flex items-center justify-center"
+      className="relative flex items-center justify-end h-10 w-10 shrink-0"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Expanding Text Pill (Unfolds smoothly to the left on hover) */}
+      {/* Expanding Capsule on Hover (Unfolds smoothly to the left) */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            initial={{ opacity: 0, x: 12, scale: 0.94 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 8, scale: 0.94 }}
-            transition={{ type: "spring", stiffness: 450, damping: 28 }}
-            className="absolute right-full mr-3.5 z-50 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border/90 text-foreground text-xs font-semibold shadow-dock backdrop-blur-2xl whitespace-nowrap pointer-events-none"
+            initial={{ width: 40, opacity: 0.7 }}
+            animate={{ width: 215, opacity: 1 }}
+            exit={{ width: 40, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 420, damping: 28 }}
+            className={`absolute right-0 top-0 h-10 w-[215px] flex items-center justify-between rounded-xl backdrop-blur-2xl z-40 overflow-hidden select-none cursor-pointer transition-colors ${
+              isActive
+                ? "bg-plum-950/95 dark:bg-[#1f132b]/95 border border-spring-500/50 shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(34,197,94,0.2)]"
+                : "bg-card/95 dark:bg-[#181122]/95 border border-border/90 hover:border-spring-500/40 shadow-[0_8px_30px_rgba(0,0,0,0.45),0_0_15px_rgba(34,197,94,0.12)]"
+            }`}
+            onClick={onClick}
           >
-            <span>{label}</span>
-            {badge && (
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/70">
-                {badge}
-              </span>
+            {href ? (
+              <Link
+                href={href}
+                target={external ? "_blank" : undefined}
+                rel={external ? "noopener noreferrer" : undefined}
+                className="w-full h-full flex items-center justify-between pl-3.5 pr-0.5 text-foreground"
+              >
+                {/* Left Label & Badge */}
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  transition={{ duration: 0.18, delay: 0.04 }}
+                  className="flex items-center gap-2 overflow-hidden"
+                >
+                  <span className="text-xs font-semibold tracking-tight text-foreground truncate">
+                    {label}
+                  </span>
+                  {badge && (
+                    <span
+                      className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
+                        isActive
+                          ? "bg-spring-500/20 text-spring-400 border-spring-500/40"
+                          : "bg-muted text-muted-foreground border-border/70"
+                      }`}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </motion.div>
+
+                {/* Right Icon Anchor */}
+                <div className="h-10 w-10 grid place-items-center shrink-0">
+                  {icon}
+                </div>
+              </Link>
+            ) : (
+              <div className="w-full h-full flex items-center justify-between pl-3.5 pr-0.5 text-foreground">
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  transition={{ duration: 0.18, delay: 0.04 }}
+                  className="flex items-center gap-2 overflow-hidden"
+                >
+                  <span className="text-xs font-semibold tracking-tight text-foreground truncate">
+                    {label}
+                  </span>
+                  {badge && (
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/70 shrink-0">
+                      {badge}
+                    </span>
+                  )}
+                </motion.div>
+
+                <div className="h-10 w-10 grid place-items-center shrink-0">
+                  {icon}
+                </div>
+              </div>
             )}
-            {/* Directional Notch pointing to the dock icon */}
-            <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 bg-card border-r border-t border-border/90" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Dock Icon Button or Link */}
+      {/* Idle Icon Slot */}
       {href ? (
         <Link
           href={href}
@@ -66,15 +125,12 @@ function DockItem({
           rel={external ? "noopener noreferrer" : undefined}
           className={`relative grid h-10 w-10 place-items-center rounded-xl transition-all duration-200 cursor-pointer ${
             isActive
-              ? "bg-plum-100 dark:bg-plum-900/60 text-primary border border-primary/30 shadow-xs"
+              ? "bg-spring-500/15 text-spring-400 border border-spring-500/35 shadow-[0_0_12px_rgba(34,197,94,0.2)]"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/70 hover:border-border/80 border border-transparent"
           }`}
         >
           {isActive && (
-            <motion.span
-              layoutId="activeDockPill"
-              className="absolute -left-1 top-1/2 -translate-y-1/2 h-4 w-1 rounded-r-full bg-spring-500 shadow-spring"
-            />
+            <span className="absolute bottom-1 right-1 h-1.5 w-1.5 rounded-full bg-spring-400 shadow-[0_0_6px_rgba(74,222,128,0.9)]" />
           )}
           {icon}
         </Link>
@@ -84,10 +140,13 @@ function DockItem({
           onClick={onClick}
           className={`relative grid h-10 w-10 place-items-center rounded-xl transition-all duration-200 cursor-pointer ${
             isActive
-              ? "bg-plum-100 dark:bg-plum-900/60 text-primary border border-primary/30 shadow-xs"
+              ? "bg-spring-500/15 text-spring-400 border border-spring-500/35 shadow-[0_0_12px_rgba(34,197,94,0.2)]"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/70 hover:border-border/80 border border-transparent"
           }`}
         >
+          {isActive && (
+            <span className="absolute bottom-1 right-1 h-1.5 w-1.5 rounded-full bg-spring-400 shadow-[0_0_6px_rgba(74,222,128,0.9)]" />
+          )}
           {icon}
         </button>
       )}
@@ -98,6 +157,8 @@ function DockItem({
 export function Navbar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
 
   const navLinks = [
     { href: "/", label: "Dashboard", icon: "dashboard" as const },
@@ -132,7 +193,7 @@ export function Navbar() {
       {/* ========================================================================= */}
       <nav
         aria-label="Application navigation dock"
-        className="fixed right-3 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-center gap-2 p-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl"
+        className="fixed right-3 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-end gap-1.5 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl"
       >
         {/* Brand Anchor */}
         <DockItem
@@ -148,7 +209,7 @@ export function Navbar() {
         />
 
         {/* Separator */}
-        <div className="w-6 h-[1px] bg-border/60 my-0.5" />
+        <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-0.5" />
 
         {/* Primary Navigation Links (Only when authenticated) */}
         {isAuthenticated &&
@@ -164,11 +225,12 @@ export function Navbar() {
                 href={link.href}
                 label={link.label}
                 isActive={isActive}
+                badge={isActive ? "Active" : undefined}
                 icon={
                   <AnimatedIcon
                     name={link.icon}
                     size={17}
-                    className={isActive ? "text-primary" : "text-muted-foreground"}
+                    className={isActive ? "text-spring-400" : "text-muted-foreground"}
                   />
                 }
               />
@@ -192,13 +254,13 @@ export function Navbar() {
         )}
 
         {/* Separator */}
-        <div className="w-6 h-[1px] bg-border/60 my-0.5" />
+        <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-0.5" />
 
         {/* GitHub Organization Link */}
         <DockItem
           href="https://github.com/Tm-Beta"
           label="Tm-Beta on GitHub"
-          badge="External"
+          badge="↗"
           external
           icon={
             <svg className="h-4 w-4 fill-current text-muted-foreground hover:text-foreground transition-colors" viewBox="0 0 24 24" aria-hidden="true">
@@ -211,15 +273,24 @@ export function Navbar() {
           }
         />
 
-        {/* Theme Switcher */}
-        <div className="relative flex items-center justify-center">
-          <ThemeToggle />
-        </div>
+        {/* Theme Switcher as Native Dock Item */}
+        <DockItem
+          label={isDark ? "Dark Theme" : "Light Theme"}
+          badge="Switch"
+          onClick={toggleTheme}
+          icon={
+            <div className="relative grid h-8 w-8 place-items-center">
+              {isDark ? (
+                <Moon className="h-4 w-4 text-spring-400" />
+              ) : (
+                <Sun className="h-4 w-4 text-amber-500" />
+              )}
+            </div>
+          }
+        />
 
-        {/* User Profile Menu (Opens dropdown towards the left into view) */}
-        <div className="relative flex items-center justify-center">
-          <UserMenu side="left" />
-        </div>
+        {/* User Profile Menu with inDock Support */}
+        <UserMenu inDock side="left" />
       </nav>
     </>
   );
