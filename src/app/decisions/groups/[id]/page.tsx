@@ -56,6 +56,8 @@ function Workspace({ id }: { id: string }) {
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
+  const drag = useRef<{x:number;y:number;left:number;top:number}|null>(null);
 
   const handleRestore = async () => {
     setBusy(true);
@@ -327,7 +329,7 @@ function Workspace({ id }: { id: string }) {
         </section>
       ) : (
         <section className={"tree-canvas " + (fullScreen ? "tree-fullscreen" : "")}>
-          <div className="tree-canvas-head"><span>{planned ? "Your possible next steps" : "Your decisions"}</span><button onClick={() => setFullScreen(!fullScreen)}>{fullScreen ? "Exit full screen" : "Full screen"}</button></div>
+          <div className="tree-canvas-head"><span>{planned ? "Your possible next steps" : "Your decisions"}</span><div className="sheet-controls"><button onClick={() => sheet.current?.scrollTo({top:0,behavior:"smooth"})}>↑ Newest branches</button><button onClick={() => sheet.current?.scrollTo({top:sheet.current.scrollHeight,behavior:"smooth"})}>↓ Starting decisions</button><button onClick={() => setFullScreen(!fullScreen)}>{fullScreen ? "Exit full screen" : "Full screen"}</button></div></div>
           {nodes.length ? (
             <>
               <p>
@@ -336,7 +338,7 @@ function Workspace({ id }: { id: string }) {
                   : "Recorded choices and outcomes"}{" "}
                 · Read from the bottom up
               </p>
-              <div className="tree-scroll">
+              <div className="tree-scroll" ref={sheet} onPointerDown={e=>{if(e.button!==0 || (e.target as HTMLElement).closest("button,a,select,input,textarea")) return; drag.current={x:e.clientX,y:e.clientY,left:e.currentTarget.scrollLeft,top:e.currentTarget.scrollTop};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>{if(!drag.current)return;e.currentTarget.scrollLeft=drag.current.left-(e.clientX-drag.current.x);e.currentTarget.scrollTop=drag.current.top-(e.clientY-drag.current.y);}} onPointerUp={()=>{drag.current=null;}} onPointerCancel={()=>{drag.current=null;}}>
                 <ul className="branch-tree">
                   {children.get(null)?.map((root) => renderNode(root))}
                 </ul>
@@ -466,9 +468,7 @@ function Workspace({ id }: { id: string }) {
             )}
             {action === "delete" && (
               <p>
-                {decisions.length || plans.length
-                  ? "This group contains history. Only empty groups can be deleted."
-                  : "This empty group will be permanently deleted."}
+                This permanently deletes this group, its {decisions.length} decisions, {plans.length} planned steps, outcomes and reminders.
               </p>
             )}
             {error && <p role="alert">{error}</p>}
@@ -479,8 +479,7 @@ function Workspace({ id }: { id: string }) {
               <button
                 className="branch-primary"
                 disabled={
-                  busy ||
-                  (action === "delete" && !!(decisions.length || plans.length))
+                  busy
                 }
               >
                 {action === "delete"
