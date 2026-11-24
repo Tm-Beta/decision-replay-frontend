@@ -11,146 +11,99 @@ import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Sun, Moon } from "lucide-react";
 
-interface DockItemProps {
+interface DockRowProps {
+  id: string;
   icon: React.ReactNode;
   label: string;
   badge?: string;
   href?: string;
   isActive?: boolean;
+  isExpanded: boolean;
+  hoveredRow: string | null;
+  setHoveredRow: (id: string | null) => void;
   onClick?: () => void;
   external?: boolean;
 }
 
-function DockItem({
+function DockRow({
+  id,
   icon,
   label,
   badge,
   href,
   isActive = false,
+  isExpanded,
+  hoveredRow,
+  setHoveredRow,
   onClick,
   external = false,
-}: DockItemProps) {
-  const [isHovered, setIsHovered] = useState(false);
+}: DockRowProps) {
+  const isHovered = hoveredRow === id;
 
-  return (
+  const content = (
     <div
-      className="relative flex items-center justify-end h-10 w-10 shrink-0"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setHoveredRow(id)}
+      onMouseLeave={() => setHoveredRow(null)}
+      className={`relative h-10 w-full flex items-center justify-between rounded-xl px-2.5 transition-all duration-150 cursor-pointer select-none ${
+        isHovered
+          ? "bg-spring-500/15 text-spring-400 border border-spring-500/40 shadow-[0_0_12px_rgba(34,197,94,0.18)]"
+          : isActive
+          ? "text-spring-400 bg-spring-500/10 border border-spring-500/25"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
+      }`}
     >
-      {/* Expanding Capsule on Hover (Unfolds smoothly to the left) */}
+      {/* Left Label & Badge (Smoothly reveals when dock is expanded) */}
       <AnimatePresence>
-        {isHovered && (
+        {isExpanded && (
           <motion.div
-            initial={{ width: 40, opacity: 0.7 }}
-            animate={{ width: 215, opacity: 1 }}
-            exit={{ width: 40, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 28 }}
-            className={`absolute right-0 top-0 h-10 w-[215px] flex items-center justify-between rounded-xl backdrop-blur-2xl z-40 overflow-hidden select-none cursor-pointer transition-colors ${
-              isActive
-                ? "bg-plum-950/95 dark:bg-[#1f132b]/95 border border-spring-500/50 shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(34,197,94,0.2)]"
-                : "bg-card/95 dark:bg-[#181122]/95 border border-border/90 hover:border-spring-500/40 shadow-[0_8px_30px_rgba(0,0,0,0.45),0_0_15px_rgba(34,197,94,0.12)]"
-            }`}
-            onClick={onClick}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -6 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center gap-2 overflow-hidden pl-1"
           >
-            {href ? (
-              <Link
-                href={href}
-                target={external ? "_blank" : undefined}
-                rel={external ? "noopener noreferrer" : undefined}
-                className="w-full h-full flex items-center justify-between pl-3.5 pr-0.5 text-foreground"
+            <span className="text-xs font-semibold tracking-tight text-foreground truncate">
+              {label}
+            </span>
+            {badge && (
+              <span
+                className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
+                  isActive || isHovered
+                    ? "bg-spring-500/20 text-spring-400 border-spring-500/40"
+                    : "bg-muted text-muted-foreground border-border/70"
+                }`}
               >
-                {/* Left Label & Badge */}
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -6 }}
-                  transition={{ duration: 0.18, delay: 0.04 }}
-                  className="flex items-center gap-2 overflow-hidden"
-                >
-                  <span className="text-xs font-semibold tracking-tight text-foreground truncate">
-                    {label}
-                  </span>
-                  {badge && (
-                    <span
-                      className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
-                        isActive
-                          ? "bg-spring-500/20 text-spring-400 border-spring-500/40"
-                          : "bg-muted text-muted-foreground border-border/70"
-                      }`}
-                    >
-                      {badge}
-                    </span>
-                  )}
-                </motion.div>
-
-                {/* Right Icon Anchor */}
-                <div className="h-10 w-10 grid place-items-center shrink-0">
-                  {icon}
-                </div>
-              </Link>
-            ) : (
-              <div className="w-full h-full flex items-center justify-between pl-3.5 pr-0.5 text-foreground">
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -6 }}
-                  transition={{ duration: 0.18, delay: 0.04 }}
-                  className="flex items-center gap-2 overflow-hidden"
-                >
-                  <span className="text-xs font-semibold tracking-tight text-foreground truncate">
-                    {label}
-                  </span>
-                  {badge && (
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/70 shrink-0">
-                      {badge}
-                    </span>
-                  )}
-                </motion.div>
-
-                <div className="h-10 w-10 grid place-items-center shrink-0">
-                  {icon}
-                </div>
-              </div>
+                {badge}
+              </span>
             )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Idle Icon Slot */}
-      {href ? (
-        <Link
-          href={href}
-          target={external ? "_blank" : undefined}
-          rel={external ? "noopener noreferrer" : undefined}
-          className={`relative grid h-10 w-10 place-items-center rounded-xl transition-all duration-200 cursor-pointer ${
-            isActive
-              ? "bg-spring-500/15 text-spring-400 border border-spring-500/35 shadow-[0_0_12px_rgba(34,197,94,0.2)]"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/70 hover:border-border/80 border border-transparent"
-          }`}
-        >
-          {isActive && (
-            <span className="absolute bottom-1 right-1 h-1.5 w-1.5 rounded-full bg-spring-400 shadow-[0_0_6px_rgba(74,222,128,0.9)]" />
-          )}
-          {icon}
-        </Link>
-      ) : (
-        <button
-          type="button"
-          onClick={onClick}
-          className={`relative grid h-10 w-10 place-items-center rounded-xl transition-all duration-200 cursor-pointer ${
-            isActive
-              ? "bg-spring-500/15 text-spring-400 border border-spring-500/35 shadow-[0_0_12px_rgba(34,197,94,0.2)]"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/70 hover:border-border/80 border border-transparent"
-          }`}
-        >
-          {isActive && (
-            <span className="absolute bottom-1 right-1 h-1.5 w-1.5 rounded-full bg-spring-400 shadow-[0_0_6px_rgba(74,222,128,0.9)]" />
-          )}
-          {icon}
-        </button>
-      )}
+      {/* Right Icon Anchor */}
+      <div className={`h-8 w-8 grid place-items-center shrink-0 ${!isExpanded ? "mx-auto" : ""}`}>
+        {icon}
+      </div>
     </div>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
+        className="w-full block"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className="w-full block text-left">
+      {content}
+    </button>
   );
 }
 
@@ -159,6 +112,9 @@ export function Navbar() {
   const { isAuthenticated } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   const navLinks = [
     { href: "/", label: "Dashboard", icon: "dashboard" as const },
@@ -218,10 +174,19 @@ export function Navbar() {
 
       {/* ========================================================================= */}
       {/* VERTICAL RIGHT-SIDE FLOATING DOCK (md: & Wide Screens)                    */}
+      {/* Seamless unified container that expands width-wise on hover               */}
       {/* ========================================================================= */}
-      <nav
+      <motion.nav
         aria-label="Application navigation dock"
-        className="fixed right-3 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-end gap-1.5 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl"
+        initial={false}
+        animate={{ width: isExpanded ? 220 : 54 }}
+        transition={{ type: "spring", stiffness: 420, damping: 30 }}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => {
+          setIsExpanded(false);
+          setHoveredRow(null);
+        }}
+        className="fixed right-3 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-end gap-1 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl overflow-hidden select-none"
       >
         {/* Primary Navigation Links (Only when authenticated) */}
         {isAuthenticated &&
@@ -232,12 +197,16 @@ export function Navbar() {
                 : pathname.startsWith(link.href);
 
             return (
-              <DockItem
+              <DockRow
                 key={link.href}
+                id={link.href}
                 href={link.href}
                 label={link.label}
                 isActive={isActive}
                 badge={isActive ? "Active" : undefined}
+                isExpanded={isExpanded}
+                hoveredRow={hoveredRow}
+                setHoveredRow={setHoveredRow}
                 icon={
                   <AnimatedIcon
                     name={link.icon}
@@ -251,9 +220,13 @@ export function Navbar() {
 
         {/* Calibration Beacon (Only when authenticated) */}
         {isAuthenticated && (
-          <DockItem
+          <DockRow
+            id="calibration"
             label="Metacognitive Calibration"
             badge="Active"
+            isExpanded={isExpanded}
+            hoveredRow={hoveredRow}
+            setHoveredRow={setHoveredRow}
             icon={
               <div className="grid h-8 w-8 place-items-center rounded-lg">
                 <span className="relative flex h-2.5 w-2.5">
@@ -266,14 +239,18 @@ export function Navbar() {
         )}
 
         {/* Separator */}
-        <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-0.5" />
+        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-0.5" />
 
         {/* GitHub Organization Link */}
-        <DockItem
+        <DockRow
+          id="github"
           href="https://github.com/Tm-Beta"
           label="Tm-Beta on GitHub"
           badge="↗"
           external
+          isExpanded={isExpanded}
+          hoveredRow={hoveredRow}
+          setHoveredRow={setHoveredRow}
           icon={
             <svg className="h-4 w-4 fill-current text-muted-foreground hover:text-foreground transition-colors" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -286,9 +263,13 @@ export function Navbar() {
         />
 
         {/* Theme Switcher as Native Dock Item */}
-        <DockItem
+        <DockRow
+          id="theme"
           label={isDark ? "Dark Theme" : "Light Theme"}
           badge="Switch"
+          isExpanded={isExpanded}
+          hoveredRow={hoveredRow}
+          setHoveredRow={setHoveredRow}
           onClick={toggleTheme}
           icon={
             <div className="relative grid h-8 w-8 place-items-center">
@@ -302,8 +283,8 @@ export function Navbar() {
         />
 
         {/* User Profile Menu with inDock Support */}
-        <UserMenu inDock side="left" />
-      </nav>
+        <UserMenu inDock side="left" isExpanded={isExpanded} />
+      </motion.nav>
     </>
   );
 }
