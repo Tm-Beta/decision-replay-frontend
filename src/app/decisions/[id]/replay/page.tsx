@@ -25,6 +25,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
+import { DecisionReplayLoader } from "@/components/ui/DecisionReplayLoader";
 import { GitCompare, ArrowLeft, CheckCircle2, XCircle, RotateCcw, Sparkles } from "lucide-react";
 
 export default function ReplayComparisonPage() {
@@ -152,7 +153,7 @@ export default function ReplayComparisonPage() {
   };
 
   if (loading) {
-    return <div className="py-16 text-center text-xs text-muted-foreground">Loading Replay Engine...</div>;
+    return <DecisionReplayLoader size="fullscreen" />;
   }
 
   if (loadError) {

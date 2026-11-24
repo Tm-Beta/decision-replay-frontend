@@ -17,6 +17,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
+import { DecisionReplayLoader } from "@/components/ui/DecisionReplayLoader";
 import { GitCompare, AlertTriangle, Split, ArrowLeft, Check, X, Circle } from "lucide-react";
 
 function daysUntil(dateStr: string | null): number | null {
@@ -94,11 +95,7 @@ export default function DecisionDetailPage() {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="py-16 text-center text-xs text-muted-foreground">
-        Loading snapshot & timeline...
-      </div>
-    );
+    return <DecisionReplayLoader size="fullscreen" />;
   }
 
   if (!decision) {

@@ -14,6 +14,7 @@ import { EmptyDecisionsIllustration } from "@/components/illustrations/DecisionI
 import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
+import { DecisionReplayLoader } from "@/components/ui/DecisionReplayLoader";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Search, Plus } from "lucide-react";
 
@@ -132,12 +133,7 @@ export default function DecisionsListPage() {
       {/* Decisions List */}
       <div className="space-y-3">
         {loading ? (
-          <div className="py-16 text-center text-xs text-muted-foreground space-y-3">
-            <div className="grid h-10 w-10 mx-auto place-items-center rounded-xl bg-muted animate-spin">
-              <AnimatedIcon name="compass" size={20} interactive={false} />
-            </div>
-            <p>Loading prospective archive...</p>
-          </div>
+          <DecisionReplayLoader size="md" />
         ) : filteredDecisions.length === 0 ? (
           <Card className="border-border/80 bg-card/60 p-8 text-center shadow-soft">
             <EmptyDecisionsIllustration />

@@ -13,6 +13,7 @@ import { decisionService } from "@/services/decisionService";
 import { replayService } from "@/services/replayService";
 import { ApiError } from "@/services/apiClient";
 import { useAuthStore } from "@/store/useAuthStore";
+import { DecisionReplayLoader } from "@/components/ui/DecisionReplayLoader";
 import { AuthGate } from "@/components/auth/AuthGate";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
@@ -57,14 +58,9 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, loadData]);
 
-  // If zustand hasn't rehydrated from localStorage yet, render subtle placeholder to avoid flicker
+  // If zustand hasn't rehydrated from localStorage yet, render unique brand loader
   if (!isHydrated) {
-    return (
-      <div className="py-24 text-center text-xs text-muted-foreground">
-        <div className="h-6 w-6 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin mb-3" />
-        <p>Loading Decision Replay workspace...</p>
-      </div>
-    );
+    return <DecisionReplayLoader size="fullscreen" />;
   }
 
   // If unauthenticated, present the Auth Gate (Google Sign-In Wall)
@@ -125,12 +121,7 @@ export default function DashboardPage() {
       )}
 
       {loading ? (
-        <div className="py-16 text-center text-xs text-muted-foreground space-y-3">
-          <div className="grid h-10 w-10 mx-auto place-items-center rounded-xl bg-muted animate-spin">
-            <AnimatedIcon name="target" size={20} />
-          </div>
-          <p>Analyzing prospective decisions and calibration metrics...</p>
-        </div>
+        <DecisionReplayLoader size="md" />
       ) : (
         <>
           {/* Top Metric Cards */}

@@ -14,6 +14,7 @@ import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { motion } from "framer-motion";
 import { Award, ShieldAlert } from "lucide-react";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
+import { DecisionReplayLoader } from "@/components/ui/DecisionReplayLoader";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function DecisionDnaPage() {
@@ -47,14 +48,7 @@ export default function DecisionDnaPage() {
   }, [isAuthenticated, loadData]);
 
   if (loading) {
-    return (
-      <div className="py-20 text-center text-xs text-muted-foreground space-y-3">
-        <div className="grid h-10 w-10 mx-auto place-items-center rounded-xl bg-muted animate-spin">
-          <AnimatedIcon name="dna" size={20} interactive={false} />
-        </div>
-        <p>Synthesizing Decision DNA profile...</p>
-      </div>
-    );
+    return <DecisionReplayLoader size="fullscreen" />;
   }
 
   const lowestDimension =
