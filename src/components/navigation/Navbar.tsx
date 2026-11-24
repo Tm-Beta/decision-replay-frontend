@@ -189,28 +189,40 @@ export function Navbar() {
       </header>
 
       {/* ========================================================================= */}
+      {/* DESKTOP TOP-LEFT BRAND IDENTITY (md: & Wide Screens)                       */}
+      {/* ========================================================================= */}
+      <div className="hidden md:flex items-center w-full max-w-6xl mx-auto px-4 sm:px-6 md:pr-20 lg:pr-24 pt-4 sm:pt-6">
+        <Link
+          href="/"
+          className="group inline-flex items-center gap-2.5 px-3.5 py-2 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl hover:border-spring-500/40 transition-all duration-200 shrink-0"
+        >
+          <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900 text-cream-50 shadow-soft transition-transform group-hover:scale-105 dark:bg-primary dark:text-plum-950 shrink-0">
+            <AnimatedIcon name="compass" size={17} className="text-spring-400 dark:text-plum-950" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-spring-500 ring-2 ring-background" />
+          </div>
+          <div className="flex flex-col shrink-0">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="font-display text-sm font-bold tracking-tight text-foreground transition-colors group-hover:text-primary whitespace-nowrap">
+                Decision Replay
+              </span>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/70 shrink-0">
+                Tm-Beta
+              </span>
+            </div>
+            <span className="text-[9px] font-medium tracking-wider text-muted-foreground uppercase whitespace-nowrap">
+              Prospective Metacognition
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {/* ========================================================================= */}
       {/* VERTICAL RIGHT-SIDE FLOATING DOCK (md: & Wide Screens)                    */}
       {/* ========================================================================= */}
       <nav
         aria-label="Application navigation dock"
         className="fixed right-3 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col items-end gap-1.5 p-1.5 rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl"
       >
-        {/* Brand Anchor */}
-        <DockItem
-          href="/"
-          label="Decision Replay"
-          badge="Tm-Beta"
-          icon={
-            <div className="relative grid h-8 w-8 place-items-center rounded-xl bg-plum-900 text-cream-50 shadow-soft dark:bg-primary dark:text-plum-950">
-              <AnimatedIcon name="compass" size={17} className="text-spring-400 dark:text-plum-950" />
-              <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-spring-500 ring-2 ring-background" />
-            </div>
-          }
-        />
-
-        {/* Separator */}
-        <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-border to-transparent my-0.5" />
-
         {/* Primary Navigation Links (Only when authenticated) */}
         {isAuthenticated &&
           navLinks.map((link) => {
