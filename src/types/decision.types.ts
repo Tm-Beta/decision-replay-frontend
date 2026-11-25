@@ -71,6 +71,7 @@ export interface OutcomeBranch {
   id: string;
   projectId: string;
   decisionId: string;
+  planId?: string | null;
   title: string;
   detail: string;
   isPrimary: boolean;
@@ -93,6 +94,7 @@ export interface Decision {
   category: string;
   projectId?: string | null;
   nextReminder?:string|null;
+  joinRule?: "ANY" | "ALL";
   choice: string;
   context: string;
   decisionReason?: string;

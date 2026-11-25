@@ -38,6 +38,7 @@ type Entry = Decision & {
 type Plan = {
   status: string;
   nodeType?: "DECISION" | "OUTCOME";
+  joinRule?: "ANY" | "ALL";
   id: string;
   originId: string | null;
   parentPlanId: string | null;
@@ -136,6 +137,7 @@ function Workspace({ id }: { id: string }) {
   const rawLinks = group.graphLinks ?? [];
 
   const recorded = new Map(decisions.filter((d) => d.planId).map((d) => [d.planId!, d]));
+  const recordedOutcomes = new Map(outcomeBranches.filter((ob) => ob.planId).map((ob) => [ob.planId!, ob]));
   const plansById = new Map(plans.map((p) => [p.id, p]));
   const byId = new Map(decisions.map((d) => [d.id, d]));
   const outcomeById = new Map(outcomeBranches.map((o) => [o.id, o]));
@@ -173,7 +175,7 @@ function Workspace({ id }: { id: string }) {
   }
 
   function formatDue(d: Entry) {
-    if (d.outcome) return "Outcome recorded";
+    if (d.outcome || d.outcomeBranches?.length) return "Outcome recorded";
     if (!d.nextReminder && !d.reviewDate) return "Awaiting outcome";
     const minutes = Math.ceil((new Date(d.nextReminder || d.reviewDate!).getTime() - now) / 60000);
     if (minutes <= 0) return "Outcome due";
@@ -183,7 +185,7 @@ function Workspace({ id }: { id: string }) {
   }
 
   function isDue(d: Entry) {
-    if (d.outcome || (!d.nextReminder && !d.reviewDate)) return false;
+    if (d.outcome || d.outcomeBranches?.length || (!d.nextReminder && !d.reviewDate)) return false;
     return new Date(d.nextReminder || d.reviewDate!).getTime() <= now;
   }
 
@@ -191,26 +193,31 @@ function Workspace({ id }: { id: string }) {
   const graphNodes: GraphNode[] = [];
   const graphEdges: GraphEdge[] = [];
 
-  // Map promoted planId -> real DECISION key for unified Plans graph rendering
+  // Map promoted planId -> real DECISION or OUTCOME key for unified Plans graph rendering
   const resolvePlanKey = (planId: string) => {
     const rec = recorded.get(planId);
-    return rec ? `DECISION:${rec.id}` : `PLAN:${planId}`;
+    if (rec) return `DECISION:${rec.id}`;
+    const ob = recordedOutcomes.get(planId);
+    if (ob) return `OUTCOME:${ob.id}`;
+    return `PLAN:${planId}`;
   };
 
   if (!planned) {
     // ACTUAL TREE: Decisions + Real Outcome Branches
     for (const d of decisions) {
       const due = isDue(d);
+      const hasOutcome = Boolean(d.outcome || d.outcomeBranches?.length);
       graphNodes.push({
         key: `DECISION:${d.id}`,
         id: d.id,
         rawType: "DECISION",
         kind: "DECISION",
         planned: false,
+        joinRule: d.joinRule ?? "ANY",
         title: d.title,
         subtitle: d.expectedOutcome || d.choice,
         statusLabel: formatDue(d),
-        tone: d.outcome ? "done" : due ? "due" : "waiting",
+        tone: hasOutcome ? "done" : due ? "due" : "waiting",
       });
     }
     for (const ob of outcomeBranches) {
@@ -291,10 +298,11 @@ function Workspace({ id }: { id: string }) {
         rawType: "DECISION",
         kind: "DECISION",
         planned: false,
+        joinRule: d.joinRule ?? "ANY",
         title: d.title,
         subtitle: d.expectedOutcome || d.choice,
         statusLabel: "Recorded",
-        tone: d.outcome ? "done" : "waiting",
+        tone: d.outcome || d.outcomeBranches?.length ? "done" : "waiting",
       });
     }
     for (const ob of outcomeBranches) {
@@ -311,7 +319,7 @@ function Workspace({ id }: { id: string }) {
       });
     }
     for (const p of plans) {
-      if (recorded.has(p.id)) continue; // Represented by the recorded Decision
+      if (recorded.has(p.id) || recordedOutcomes.has(p.id)) continue; // Represented by recorded Decision or Outcome
       const isOut = (p.nodeType ?? "DECISION") === "OUTCOME";
       graphNodes.push({
         key: `PLAN:${p.id}`,
@@ -319,6 +327,7 @@ function Workspace({ id }: { id: string }) {
         rawType: "PLAN",
         kind: isOut ? "OUTCOME" : "DECISION",
         planned: true,
+        joinRule: p.joinRule ?? "ANY",
         title: p.title,
         subtitle: p.expectedOutcome,
         statusLabel: isOut
@@ -446,6 +455,21 @@ function Workspace({ id }: { id: string }) {
     }
   }
 
+  async function handleToggleJoinRule(node: GraphNode) {
+    if (node.rawType !== "DECISION" && node.rawType !== "PLAN") return;
+    const nextRule = node.joinRule === "ALL" ? "ANY" : "ALL";
+    setError("");
+    try {
+      await apiClient(`${endpoint}/nodes/${node.rawType}/${node.id}/join-rule`, {
+        method: "PATCH",
+        body: JSON.stringify({ joinRule: nextRule }),
+      });
+      await refreshGroup();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   function handleQuickAddDecisionFromNode(node: GraphNode) {
     if (!planned) {
       if (node.rawType === "DECISION") {
@@ -540,13 +564,39 @@ function Workspace({ id }: { id: string }) {
           </div>
         )}
 
+        {incoming.length >= 2 && node.kind === "DECISION" && (
+          <div className="p-2.5 rounded-xl border border-border/60 bg-background/40 space-y-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground block">
+              Convergence rule ({incoming.length} paths)
+            </span>
+            <button
+              type="button"
+              onClick={() => void handleToggleJoinRule(node)}
+              className="w-full text-left text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-border bg-secondary/40 hover:bg-secondary/70 transition flex items-center justify-between"
+            >
+              <span>
+                {node.joinRule === "ALL"
+                  ? "ALL paths required (AND)"
+                  : "ANY single path works (OR)"}
+              </span>
+              <span className="text-[10px] text-primary">Switch</span>
+            </button>
+          </div>
+        )}
+
         <div className="graph-inspector-actions">
           {/* ACTUAL DECISION ACTIONS */}
           {decision && (
             <>
               {!decision.outcome && (
-                <Link className="primary-action" href={`/decisions/${decision.id}/replay`}>
-                  <ArrowRight size={14} /> Record full outcome
+                <Link
+                  className={decision.outcomeBranches?.length ? "" : "primary-action"}
+                  href={`/decisions/${decision.id}/replay`}
+                >
+                  <ArrowRight size={14} />{" "}
+                  {decision.outcomeBranches?.length
+                    ? "Complete full replay reflection"
+                    : "Record full outcome"}
                 </Link>
               )}
               <button type="button" onClick={() => open("addOutcome", decision.id)}>
@@ -923,6 +973,7 @@ function Workspace({ id }: { id: string }) {
           onCompleteConnect={handleCompleteConnect}
           onRemoveEdge={handleRemoveEdge}
           onDeleteNode={handleDeleteNode}
+          onToggleJoinRule={handleToggleJoinRule}
           onQuickAddDecisionFromNode={handleQuickAddDecisionFromNode}
           onQuickAddOutcomeFromNode={handleQuickAddOutcomeFromNode}
           onAddRootDecision={() =>
@@ -1012,17 +1063,11 @@ function Workspace({ id }: { id: string }) {
                 if (action === "promoteOutcome") {
                   const p = plansById.get(selected);
                   if (p) {
-                    await apiClient(endpoint + "/outcomes", {
+                    await apiClient(endpoint + "/plans/" + p.id + "/promote-outcome", {
                       method: "POST",
                       body: JSON.stringify({
                         decisionId: value("decisionId"),
-                        title: p.title,
-                        detail: p.expectedOutcome,
                       }),
-                    });
-                    await apiClient(endpoint + "/plans/" + p.id, {
-                      method: "PATCH",
-                      body: JSON.stringify({ status: "DROPPED" }),
                     });
                   }
                 }
@@ -1208,18 +1253,30 @@ function Workspace({ id }: { id: string }) {
               </>
             )}
 
-            {action === "promoteOutcome" && (
-              <label>
-                Which decision in the Tree produced “{plansById.get(selected)?.title}”?
-                <select name="decisionId" defaultValue={decisions[0]?.id}>
-                  {decisions.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
+            {action === "promoteOutcome" && (() => {
+              const planObj = plansById.get(selected);
+              const linkedDecisionId =
+                rawLinks.find(
+                  (l) =>
+                    l.toType === "PLAN" &&
+                    l.toId === selected &&
+                    l.fromType === "DECISION",
+                )?.fromId ||
+                (planObj ? findStartingDecision(planObj) : undefined) ||
+                decisions[0]?.id;
+              return (
+                <label>
+                  Which decision in the Tree produced “{planObj?.title}”?
+                  <select name="decisionId" defaultValue={linkedDecisionId}>
+                    {decisions.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              );
+            })()}
 
             {(action === "plan" || action === "rename" || action === "editDecision") && (
               <label>
