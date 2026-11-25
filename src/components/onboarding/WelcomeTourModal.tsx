@@ -21,10 +21,10 @@ const slides = [
     example: [{ label: "You expected", value: "20 orders" }, { label: "What happened", value: "24 orders" }],
   },
   {
-    title: "Keep related choices together",
-    message: "Use a collection to see how one choice led to the next. A quick decision can stand on its own.",
+    title: "Map decisions and outcomes",
+    message: "Connect choices, record multiple outcomes, and plan 'what if' scenarios in one zoomable flow.",
     kind: "projects", reaction: "sorting",
-    example: [{ label: "First choice", value: "Run the pop-up" }, { label: "Next choice", value: "Try preorders" }],
+    example: [{ label: "Outcome", value: "Passed exam" }, { label: "Next decision", value: "Join engineering" }],
   },
   {
     title: "Think through the next step",

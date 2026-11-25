@@ -67,6 +67,26 @@ export interface SnapshotSummary {
   lockedAt: string;
 }
 
+export interface OutcomeBranch {
+  id: string;
+  projectId: string;
+  decisionId: string;
+  title: string;
+  detail: string;
+  isPrimary: boolean;
+  createdAt: string;
+}
+
+export interface GraphLink {
+  id: string;
+  projectId: string;
+  fromType: "DECISION" | "OUTCOME" | "PLAN";
+  fromId: string;
+  toType: "DECISION" | "OUTCOME" | "PLAN";
+  toId: string;
+  label?: string;
+}
+
 export interface Decision {
   id: string;
   title: string;
@@ -143,6 +163,7 @@ export interface DecisionDnaProfile {
   totalDecisions: number;
   overallDnaScore: number;
   dimensions: DnaDimension[];
+  patterns?: DetectedPattern[];
 }
 
 

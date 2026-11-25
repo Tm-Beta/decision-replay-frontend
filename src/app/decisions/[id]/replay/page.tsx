@@ -311,7 +311,28 @@ export default function ReplayComparisonPage() {
             <div>
               <details className="rounded-xl border border-border p-4"><summary className="cursor-pointer text-sm font-semibold">Add details (optional)</summary>
               <div className="mt-4 grid gap-4">
-              <label className="grid gap-2 text-sm">Rating (0–100)<Input className="w-28 !bg-background !text-foreground !border-border" type="number" min="0" max="100" value={outcomeScore??""} onChange={e=>setOutcomeScore(e.target.value===""?null:Number(e.target.value))}/></label>
+              <label className="grid gap-2 text-sm">
+                How did it turn out? (0–100)
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input className="w-24 !bg-background !text-foreground !border-border" type="number" min="0" max="100" value={outcomeScore??""} onChange={e=>setOutcomeScore(e.target.value===""?null:Number(e.target.value))}/>
+                  {[
+                    ["Great (90)", 90],
+                    ["Good (75)", 75],
+                    ["Mixed (55)", 55],
+                    ["Rough (30)", 30],
+                  ].map(([label, val]) => (
+                    <Button
+                      key={String(val)}
+                      type="button"
+                      size="sm"
+                      variant={outcomeScore === val ? "default" : "outline"}
+                      onClick={() => setOutcomeScore(Number(val))}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </label>
             {assumptions.some((a) => a.id) && (
               <div className="space-y-3">
                 <label className="text-xs font-semibold block">Were your assumptions correct?</label>

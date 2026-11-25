@@ -81,7 +81,7 @@ export default function DecisionsListPage() {
             All decisions
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            
+            Search and review decisions across your collections and individual journal.
           </p>
         </div>
 
@@ -185,13 +185,13 @@ export default function DecisionsListPage() {
                         </Badge>
                       ) : (
                         <Badge tone="plum">
-                          <AnimatedIcon name="lock" size={11} className="mr-1" /> Frozen Snapshot
+                          <AnimatedIcon name="lock" size={11} className="mr-1" /> Awaiting outcome
                         </Badge>
                       )}
                     </div>
 
                     <p className="text-xs text-muted-foreground line-clamp-1">
-                      <span className="font-semibold text-foreground/80">Chosen Action:</span> {d.choice}
+                      <span className="font-semibold text-foreground/80">Choice:</span> {d.choice}
                     </p>
 
                     <div className="flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground pt-0.5">
@@ -217,7 +217,7 @@ export default function DecisionsListPage() {
                   <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                     <Link href={`/decisions/${d.id}`}>
                       <Button variant="outline" size="sm" className="h-9 font-medium text-xs">
-                        Snapshot <AnimatedIcon name="arrow-right" size={12} className="ml-1" />
+                        Open <AnimatedIcon name="arrow-right" size={12} className="ml-1" />
                       </Button>
                     </Link>
                     {d.status !== "REPLAYED" ? (
@@ -226,13 +226,13 @@ export default function DecisionsListPage() {
                           size="sm"
                           className="h-9 bg-spring-500 text-plum-950 font-bold shadow-sm hover:bg-spring-400 text-xs"
                         >
-                          Record Outcome
+                          Record outcome
                         </Button>
                       </Link>
                     ) : (
                       <Link href={`/decisions/${d.id}/replay`}>
                         <Button size="sm" variant="secondary" className="h-9 text-xs font-semibold">
-                          View Replay
+                          View outcome
                         </Button>
                       </Link>
                     )}

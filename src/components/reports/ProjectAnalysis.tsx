@@ -9,13 +9,14 @@ const monthLabel = new Intl.DateTimeFormat("en", {
   year: "2-digit", month: "short", timeZone: "Asia/Colombo",
 });
 
-export function ProjectAnalysis({ decisions, openPlans, now }: {
+export function ProjectAnalysis({ decisions, openPlans, now, totalOutcomes }: {
   decisions: Decision[];
   openPlans: number;
   now: number;
+  totalOutcomes?: number;
 }) {
   const pending = decisions.filter(decision => !decision.outcome);
-  const completed = decisions.length - pending.length;
+  const completed = totalOutcomes ?? (decisions.length - pending.length);
   const due = pending.filter(decision => {
     const reminder = decision.nextReminder || decision.reviewDate;
     return reminder && Date.parse(reminder) <= now;
