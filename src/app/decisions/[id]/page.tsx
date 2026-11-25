@@ -9,18 +9,21 @@
 import { BackLink } from "@/components/navigation/BackLink";
 import { formatReminder } from "@/lib/utils";
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Decision } from "@/types/decision.types";
 import { decisionService } from "@/services/decisionService";
+import { apiClient } from "@/services/apiClient";
 import { SnapshotTimeline } from "@/components/replay/SnapshotTimeline";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
 import { DecisionReplayLoader } from "@/components/ui/DecisionReplayLoader";
-import { GitCompare, AlertTriangle, Split, ArrowLeft, Check, X, Circle } from "lucide-react";
+import { GitCompare, AlertTriangle, Split, ArrowLeft, Check, X, Circle, Pencil, FolderInput, Trash2 } from "lucide-react";
+
+type Collection = { id: string; name: string };
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null;
@@ -30,15 +33,35 @@ function daysUntil(dateStr: string | null): number | null {
 
 export default function DecisionDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const [decision, setDecision] = useState<Decision | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalAction, setModalAction] = useState<"edit" | "move" | "delete" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (modalAction && !dialogRef.current?.open) dialogRef.current?.showModal();
+    if (!modalAction && dialogRef.current?.open) dialogRef.current?.close();
+  }, [modalAction]);
+
+  const reload = async () => {
+    const d = await decisionService.getDecisionById(id);
+    setDecision(d);
+  };
 
   useEffect(() => {
     async function load() {
       try {
-        const d = await decisionService.getDecisionById(id);
+        const [d, cols] = await Promise.all([
+          decisionService.getDecisionById(id),
+          apiClient<Collection[]>("/groups").catch(() => []),
+        ]);
         setDecision(d);
+        setCollections(cols);
       } catch {
         setDecision(null);
       } finally {
@@ -68,15 +91,26 @@ export default function DecisionDetailPage() {
       <div className="decision-worksheet space-y-6">
       {/* Top Navigation */}
       <div className="flex flex-wrap items-center gap-2">
-        <BackLink href={decision.projectId ? "/decisions/groups/" + decision.projectId : "/decisions?view=individual"}>{decision.projectId ? "Project tree" : "Individual decisions"}</BackLink>
-        <Link className="ml-auto rounded-xl px-3 py-2 text-sm font-semibold text-primary hover:bg-muted" href={"/dna?decision="+encodeURIComponent(decision.id)}>Ask AI</Link>
-        <Button size="sm" variant="ghost" onClick={() => window.print()}>Print</Button>
-        <Link href={`/decisions/${decision.id}/replay`}>
-          <Button size="sm" variant={reviewDue || decision.outcome ? "default" : "outline"}>
-            <GitCompare className="h-4 w-4 mr-1.5" />
-            {decision.outcome ? "View outcome" : "Record outcome"}
+        <BackLink href={decision.projectId ? "/decisions/groups/" + decision.projectId : "/decisions?view=individual"}>{decision.projectId ? "Collection flow" : "Individual decisions"}</BackLink>
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Link className="rounded-xl px-3 py-2 text-sm font-semibold text-primary hover:bg-muted" href={"/dna?decision="+encodeURIComponent(decision.id)}>Ask AI</Link>
+          <Button size="sm" variant="ghost" onClick={() => { setActionError(""); setModalAction("edit"); }}>
+            <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
           </Button>
-        </Link>
+          <Button size="sm" variant="ghost" onClick={() => { setActionError(""); setModalAction("move"); }}>
+            <FolderInput className="h-3.5 w-3.5 mr-1" /> Move
+          </Button>
+          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { setActionError(""); setModalAction("delete"); }}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => window.print()}>Print</Button>
+          <Link href={`/decisions/${decision.id}/replay`}>
+            <Button size="sm" variant={reviewDue || decision.outcome ? "default" : "outline"}>
+              <GitCompare className="h-4 w-4 mr-1.5" />
+              {decision.outcome ? "View outcome" : "Record outcome"}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Time until review */}
@@ -194,6 +228,151 @@ export default function DecisionDetailPage() {
         </Card>
       )}
     </div>
+
+    {modalAction && (
+      <dialog
+        ref={dialogRef}
+        onCancel={() => setModalAction(null)}
+        className="branch-dialog"
+        aria-label="Decision actions"
+      >
+        <form
+          key={modalAction + decision.id}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (busy) return;
+            setBusy(true);
+            setActionError("");
+            const data = new FormData(e.currentTarget);
+            const value = (k: string) => String(data.get(k) || "").trim();
+            try {
+              if (modalAction === "edit") {
+                await apiClient(`/decisions/${decision.id}/details`, {
+                  method: "PATCH",
+                  body: JSON.stringify({
+                    title: value("title"),
+                    choice: value("choice"),
+                    expectedOutcome: value("expectedOutcome"),
+                    decisionReason: value("decisionReason"),
+                    beliefRationale: decision.beliefRationale || "",
+                    confidence: value("confidence") ? Number(value("confidence")) : null,
+                    reviewDate: value("reviewDate") ? new Date(value("reviewDate")).toISOString() : null,
+                  }),
+                });
+                await reload();
+                window.dispatchEvent(new Event("reviews-changed"));
+              } else if (modalAction === "move") {
+                const targetProjectId = value("projectId") || null;
+                await apiClient(`/decisions/${decision.id}/project`, {
+                  method: "PATCH",
+                  body: JSON.stringify({ projectId: targetProjectId }),
+                });
+                await reload();
+              } else if (modalAction === "delete") {
+                await apiClient(`/decisions/${decision.id}`, { method: "DELETE" });
+                window.dispatchEvent(new Event("reviews-changed"));
+                router.push(
+                  decision.projectId
+                    ? `/decisions/groups/${decision.projectId}`
+                    : "/decisions?view=individual",
+                );
+                return;
+              }
+              setModalAction(null);
+            } catch (err) {
+              setActionError((err as Error).message);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <h2>
+            {modalAction === "edit"
+              ? "Edit decision"
+              : modalAction === "move"
+                ? "Move to collection"
+                : "Delete decision?"}
+          </h2>
+
+          {modalAction === "edit" && (() => {
+            const date = decision.reviewDate
+              ? new Date(
+                  new Date(decision.reviewDate).getTime() -
+                    new Date(decision.reviewDate).getTimezoneOffset() * 60000,
+                )
+                  .toISOString()
+                  .slice(0, 16)
+              : "";
+            return (
+              <>
+                <p>Original snapshot stays safely preserved in history.</p>
+                <label>
+                  Decision title
+                  <input name="title" required defaultValue={decision.title} />
+                </label>
+                <label>
+                  What did you decide?
+                  <textarea name="choice" required defaultValue={decision.choice} />
+                </label>
+                <label>
+                  Expected outcome
+                  <textarea name="expectedOutcome" defaultValue={decision.expectedOutcome} />
+                </label>
+                <label>
+                  Why now?
+                  <textarea name="decisionReason" defaultValue={decision.decisionReason || ""} />
+                </label>
+                <label>
+                  Confidence (optional, 1–100)
+                  <input
+                    name="confidence"
+                    type="number"
+                    min="1"
+                    max="100"
+                    defaultValue={decision.confidence ?? ""}
+                  />
+                </label>
+                <label>
+                  Outcome reminder (optional)
+                  <input name="reviewDate" type="datetime-local" defaultValue={date} />
+                </label>
+              </>
+            );
+          })()}
+
+          {modalAction === "move" && (
+            <label>
+              Collection
+              <select name="projectId" defaultValue={decision.projectId || ""}>
+                <option value="">Individual decision (no collection)</option>
+                {collections.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {modalAction === "delete" && (
+            <p>
+              This permanently deletes “{decision.title}”, its outcome, and timeline notes.
+            </p>
+          )}
+
+          {actionError && <p role="alert">{actionError}</p>}
+
+          <div className="branch-tools">
+            <button type="button" onClick={() => setModalAction(null)}>
+              Cancel
+            </button>
+            <button className="branch-primary" disabled={busy}>
+              {modalAction === "delete" ? "Delete" : "Save"}
+            </button>
+          </div>
+        </form>
+      </dialog>
+    )}
     </ProtectedGate>
   );
 }

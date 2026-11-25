@@ -99,7 +99,22 @@ function ThinkingSpace() {
     <section className="insights-page">
       <div className="insights-chat">
         <div className="insights-chatbar">
-          <span className="chat-credit-count">{remaining === null ? "—" : remaining} credits left today</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="chat-credit-count">{remaining === null ? "—" : remaining} credits left today</span>
+            {decisionId && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/30 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                Focused on 1 decision
+                <button
+                  type="button"
+                  onClick={() => setDecisionId(undefined)}
+                  aria-label="Clear decision filter"
+                  className="hover:text-foreground"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
           <div className="chat-project-picker">
             <button type="button" className="chat-project-trigger" disabled={sending} aria-expanded={projectMenu} aria-label="Choose a collection" onClick={()=>setProjectMenu(!projectMenu)}><FolderOpen size={16}/>{projects.find(p=>p.id===project)?.name || (decisionId ? "Selected decision" : "All decisions")}<span>⌄</span></button>
             {projectMenu && <div className="chat-project-menu"><button type="button" onClick={()=>{setDecisionId(undefined);setProject("");setProjectMenu(false)}}>All decisions {project===""?"✓":""}</button>{projects.map(p=><button key={p.id} type="button" onClick={()=>{setDecisionId(undefined);setProject(p.id);setProjectMenu(false)}}>{p.name}{project===p.id?" ✓":""}</button>)}{projects.length===0&&<Link href="/decisions">Create a collection ↗</Link>}</div>}
@@ -198,7 +213,7 @@ function ThinkingSpace() {
   );
 }
 
-function DnaProfileView() {
+function DnaProfileView({ onAskAi }: { onAskAi?: () => void }) {
   const { isAuthenticated } = useAuthStore();
   const [profile, setProfile] = useState<DecisionDnaProfile | null>(null);
   const [selectedDimension, setSelectedDimension] = useState<DnaDimension | null>(null);
@@ -277,12 +292,141 @@ function DnaProfileView() {
         </Card>
       )}
 
-      {profile && measured.length > 0 && (
-        <DnaRadarChart
-          dimensions={measured}
-          onSelectDimension={(dim) => setSelectedDimension(dim)}
-        />
-      )}
+      {profile && measured.length > 0 && (() => {
+        const sorted = [...measured].sort((a, b) => b.score - a.score);
+        const strongest = sorted[0];
+        const growth = sorted[sorted.length - 1];
+        const score = profile.overallDnaScore;
+        const stage =
+          score >= 75 ? "Strong & Well-Calibrated" : score >= 55 ? "Growing Consistency" : "Building Foundations";
+        return (
+          <div className="space-y-6">
+            {/* Top 3-Card Summary Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-5 rounded-2xl border border-border/80 bg-card/90 shadow-soft flex flex-col justify-between gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Overall Insight Score
+                  </span>
+                  <Award size={18} className="text-primary" />
+                </div>
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <strong className="font-display text-3xl font-extrabold text-foreground">
+                      {score}
+                    </strong>
+                    <span className="text-sm text-muted-foreground">/ 100</span>
+                  </div>
+                  <p className="text-xs text-spring-500 font-semibold mt-1">{stage}</p>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-border/80 bg-card/90 shadow-soft flex flex-col justify-between gap-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Your Habits ({profile.totalDecisions} Reviewed)
+                </span>
+                <div className="space-y-1.5 text-xs">
+                  {strongest && (
+                    <p className="flex items-center justify-between gap-2">
+                      <span className="text-muted-foreground">Strongest:</span>
+                      <strong className="text-emerald-400">{strongest.label} ({strongest.score})</strong>
+                    </p>
+                  )}
+                  {growth && growth.name !== strongest?.name && (
+                    <p className="flex items-center justify-between gap-2">
+                      <span className="text-muted-foreground">Focus next:</span>
+                      <strong className="text-amber-400">{growth.label} ({growth.score})</strong>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-primary/25 bg-primary/5 shadow-soft flex flex-col justify-between gap-3">
+                <div className="flex items-center gap-2 text-primary font-semibold text-xs uppercase tracking-wider">
+                  <Sparkles size={15} /> Personal Reflection
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Want help understanding why certain outcomes surprised you?
+                </p>
+                {onAskAi && (
+                  <button
+                    type="button"
+                    onClick={onAskAi}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent text-accent-foreground px-3.5 py-2 text-xs font-bold hover:opacity-90 transition-opacity"
+                  >
+                    <MessageCircle size={14} /> Discuss my insights in Chat
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Patterns Strip (1 col if single, 2 col if multiple so never lopsided) */}
+            {profile.patterns && profile.patterns.length > 0 && (
+              <div
+                className={
+                  "grid gap-3 " +
+                  (profile.patterns.length > 1 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1")
+                }
+              >
+                {profile.patterns.map((p) => (
+                  <div
+                    key={p.patternKey}
+                    className="p-4 rounded-2xl border border-border/80 bg-card/85 flex flex-wrap items-center justify-between gap-3 shadow-soft"
+                  >
+                    <div className="flex items-start gap-3">
+                      <ShieldAlert
+                        size={18}
+                        className={
+                          p.severity === "POSITIVE"
+                            ? "text-emerald-500 shrink-0 mt-0.5"
+                            : p.severity === "HIGH"
+                              ? "text-destructive shrink-0 mt-0.5"
+                              : "text-amber-500 shrink-0 mt-0.5"
+                        }
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <strong className="text-sm font-bold">{p.title}</strong>
+                          {p.evidenceDecisionIds && p.evidenceDecisionIds.length > 0 && (
+                            <span className="text-[11px] text-muted-foreground">
+                              ({p.evidenceDecisionIds.length} decisions)
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {p.description}
+                        </p>
+                      </div>
+                    </div>
+                    {p.evidenceDecisionIds && p.evidenceDecisionIds.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedDimension({
+                            name: p.patternKey,
+                            label: p.title,
+                            score: score,
+                            description: p.description,
+                            evidenceDecisionIds: p.evidenceDecisionIds ?? [],
+                          })
+                        }
+                        className="text-xs font-semibold text-primary hover:underline px-2 py-1"
+                      >
+                        See decisions →
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <DnaRadarChart
+              dimensions={measured}
+              onSelectDimension={(dim) => setSelectedDimension(dim)}
+            />
+          </div>
+        );
+      })()}
 
       {selectedDimension && (
         <MetricEvidenceModal
@@ -338,7 +482,7 @@ export default function Page() {
         <div className="chat-tab-panel" hidden={activeTab !== "chat"}>
           <ThinkingSpace />
         </div>
-        {activeTab === "dna" && <DnaProfileView />}
+        {activeTab === "dna" && <DnaProfileView onAskAi={() => setActiveTab("chat")} />}
       </div>
     </ProtectedGate>
   );

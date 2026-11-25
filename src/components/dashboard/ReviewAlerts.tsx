@@ -23,7 +23,7 @@ export function ReviewAlerts() {
 
   useEffect(() => {
     const supported = window.isSecureContext && "Notification" in window &&
-      "serviceWorker" in navigator && "PushManager" in window;
+      "serviceWorker" in navigator;
     setAvailable(supported);
     const syncPermission = () => setEnabled(Boolean(
       supported && user && Notification.permission === "granted" &&
@@ -33,6 +33,33 @@ export function ReviewAlerts() {
     window.addEventListener("focus", syncPermission);
     return () => window.removeEventListener("focus", syncPermission);
   }, [subscriptionKey, user]);
+
+  // Fallback in-app notification delivery when browser permission is granted (works even if PushManager service is blocked locally)
+  useEffect(() => {
+    if (!user || !enabled || !rows.length || Notification.permission !== "granted") return;
+    let active = true;
+    async function showLocal() {
+      try {
+        await navigator.serviceWorker.register("/review-notifications.js");
+        const reg = await navigator.serviceWorker.ready;
+        for (const r of rows) {
+          if (!active) return;
+          const seenKey = `review-notified:${user}:${r.id}`;
+          const marker = r.nextReminder || r.reviewDate || "due";
+          if (localStorage.getItem(seenKey) === marker) continue;
+          await reg.showNotification("Decision review due", {
+            body: r.title,
+            icon: "/favicon.ico",
+            tag: seenKey,
+            data: { path: "/decisions/" + encodeURIComponent(r.id) + "/replay" },
+          });
+          localStorage.setItem(seenKey, marker);
+        }
+      } catch {}
+    }
+    void showLocal();
+    return () => { active = false; };
+  }, [user, enabled, rows]);
 
   async function changeBrowserReminders() {
     if (!available || !user || changingPermission) return;
@@ -47,24 +74,31 @@ export function ReviewAlerts() {
       }
       await navigator.serviceWorker.register("/review-notifications.js");
       const registration = await navigator.serviceWorker.ready;
-      const current = await registration.pushManager.getSubscription();
+      const canPush = "PushManager" in window && Boolean(registration.pushManager);
+      const current = canPush ? await registration.pushManager.getSubscription() : null;
       if (enabled) {
         if (current) {
           await apiClient("/review-push/subscription", {
             method: "DELETE", body: JSON.stringify({ endpoint: current.endpoint }),
-          });
-          await current.unsubscribe();
+          }).catch(() => {});
+          await current.unsubscribe().catch(() => {});
         }
         localStorage.removeItem(subscriptionKey);
         setEnabled(false);
         return;
       }
-      const { publicKey } = await apiClient<{ publicKey: string }>("/review-push/key");
-      const key = Uint8Array.from(atob(publicKey.replace(/-/g, "+").replace(/_/g, "/")), char => char.charCodeAt(0));
-      const subscription = current ?? await registration.pushManager.subscribe({
-        userVisibleOnly: true, applicationServerKey: key,
-      });
-      await apiClient("/review-push/subscription", { method: "POST", body: JSON.stringify(subscription.toJSON()) });
+      if (canPush) {
+        try {
+          const { publicKey } = await apiClient<{ publicKey: string }>("/review-push/key");
+          const key = Uint8Array.from(atob(publicKey.replace(/-/g, "+").replace(/_/g, "/")), char => char.charCodeAt(0));
+          const subscription = current ?? await registration.pushManager.subscribe({
+            userVisibleOnly: true, applicationServerKey: key,
+          });
+          await apiClient("/review-push/subscription", { method: "POST", body: JSON.stringify(subscription.toJSON()) });
+        } catch {
+          // Local browser notifications still remain active when tab is open
+        }
+      }
       localStorage.setItem(subscriptionKey, "true");
       setEnabled(true);
     } catch (error) {

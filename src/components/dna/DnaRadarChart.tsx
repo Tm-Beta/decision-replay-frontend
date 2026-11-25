@@ -16,12 +16,21 @@ interface DnaRadarChartProps {
 }
 
 const SHORT_LABELS: Record<string, string> = {
-  Calibration: "Calibration",
-  PredictionAccuracy: "Prediction",
-  AssumptionRigor: "Rigor",
-  RiskForesight: "Foresight",
-  EstimationAccuracy: "Estimation",
-  AlternativeBreadth: "Breadth",
+  Calibration: "Confidence Match",
+  PredictionAccuracy: "Predictions",
+  AssumptionRigor: "Assumptions",
+  RiskForesight: "Risk Prep",
+  EstimationAccuracy: "Time & Cost",
+  AlternativeBreadth: "Options Weighed",
+};
+
+const FRIENDLY_NAMES: Record<string, string> = {
+  Calibration: "Confidence Match",
+  PredictionAccuracy: "Expectation Accuracy",
+  AssumptionRigor: "Assumptions Held",
+  RiskForesight: "Risk Preparedness",
+  EstimationAccuracy: "Time & Cost Accuracy",
+  AlternativeBreadth: "Options Considered",
 };
 
 const SIZE = 400;
@@ -51,15 +60,15 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
           <div className="flex items-center justify-between mb-4 border-b border-border/60 pb-3">
             <div>
               <h3 className="font-display text-sm font-bold text-foreground">
-                Metacognitive Geometry
+                Your Decision Balance
               </h3>
               <p className="text-xs text-muted-foreground">
-                Select a metric to see its source.
+                Click any point to inspect the decisions behind it.
               </p>
             </div>
             <div className="inline-flex items-center gap-1.5 rounded-full bg-spring-500/15 border border-spring-500/30 px-2.5 py-0.5 text-[11px] font-bold text-spring-700 dark:text-spring-400">
               <span className="h-1.5 w-1.5 rounded-full bg-spring-500" />
-              Active Calibration
+              Live Insights
             </div>
           </div>
 
@@ -167,7 +176,7 @@ export function DnaRadarChart({ dimensions = [], onSelectDimension }: DnaRadarCh
               <CardHeader className="p-4 pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="font-display text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                    {dim.label}
+                    {FRIENDLY_NAMES[dim.name] ?? dim.label}
                   </CardTitle>
                   <span className="text-base font-extrabold font-mono text-spring-600 dark:text-spring-400">
                     {dim.score}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/useAuthStore";
+import { apiClient } from "@/services/apiClient";
 import { Bell, Sun, Moon } from "lucide-react";
 
 interface DockRowProps {
@@ -114,6 +115,25 @@ export function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const [dueCount, setDueCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) { setDueCount(0); return; }
+    let active = true;
+    const loadDue = () => {
+      apiClient<unknown[]>("/decisions/due-reviews")
+        .then((rows) => { if (active && Array.isArray(rows)) setDueCount(rows.length); })
+        .catch(() => {});
+    };
+    loadDue();
+    window.addEventListener("reviews-changed", loadDue);
+    window.addEventListener("focus", loadDue);
+    return () => {
+      active = false;
+      window.removeEventListener("reviews-changed", loadDue);
+      window.removeEventListener("focus", loadDue);
+    };
+  }, [isAuthenticated]);
 
   const dockExpanded = isExpanded || isMenuOpen;
 
@@ -214,8 +234,18 @@ export function Navbar() {
             })}
             <DockRow
               id="notifications"
-              label="Notifications"
-              icon={<Bell size={17} />}
+              label={dueCount > 0 ? `Alerts (${dueCount})` : "Alerts"}
+              icon={
+                <span className="relative inline-flex">
+                  <Bell size={17} />
+                  {dueCount > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-background"
+                    />
+                  )}
+                </span>
+              }
               isExpanded={dockExpanded}
               hoveredRow={hoveredRow}
               setHoveredRow={setHoveredRow}

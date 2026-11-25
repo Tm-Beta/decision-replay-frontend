@@ -57,11 +57,30 @@ function Groups() {
           {!individual && !error && <p role="status">Loading decisions…</p>}
           {individual?.length === 0 && <p>No individual decisions yet.</p>}
           {individual?.map(decision => (
-            <Link className="journal-row" key={decision.id} href={"/decisions/" + decision.id}>
-              <NotebookPen size={17} />
-              <div><strong>{decision.title}</strong><small>{decision.outcome ? "Outcome recorded" : "Awaiting outcome"}</small></div>
-              <ArrowUpRight size={15} />
-            </Link>
+            <div className="journal-row flex-wrap" key={decision.id}>
+              <NotebookPen size={17} className="shrink-0" />
+              <Link href={"/decisions/" + decision.id} className="flex-1 min-w-0">
+                <strong className="block truncate">{decision.title}</strong>
+                <small>
+                  {decision.outcome ? "Outcome recorded" : "Awaiting outcome"}
+                  {decision.confidence != null ? ` · ${decision.confidence}% confidence` : ""}
+                </small>
+              </Link>
+              <div className="flex items-center gap-2 shrink-0">
+                {!decision.outcome ? (
+                  <Link className="branch-primary !py-1.5 !px-3 !text-xs" href={`/decisions/${decision.id}/replay`}>
+                    Record outcome
+                  </Link>
+                ) : (
+                  <Link className="graph-action-btn !py-1.5 !px-3 !text-xs" href={`/decisions/${decision.id}/replay`}>
+                    View outcome
+                  </Link>
+                )}
+                <Link href={"/decisions/" + decision.id} aria-label={"Open " + decision.title}>
+                  <ArrowUpRight size={15} />
+                </Link>
+              </div>
+            </div>
           ))}
         </section>
       )}

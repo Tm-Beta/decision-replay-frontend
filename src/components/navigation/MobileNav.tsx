@@ -9,13 +9,33 @@ import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Plus, User as UserIcon, LogOut, HelpCircle, Shield } from "lucide-react";
 import { launchGoogleSignIn } from "@/lib/googleAuth";
+import { apiClient } from "@/services/apiClient";
 
 export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, openAuthModal, openTourModal, logout } = useAuthStore();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [dueCount, setDueCount] = useState(0);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) { setDueCount(0); return; }
+    let active = true;
+    const loadDue = () => {
+      apiClient<unknown[]>("/decisions/due-reviews")
+        .then((rows) => { if (active && Array.isArray(rows)) setDueCount(rows.length); })
+        .catch(() => {});
+    };
+    loadDue();
+    window.addEventListener("reviews-changed", loadDue);
+    window.addEventListener("focus", loadDue);
+    return () => {
+      active = false;
+      window.removeEventListener("reviews-changed", loadDue);
+      window.removeEventListener("focus", loadDue);
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -129,11 +149,25 @@ export function MobileNav() {
           {isDnaActive && <span className="h-1 w-1 rounded-full bg-spring-400" />}
         </Link>
 
-        {isAuthenticated && <Link href="/notifications" aria-label="Notifications"
-          aria-current={pathname === "/notifications" ? "page" : undefined}
-          className="grid min-h-11 min-w-9 place-items-center text-muted-foreground aria-[current=page]:text-spring-400">
-          <Bell size={18} />
-        </Link>}
+        {isAuthenticated && (
+          <Link
+            href="/notifications"
+            aria-label={dueCount > 0 ? `Alerts (${dueCount} due)` : "Alerts"}
+            aria-current={pathname === "/notifications" ? "page" : undefined}
+            className={`relative flex flex-col items-center gap-0.5 py-1 px-2 text-[10px] transition-colors ${
+              pathname === "/notifications" ? "text-spring-400 font-bold" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span className="relative inline-flex">
+              <Bell size={18} />
+              {dueCount > 0 && (
+                <span className="absolute -top-0.5 -right-1 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-background" />
+              )}
+            </span>
+            <span>Alerts</span>
+            {pathname === "/notifications" && <span className="h-1 w-1 rounded-full bg-spring-400" />}
+          </Link>
+        )}
 
         {/* Profile / Menu Button with Popup */}
         <div className="relative" ref={profileRef}>

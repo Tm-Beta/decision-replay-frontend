@@ -24,6 +24,7 @@ export interface CreateDecisionInput {
   expectedOutcome: string;
   confidence: number | null;
   decidedOn?: string; outcomeKnown?: boolean; influences?: string[];
+  sourceLinks?: Array<{ type: "DECISION" | "OUTCOME" | "PLAN"; id: string }>;
   reviewDate?: string;
   assumptions: Array<{ statement: string; metricTarget?: string; confidence: number }>;
   alternatives: Array<{ title: string; pros: string; cons: string }>;
