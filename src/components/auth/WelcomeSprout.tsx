@@ -1,23 +1,70 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { findWelcomeRoute } from "./welcomeRoute";
 import { JournalArt } from "@/components/illustrations/JournalArt";
-
-const tour = [
-  { message: "Hi! I’m Sprout. Come on in!", kind: "journal", reaction: "celebrating" },
-  { message: "Write down a choice while it’s fresh.", kind: "projects", reaction: "sorting" },
-  { message: "See what worked when the results come in.", kind: "insights", reaction: "celebrating" },
-  { message: "Talk through your next step in Chat.", kind: "chat", reaction: "listening" },
-  { message: "Ready? Continue with Google to start.", kind: "journal", reaction: "celebrating" },
-] as const;
+import { useTheme } from "@/components/theme/ThemeProvider";
+import { CHARACTER_CATALOG } from "@/lib/preferences";
 
 const flourishes = ["wave", "peek", "twinkle"] as const;
-const lastStop = tour.length - 1;
+
+function useTourSteps() {
+  const { preferences } = useTheme();
+  return useMemo(() => {
+    const char = preferences.character;
+    const name = char.name?.trim() || CHARACTER_CATALOG[char.id].defaultName;
+    const returning = Boolean(
+      preferences.onboardingCompleted ||
+        char.id !== "sprout" ||
+        preferences.presetId !== "midnight-velvet",
+    );
+    const toneLine =
+      char.tone === "direct"
+        ? "Let’s see which calls paid off."
+        : char.tone === "socratic"
+          ? "Got an assumption to test today?"
+          : char.tone === "playful"
+            ? "Ready to map your next move?"
+            : "Write down a choice while it’s fresh.";
+
+    return [
+      {
+        message: returning
+          ? `Hey! I’m ${name}. Good to see you!`
+          : `Hi! I’m ${name}. Welcome to So I Chose!`,
+        kind: "journal" as const,
+        reaction: "celebrating" as const,
+      },
+      {
+        message: toneLine,
+        kind: "projects" as const,
+        reaction: "sorting" as const,
+      },
+      {
+        message: "Compare what you expected with reality.",
+        kind: "insights" as const,
+        reaction: "proud" as const,
+      },
+      {
+        message: `Ask ${name} anytime in Chat.`,
+        kind: "chat" as const,
+        reaction: "curious" as const,
+      },
+      {
+        message: returning
+          ? `Sign in with Google — ${name} is ready!`
+          : "Continue with Google to make this yours.",
+        kind: "journal" as const,
+        reaction: "celebrating" as const,
+      },
+    ];
+  }, [preferences]);
+}
 
 export function MobileWelcomeSprout() {
   const [step, setStep] = useState(0);
+  const tour = useTourSteps();
 
   useEffect(() => {
     const mobile = window.matchMedia("(max-width: 767px)");
@@ -28,9 +75,9 @@ export function MobileWelcomeSprout() {
       }
     }, 4200);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [tour.length]);
 
-  const { message, kind, reaction } = tour[step];
+  const { message, kind, reaction } = tour[step % tour.length];
   return <div className="mobile-welcome-sprout">
     <JournalArt key={step} kind={kind} reaction={reaction} />
     <p>{message}</p>
@@ -38,6 +85,8 @@ export function MobileWelcomeSprout() {
 }
 
 export function WelcomeSprout() {
+  const tour = useTourSteps();
+  const lastStop = tour.length - 1;
   const guide = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0);
   const [arrival, setArrival] = useState(0);

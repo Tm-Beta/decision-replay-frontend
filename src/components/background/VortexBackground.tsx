@@ -408,7 +408,8 @@ export function VortexBackground() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none"
+      className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none transition-opacity duration-300"
+      style={{ opacity: "var(--vortex-opacity, 0.7)" }}
     >
       <canvas
         ref={canvasRef}

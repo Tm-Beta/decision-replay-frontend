@@ -7,9 +7,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Plus, User as UserIcon, LogOut, HelpCircle, Shield } from "lucide-react";
+import { Plus, User as UserIcon, LogOut, HelpCircle, Shield, Settings } from "lucide-react";
 import { launchGoogleSignIn } from "@/lib/googleAuth";
-import { apiClient } from "@/services/apiClient";
+import { getDueReviews, invalidateDueReviews } from "@/lib/dueReviewsCache";
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -20,22 +20,28 @@ export function MobileNav() {
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) { setDueCount(0); return; }
+    if (!isAuthenticated || !user?.id) { setDueCount(0); return; }
     let active = true;
-    const loadDue = () => {
-      apiClient<unknown[]>("/decisions/due-reviews")
-        .then((rows) => { if (active && Array.isArray(rows)) setDueCount(rows.length); })
+    const uid = user.id;
+    const loadDue = (force = false) => {
+      getDueReviews(uid, force)
+        .then((rows) => { if (active) setDueCount(rows.length); })
         .catch(() => {});
     };
-    loadDue();
-    window.addEventListener("reviews-changed", loadDue);
-    window.addEventListener("focus", loadDue);
+    const handleChanged = () => {
+      invalidateDueReviews();
+      loadDue(true);
+    };
+    const handleFocus = () => loadDue(false);
+    loadDue(false);
+    window.addEventListener("reviews-changed", handleChanged);
+    window.addEventListener("focus", handleFocus);
     return () => {
       active = false;
-      window.removeEventListener("reviews-changed", loadDue);
-      window.removeEventListener("focus", loadDue);
+      window.removeEventListener("reviews-changed", handleChanged);
+      window.removeEventListener("focus", handleFocus);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -240,6 +246,15 @@ export function MobileNav() {
 
                 {/* Menu Options */}
                 <div className="space-y-0.5">
+                  <Link
+                    href="/settings"
+                    onClick={() => setProfileOpen(false)}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors text-left"
+                  >
+                    <Settings className="h-3.5 w-3.5 text-spring-400" />
+                    <span>Settings & Character</span>
+                  </Link>
+
                   <button
                     type="button"
                     onClick={() => {

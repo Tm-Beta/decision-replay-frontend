@@ -54,7 +54,7 @@ function Tour({ finish }: { finish: (createDecision?: boolean) => void }) {
       onCancel={event => { event.preventDefault(); finish(); }}
     >
       <div className="sprout-tour-top">
-        <span className="text-xs text-muted-foreground">{step + 1} of {slides.length}</span>
+        <span className="text-xs text-muted-foreground">So I Chose · {step + 1} of {slides.length}</span>
         <Button variant="ghost" size="sm" onClick={() => finish()}>Skip tour</Button>
       </div>
       <div aria-live="polite" className="sprout-tour-content">

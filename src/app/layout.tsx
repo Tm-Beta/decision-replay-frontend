@@ -10,8 +10,10 @@ import { Navbar } from "@/components/navigation/Navbar";
 import { MobileNav } from "@/components/navigation/MobileNav";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { WelcomeTourModal } from "@/components/onboarding/WelcomeTourModal";
+import { PersonalizeOnboardingModal } from "@/components/onboarding/PersonalizeOnboardingModal";
 import { GoogleOAuthListener } from "@/components/auth/GoogleOAuthListener";
 import { VortexBackground } from "@/components/background/VortexBackground";
+import { PageTransition } from "@/components/ui/PageTransition";
 
 const displayFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -20,17 +22,18 @@ const displayFont = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Decision Replay — Prospective Decision Intelligence & Metacognition",
+  title: "So I Chose — Remember why you decided. Learn from what happened.",
   description:
-    "Capture beliefs before reality happens; learn honestly when the outcome arrives. Zero hindsight bias.",
-  authors: [{ name: "Tm-Beta", url: "https://github.com/Tm-Beta" }],
+    "Record what you choose and what you expect before reality happens — then come back to see what worked. Zero hindsight bias.",
+  authors: [{ name: "Tm-Beta", url: "https://soichose.com" }],
   creator: "Tm-Beta",
-  publisher: "Tm-Beta",
+  publisher: "So I Chose",
   openGraph: {
-    title: "Decision Replay",
-    description: "Prospective Decision Intelligence & Metacognition by Tm-Beta",
-    url: "https://github.com/Tm-Beta",
-    siteName: "Decision Replay by Tm-Beta",
+    title: "So I Chose",
+    description:
+      "Record what you decide today, compare with reality later, and grow wiser with every choice.",
+    url: "https://soichose.com",
+    siteName: "So I Chose",
     type: "website",
   },
 };
@@ -71,14 +74,14 @@ export default function RootLayout({
             {/* Main Application Container (with dedicated right clearance for the dock, top clearance for corner logo, and bottom clearance for mobile nav) */}
             <main className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 md:pr-20 lg:pr-24 pb-28 sm:pb-32 md:pb-16 pt-6 sm:pt-8 md:pt-6">
               <ReviewAlerts/>
-              {children}
+              <PageTransition>{children}</PageTransition>
             </main>
 
             {/* Minimalist Brand Footer (Solveo style for Tm-Beta) */}
             <footer className="mt-auto border-t border-border/40 py-3 sm:py-3.5 text-center text-xs text-muted-foreground shrink-0">
               <div className="mx-auto max-w-7xl px-4 flex items-center justify-center">
                 <p className="flex items-center justify-center flex-wrap gap-2 text-xs text-muted-foreground">
-                  <span>&copy; {new Date().getFullYear()} Decision Replay</span>
+                  <span>&copy; {new Date().getFullYear()} So I Chose</span>
                   <span className="text-muted-foreground/40">&middot;</span>
                   <a
                     href="https://github.com/Tm-Beta"
@@ -105,6 +108,7 @@ export default function RootLayout({
             {/* Authentication & Onboarding Modals */}
             <GoogleOAuthListener />
             <AuthModal />
+            <PersonalizeOnboardingModal />
             <WelcomeTourModal />
           </div>
         </ThemeProvider>
