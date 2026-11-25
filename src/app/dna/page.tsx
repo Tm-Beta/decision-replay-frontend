@@ -4,7 +4,8 @@ import { BackLink } from "@/components/navigation/BackLink";
 import { FloatingDetails, JournalArt } from "@/components/illustrations/JournalArt";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUp, MessageCircle, Sparkles, FolderOpen, Award, ShieldAlert } from "lucide-react";
+import { ArrowUp, MessageCircle, Sparkles, FolderOpen, Award, ShieldAlert, History, MessageSquarePlus, Trash2, X, Search } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ProtectedGate } from "@/components/auth/ProtectedGate";
 import { apiClient, ApiError } from "@/services/apiClient";
 import { dnaService } from "@/services/dnaService";
@@ -15,17 +16,36 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 type Project = { id: string; name: string; status: string };
 type Message = { id: string; role: "user" | "assistant"; content: string };
-type History = { messages: Message[]; remaining: number; limit: number };
+type ChatSessionItem = {
+  id: string;
+  title: string;
+  projectId: string | null;
+  updatedAt: string;
+  _count?: { messages: number };
+};
+type HistoryResponse = {
+  sessionId?: string | null;
+  sessionTitle?: string | null;
+  messages: Message[];
+  remaining: number;
+  limit: number;
+};
 
 function ThinkingSpace() {
+  const { preferences } = useTheme();
   const [composerFocused, setComposerFocused] = useState(false);
   const [decisionId,setDecisionId]=useState<string>();
   useEffect(()=>{setDecisionId(new URLSearchParams(window.location.search).get("decision") || undefined)},[]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [project, setProject] = useState("");
+  const [sessions, setSessions] = useState<ChatSessionItem[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [chatSearch, setChatSearch] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [text, setText] = useState("");
@@ -35,37 +55,61 @@ function ThinkingSpace() {
   const scroll = useRef<HTMLDivElement>(null);
   const [projectMenu,setProjectMenu]=useState(false);
 
+  const refreshSessions = useCallback(() => {
+    apiClient<ChatSessionItem[]>("/chat/sessions")
+      .then((rows) => { if (Array.isArray(rows)) setSessions(rows); })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     apiClient<Project[]>("/groups")
       .then(setProjects)
       .catch((e) => setError(e.message));
+    refreshSessions();
+  }, [refreshSessions]);
+
+  const loadChat = useCallback((opts?: { sessionId?: string | null; projectId?: string }) => {
+    setLoading(true);
+    setError("");
+    const qs = new URLSearchParams();
+    if (opts?.sessionId) qs.set("sessionId", opts.sessionId);
+    else if (opts?.projectId) qs.set("projectId", opts.projectId);
+    const queryStr = qs.toString();
+    apiClient<HistoryResponse>("/chat" + (queryStr ? "?" + queryStr : ""))
+      .then((data) => {
+        setMessages(data.messages);
+        setRemaining(data.remaining);
+        setActiveSessionId(data.sessionId ?? null);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError("");
-    apiClient<History>("/chat" + (project ? "?projectId=" + encodeURIComponent(project) : ""))
-      .then((data) => {
-        if (active) {
-          setMessages(data.messages);
-          setRemaining(data.remaining);
-        }
-      })
-      .catch((e) => {
-        if (active) setError(e.message);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [project]);
+    loadChat({ projectId: project });
+  }, [project, loadChat]);
 
   useEffect(() => {
     scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
+
+  function startNewChat() {
+    setActiveSessionId(null);
+    setMessages([]);
+    setHistoryOpen(false);
+    setError("");
+  }
+
+  async function deleteSession(id: string) {
+    try {
+      await apiClient("/chat/sessions/" + id, { method: "DELETE" });
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      if (activeSessionId === id) {
+        setActiveSessionId(null);
+        setMessages([]);
+      }
+    } catch {}
+  }
 
   async function send(value = text) {
     const message = value.trim();
@@ -76,16 +120,27 @@ function ThinkingSpace() {
     const temp: Message = { id: "pending", role: "user", content: message };
     setMessages((prev) => [...prev, temp]);
     try {
-      const result = await apiClient<{ answer: string; remaining: number }>("/chat", {
+      const result = await apiClient<{
+        answer: string;
+        remaining: number;
+        sessionId?: string;
+      }>("/chat", {
         method: "POST",
-        body: JSON.stringify({ message, decisionId, projectId: project || null }),
+        body: JSON.stringify({
+          message,
+          decisionId,
+          projectId: project || null,
+          sessionId: activeSessionId,
+        }),
       });
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== "pending"),
         { ...temp, id: crypto.randomUUID() },
         { id: crypto.randomUUID(), role: "assistant", content: result.answer },
       ]);
+      if (result.sessionId) setActiveSessionId(result.sessionId);
       setRemaining(result.remaining);
+      refreshSessions();
     } catch (e) {
       setMessages((prev) => prev.filter((m) => m.id !== "pending"));
       setText(message);
@@ -100,6 +155,31 @@ function ThinkingSpace() {
       <div className="insights-chat">
         <div className="insights-chatbar">
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setHistoryOpen((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                historyOpen
+                  ? "border-accent bg-accent/15 text-foreground"
+                  : "border-border bg-card/70 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              }`}
+            >
+              <History size={14} />
+              <span>Previous chats</span>
+              {sessions.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-secondary text-[10px] font-bold">
+                  {sessions.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={startNewChat}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card/70 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition"
+            >
+              <MessageSquarePlus size={14} />
+              <span>New chat</span>
+            </button>
             <span className="chat-credit-count">{remaining === null ? "—" : remaining} credits left today</span>
             {decisionId && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/30 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
@@ -121,6 +201,130 @@ function ThinkingSpace() {
           </div>
         </div>
 
+        <AnimatePresence>
+          {historyOpen && (
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Previous chats"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              onClick={() => setHistoryOpen(false)}
+              className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-lg rounded-3xl border border-border/80 bg-card p-5 shadow-2xl space-y-4"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <History size={17} className="text-accent" />
+                    <h2 className="font-display text-lg font-bold">Previous chats</h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={startNewChat}
+                      className="h-8 px-3 rounded-xl bg-accent/15 border border-accent/35 text-accent text-xs font-bold inline-flex items-center gap-1.5 hover:bg-accent/25 transition"
+                    >
+                      <MessageSquarePlus size={13} /> New chat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryOpen(false)}
+                      aria-label="Close"
+                      className="p-1.5 rounded-xl text-muted-foreground hover:bg-muted transition"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {sessions.length > 3 && (
+                  <label className="flex items-center gap-2 px-3 h-9 rounded-xl border border-border bg-background/60 text-muted-foreground">
+                    <Search size={14} className="shrink-0" />
+                    <input
+                      type="search"
+                      value={chatSearch}
+                      onChange={(e) => setChatSearch(e.target.value)}
+                      placeholder="Search previous chats…"
+                      className="w-full !bg-transparent !border-0 !p-0 text-xs text-foreground focus:outline-none"
+                    />
+                  </label>
+                )}
+
+                {(() => {
+                  const q = chatSearch.trim().toLowerCase();
+                  const filtered = q
+                    ? sessions.filter((s) => s.title.toLowerCase().includes(q))
+                    : sessions;
+                  if (filtered.length === 0) {
+                    return (
+                      <p className="text-xs text-muted-foreground py-6 text-center">
+                        {sessions.length === 0
+                          ? "No previous chats yet. Start a conversation!"
+                          : "No matching chats found."}
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                      {filtered.map((s) => {
+                        const active = activeSessionId === s.id;
+                        return (
+                          <div
+                            key={s.id}
+                            className={`group flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl border text-xs transition ${
+                              active
+                                ? "border-accent bg-accent/15 text-foreground"
+                                : "border-border/60 bg-background/50 hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setHistoryOpen(false);
+                                if ((s.projectId || "") !== project) {
+                                  setProject(s.projectId || "");
+                                }
+                                loadChat({ sessionId: s.id });
+                              }}
+                              className="flex-1 min-w-0 text-left"
+                            >
+                              <strong className="block font-semibold truncate text-sm">
+                                {s.title}
+                              </strong>
+                              <small className="text-[11px] opacity-75">
+                                {new Date(s.updatedAt).toLocaleDateString()} ·{" "}
+                                {s._count?.messages ?? 0} msgs
+                              </small>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void deleteSession(s.id)}
+                              title="Delete chat"
+                              aria-label="Delete chat"
+                              className="p-1.5 rounded-xl opacity-60 hover:opacity-100 hover:text-destructive transition shrink-0"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div ref={scroll} className="insights-messages illustrated-area" aria-live="polite">
           {!messages.length && <FloatingDetails kind="chat" />}
           {loading ? (
@@ -128,6 +332,9 @@ function ThinkingSpace() {
           ) : messages.length === 0 ? (
             <div className="insights-empty">
               <JournalArt kind="chat" reaction={composerFocused || text.trim() ? "listening" : "idle"} />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+                {preferences.character.name || "Sprout"}
+              </span>
               <h2>What’s on your mind?</h2>
               
               <div className="insights-suggestions">

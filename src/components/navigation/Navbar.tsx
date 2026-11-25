@@ -5,12 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIcon } from "@/components/ui/AnimatedIcon";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { useTheme } from "@/components/theme/ThemeProvider";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuthStore } from "@/store/useAuthStore";
-import { apiClient } from "@/services/apiClient";
-import { Bell, Sun, Moon } from "lucide-react";
+import { getDueReviews, invalidateDueReviews } from "@/lib/dueReviewsCache";
+import { Bell, Settings } from "lucide-react";
 
 interface DockRowProps {
   id: string;
@@ -108,9 +106,7 @@ function DockRow({
 
 export function Navbar() {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuthStore();
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { isAuthenticated, user } = useAuthStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -118,22 +114,28 @@ export function Navbar() {
   const [dueCount, setDueCount] = useState(0);
 
   useEffect(() => {
-    if (!isAuthenticated) { setDueCount(0); return; }
+    if (!isAuthenticated || !user?.id) { setDueCount(0); return; }
     let active = true;
-    const loadDue = () => {
-      apiClient<unknown[]>("/decisions/due-reviews")
-        .then((rows) => { if (active && Array.isArray(rows)) setDueCount(rows.length); })
+    const uid = user.id;
+    const loadDue = (force = false) => {
+      getDueReviews(uid, force)
+        .then((rows) => { if (active) setDueCount(rows.length); })
         .catch(() => {});
     };
-    loadDue();
-    window.addEventListener("reviews-changed", loadDue);
-    window.addEventListener("focus", loadDue);
+    const handleChanged = () => {
+      invalidateDueReviews();
+      loadDue(true);
+    };
+    const handleFocus = () => loadDue(false);
+    loadDue(false);
+    window.addEventListener("reviews-changed", handleChanged);
+    window.addEventListener("focus", handleFocus);
     return () => {
       active = false;
-      window.removeEventListener("reviews-changed", loadDue);
-      window.removeEventListener("focus", loadDue);
+      window.removeEventListener("reviews-changed", handleChanged);
+      window.removeEventListener("focus", handleFocus);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   const dockExpanded = isExpanded || isMenuOpen;
 
@@ -146,23 +148,55 @@ export function Navbar() {
   return (
     <>
       <header className="relative grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4 py-4">
-        <Link href="/" aria-label="Decision Replay home"
+        <Link href="/" aria-label="So I Chose home"
           className="col-start-2 inline-flex items-center gap-2 font-display text-sm font-bold text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
           <AnimatedIcon name="compass" size={19} className="text-spring-500" />
-          <span>Decision Replay</span>
+          <span>So I <span className="text-spring-500">Chose</span></span>
         </Link>
         <div className="col-start-3 flex items-center justify-self-end gap-1 md:hidden">
-          <ThemeToggle />
-          <UserMenu side="bottom" />
+          {isAuthenticated ? (
+            <>
+              <Link
+                href="/settings"
+                aria-label="Settings"
+                title="Settings"
+                className={`h-9 w-9 grid place-items-center rounded-xl transition-colors ${
+                  pathname === "/settings"
+                    ? "text-spring-400 bg-spring-500/15"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                }`}
+              >
+                <Settings className="h-4 w-4" />
+              </Link>
+              <UserMenu side="bottom" />
+            </>
+          ) : (
+            <Link
+              href="https://github.com/Tm-Beta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+              title="Tm-Beta on GitHub"
+              aria-label="Tm-Beta on GitHub"
+            >
+              <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                />
+              </svg>
+            </Link>
+          )}
         </div>
       </header>
 
       {/* ========================================================================= */}
-      {/* DESKTOP TOP-RIGHT CONTROLS FOR PUBLIC / LANDING PAGE (!isAuthenticated)  */}
-      {/* Clean top-right header with Theme Switcher & GitHub - No awkward dock!     */}
+      {/* DESKTOP TOP-RIGHT CONTROLS FOR PUBLIC / SIGN-IN PAGE (!isAuthenticated)   */}
+      {/* No theme toggle on login screen — keeps personal preferences isolated     */}
       {/* ========================================================================= */}
       {!isAuthenticated && (
-        <div className="hidden md:flex fixed top-4 sm:top-5 right-4 sm:right-6 z-40 items-center gap-2.5">
+        <div className="hidden md:flex fixed top-4 sm:top-5 right-4 sm:right-6 z-40 items-center">
           <Link
             href="https://github.com/Tm-Beta"
             target="_blank"
@@ -179,9 +213,6 @@ export function Navbar() {
               />
             </svg>
           </Link>
-          <div className="h-10 w-10 grid place-items-center rounded-2xl glass-dock shadow-dock border border-border/80 backdrop-blur-2xl hover:border-spring-500/40 transition-all duration-200">
-            <ThemeToggle className="border-none bg-transparent shadow-none" />
-          </div>
         </div>
       )}
 
@@ -284,23 +315,19 @@ export function Navbar() {
                 </svg>
               </Link>
 
-              {/* Theme Switcher Button */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleTheme();
-                }}
-                className="h-9 w-9 grid place-items-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors shrink-0 cursor-pointer"
-                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                aria-label="Toggle theme"
+              {/* Settings Studio Link (replaces quick theme toggle) */}
+              <Link
+                href="/settings"
+                className={`h-9 w-9 grid place-items-center rounded-xl transition-colors shrink-0 ${
+                  pathname === "/settings"
+                    ? "text-spring-400 bg-spring-500/15"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                }`}
+                title="Settings & Personalization"
+                aria-label="Settings & Personalization"
               >
-                {isDark ? (
-                  <Moon className="h-4 w-4 text-spring-400 pointer-events-none" />
-                ) : (
-                  <Sun className="h-4 w-4 text-amber-500 pointer-events-none" />
-                )}
-              </button>
+                <Settings className="h-4 w-4 pointer-events-none" />
+              </Link>
 
               {/* User Profile Menu with inDock Support */}
               <UserMenu

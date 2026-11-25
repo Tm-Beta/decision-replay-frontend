@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { apiClient } from "@/services/apiClient";
+import { apiClient, setUnauthorizedHandler } from "@/services/apiClient";
+import { invalidateDueReviews } from "@/lib/dueReviewsCache";
+import type { UserPreferences } from "@/lib/preferences";
 
 export interface UserProfile {
   id: string;
   email: string;
   name: string;
   avatar?: string | null;
+  preferences?: Partial<UserPreferences>;
 }
 
 interface AuthState {
@@ -22,13 +25,13 @@ interface AuthState {
   setHasHydrated: (state: boolean) => void;
   loginWithGoogleAccessToken: (accessToken: string) => Promise<{ isNewUser: boolean }>;
   loginWithGoogleCredential: (credential: string) => Promise<{ isNewUser: boolean }>;
-  loginWithGoogle: (data: { email: string; name: string; avatar?: string }) => Promise<{ isNewUser: boolean }>;
   logout: () => void;
   openAuthModal: () => void;
   closeAuthModal: () => void;
   openTourModal: () => void;
   closeTourModal: () => void;
   completeTour: () => void;
+  updateUserPreferences: (preferences: Partial<UserPreferences>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -61,7 +64,7 @@ export const useAuthStore = create<AuthState>()(
             token,
             isAuthenticated: true,
             showAuthModal: false,
-            showTourModal: isNewUser || !get().hasSeenTour,
+            showTourModal: false,
           });
 
           return { isNewUser };
@@ -88,7 +91,7 @@ export const useAuthStore = create<AuthState>()(
             token,
             isAuthenticated: true,
             showAuthModal: false,
-            showTourModal: isNewUser || !get().hasSeenTour,
+            showTourModal: false,
           });
 
           return { isNewUser };
@@ -98,41 +101,18 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithGoogle: async (data: { email: string; name: string; avatar?: string }) => {
-        try {
-          const res = await apiClient<{
-            status: string;
-            data: { user: UserProfile; token: string; isNewUser: boolean };
-          }>("/auth/google", {
-            method: "POST",
-            body: JSON.stringify(data),
-          });
-
-          const { user, token, isNewUser } = res.data;
-
-          set({
-            user,
-            token,
-            isAuthenticated: true,
-            showAuthModal: false,
-            showTourModal: isNewUser || !get().hasSeenTour,
-          });
-
-          return { isNewUser };
-        } catch (error) {
-          console.error("Google authentication failed:", error);
-          throw error;
-        }
-      },
-
       logout: () => {
+        invalidateDueReviews();
         if (typeof window !== "undefined") {
           localStorage.removeItem("decision-replay-auth");
+          localStorage.removeItem("soichose-last-prefs");
+          localStorage.removeItem("decision-replay-theme");
         }
         set({
           user: null,
           token: null,
           isAuthenticated: false,
+          hasSeenTour: false,
           showAuthModal: false,
           showTourModal: false,
         });
@@ -143,6 +123,10 @@ export const useAuthStore = create<AuthState>()(
       openTourModal: () => set({ showTourModal: true }),
       closeTourModal: () => set({ showTourModal: false }),
       completeTour: () => set({ hasSeenTour: true, showTourModal: false }),
+      updateUserPreferences: (preferences) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, preferences } : null,
+        })),
     }),
     {
       name: "decision-replay-auth",
@@ -158,3 +142,9 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Automatically log out if an existing session receives 401 (expired/deleted account)
+setUnauthorizedHandler(() => {
+  const { isAuthenticated, logout } = useAuthStore.getState();
+  if (isAuthenticated) logout();
+});

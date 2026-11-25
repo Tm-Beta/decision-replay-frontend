@@ -4,9 +4,9 @@ import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { MobileWelcomeSprout, WelcomeSprout } from "@/components/auth/WelcomeSprout";
 
 const features = [
-  { title: "Remember why you chose", description: "Keep your original reasons and expectations together.", art: "notebook", accent: "lavender" },
-  { title: "See what happened", description: "Compare what you expected with the real outcome.", art: "terrarium", accent: "mint" },
-  { title: "Find your next step", description: "Use your past decisions to guide what you do next.", art: "paper-plane", accent: "peach" },
+  { title: "Remember why you chose", description: "Lock in your reasoning, alternatives, and expectations before hindsight kicks in.", art: "notebook", accent: "lavender" },
+  { title: "Map choices & outcomes", description: "See how one decision branches into real outcomes, plans, and next steps.", art: "terrarium", accent: "mint" },
+  { title: "Spot your patterns", description: "Review what worked, track your calibration, and ask AI about your next move.", art: "paper-plane", accent: "peach" },
 ] as const;
 
 export function AuthGate() {
@@ -14,8 +14,11 @@ export function AuthGate() {
     <section className="signin-stage">
       <WelcomeSprout />
       <div className="signin-card" data-sprout-obstacle>
-        <h1>Make decisions.<br />Learn from them.</h1>
-        <p>Write down what you decide today, then come back to see what worked.</p>
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-spring-500 mb-2">
+          So I Chose
+        </span>
+        <h1>Decide clearly.<br />Learn honestly.</h1>
+        <p>Write down what you chose today, then come back to see what worked.</p>
         <MobileWelcomeSprout />
         <div data-google-welcome className="rounded-2xl">
           <GoogleAuthButton size="large" />

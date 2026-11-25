@@ -16,7 +16,7 @@ self.addEventListener("push", (event) => {
   try { decisionId = event.data?.json()?.decisionId; } catch { return; }
   if (typeof decisionId !== "string" || !/^[\w-]+$/.test(decisionId)) return;
   event.waitUntil(self.registration.showNotification("Decision review due", {
-    body: "Open Decision Replay to record your outcome.",
+    body: "Open So I Chose to record your outcome.",
     icon: "/favicon.ico",
     tag: "review:" + decisionId,
     data: { path: "/decisions/" + decisionId + "/replay" },
