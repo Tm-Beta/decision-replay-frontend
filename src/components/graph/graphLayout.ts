@@ -6,6 +6,7 @@ export interface GraphNode {
   rawType: NodeRawType;
   kind: "DECISION" | "OUTCOME";
   planned: boolean;
+  joinRule?: "ANY" | "ALL";
   title: string;
   subtitle: string;
   statusLabel: string;

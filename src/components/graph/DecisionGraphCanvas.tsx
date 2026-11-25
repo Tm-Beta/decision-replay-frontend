@@ -91,6 +91,7 @@ interface DecisionGraphCanvasProps {
   onCompleteConnect: (fromKey: string, toKey: string) => void;
   onRemoveEdge?: (edge: GraphEdge) => void;
   onDeleteNode?: (node: GraphNode) => void;
+  onToggleJoinRule?: (node: GraphNode) => void;
   onQuickAddDecisionFromNode: (node: GraphNode) => void;
   onQuickAddOutcomeFromNode: (node: GraphNode) => void;
   onAddRootDecision: () => void;
@@ -137,6 +138,7 @@ export function DecisionGraphCanvas({
   onCompleteConnect,
   onRemoveEdge,
   onDeleteNode,
+  onToggleJoinRule,
   onQuickAddDecisionFromNode,
   onQuickAddOutcomeFromNode,
   onAddRootDecision,
@@ -1057,6 +1059,25 @@ export function DecisionGraphCanvas({
                         )}
                       </span>
                       <span className="graph-node-badge">{node.statusLabel}</span>
+                      {node.kind === "DECISION" &&
+                        edges.filter((e) => e.toKey === node.key).length >= 2 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleJoinRule?.(node);
+                            }}
+                            title="Convergence rule: click to toggle ANY path (OR) vs ALL paths required (AND)"
+                            className={
+                              "ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded border transition " +
+                              (node.joinRule === "ALL"
+                                ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                                : "bg-sky-500/15 text-sky-300 border-sky-500/40")
+                            }
+                          >
+                            {node.joinRule === "ALL" ? "ALL" : "ANY"}
+                          </button>
+                        )}
                     </div>
 
                     <h3 className="graph-node-title">{node.title}</h3>
