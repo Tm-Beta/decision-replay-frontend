@@ -1,0 +1,18 @@
+{
+  "name": "So I Chose — Decision Clarity App",
+  "short_name": "So I Chose",
+  "description": "Prospective decision journal, SHA-256 snapshot locking, branching outcome trees, 6-axis Decision DNA, and 6 AI companions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#140D14",
+  "theme_color": "#00E58A",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
+

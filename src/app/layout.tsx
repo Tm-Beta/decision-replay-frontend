@@ -22,20 +22,96 @@ const displayFont = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "So I Chose — Remember why you decided. Learn from what happened.",
+  metadataBase: new URL("https://app.soichose.com"),
+  title: {
+    default: "So I Chose App — Decide clearly. Learn honestly.",
+    template: "%s · So I Chose",
+  },
   description:
-    "Record what you choose and what you expect before reality happens — then come back to see what worked. Zero hindsight bias.",
+    "Sign in free to lock decisions with immutable SHA-256 Day-0 snapshots, map ANY/ALL branching outcomes, measure 6-axis Decision DNA calibration, and reflect with 6 private AI companions.",
+  keywords: [
+    "So I Chose app",
+    "prospective decision journal",
+    "decision replay workspace",
+    "beat hindsight bias",
+    "6-axis decision DNA",
+    "encrypted .soichose vault",
+  ],
   authors: [{ name: "Tm-Beta", url: "https://soichose.com" }],
   creator: "Tm-Beta",
   publisher: "So I Chose",
+  alternates: { canonical: "https://app.soichose.com" },
+  manifest: "/manifest.webmanifest",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
-    title: "So I Chose",
+    title: "So I Chose App — Prospective Decision Journal & Replay",
     description:
-      "Record what you decide today, compare with reality later, and grow wiser with every choice.",
-    url: "https://soichose.com",
+      "Lock what you decided today before reality happens, compare expectations with outcomes honestly, and discover your 6-axis Decision DNA.",
+    url: "https://app.soichose.com",
     siteName: "So I Chose",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "So I Chose — Decide clearly. Learn honestly.",
+      },
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "So I Chose App — Decide clearly. Learn honestly.",
+    description:
+      "Prospective SHA-256 decision locking, branching outcome trees, and 6 private AI companions.",
+    images: ["/og-image.png"],
+  },
+};
+
+const APP_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": "https://app.soichose.com/#app",
+      name: "So I Chose",
+      alternateName: "Decision Replay",
+      url: "https://app.soichose.com",
+      applicationCategory: "ProductivityApplication",
+      applicationSubCategory: "Decision Journal & Calibration Analytics",
+      operatingSystem: "Web",
+      browserRequirements: "Requires JavaScript",
+      isPartOf: { "@id": "https://soichose.com/#website" },
+      publisher: { "@id": "https://soichose.com/#org" },
+      mainEntityOfPage: "https://soichose.com",
+      sameAs: ["https://soichose.com", "https://github.com/Tm-Beta"],
+      softwareHelp: "https://soichose.com/guides",
+      releaseNotes: "https://soichose.com/security",
+      screenshot: "https://app.soichose.com/og-image.png",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+      featureList: [
+        "Immutable SHA-256 Day-Zero Decision Snapshot Locking",
+        "Pre-Mortem Failure Tracking & Assumption Checklists",
+        "Visual Branching Outcome & ANY/ALL Contingency Trees",
+        "6-Axis Decision DNA Calibration Analytics",
+        "6 Journal-Grounded Private AI Reflection Companions",
+        "AES-256-GCM Encrypted .soichose v2 Portable Vault Backups",
+      ],
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -50,6 +126,10 @@ export default function RootLayout({
       className={`${displayFont.variable} dark`}
     >
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-accent/30 selection:text-foreground">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(APP_JSON_LD) }}
+        />
         {/* Official Google Identity Services SDK */}
         <Script
           src="https://accounts.google.com/gsi/client"
@@ -82,6 +162,20 @@ export default function RootLayout({
               <div className="mx-auto max-w-7xl px-4 flex items-center justify-center">
                 <p className="flex items-center justify-center flex-wrap gap-2 text-xs text-muted-foreground">
                   <span>&copy; {new Date().getFullYear()} So I Chose</span>
+                  <span className="text-muted-foreground/40">&middot;</span>
+                  <a
+                    href="https://soichose.com"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Website &amp; Guides
+                  </a>
+                  <span className="text-muted-foreground/40">&middot;</span>
+                  <a
+                    href="https://soichose.com/privacy"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Privacy
+                  </a>
                   <span className="text-muted-foreground/40">&middot;</span>
                   <a
                     href="https://github.com/Tm-Beta"

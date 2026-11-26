@@ -1,0 +1,12 @@
+# So I Chose Web Application (app.soichose.com)
+
+> Interactive zero-hindsight prospective decision clarity workspace. Sign in with passwordless Google authentication to lock Day-0 decisions with SHA-256 snapshots, build ANY/ALL branching outcome trees, view 6-axis Decision DNA reports, talk to 6 scoped AI companions, and export encrypted `.soichose` v2 backups.
+
+- Live App Workspace: https://app.soichose.com
+- Official Documentation, Behavioral Science & Guides: https://soichose.com
+- Full AI / LLM Reference Specification: https://soichose.com/llms-full.txt
+- Compact LLM Index: https://soichose.com/llms.txt
+- Security & Cryptography Architecture: https://soichose.com/security
+- FAQ Directory: https://soichose.com/faq
+- Contact: hello@soichose.com
+
