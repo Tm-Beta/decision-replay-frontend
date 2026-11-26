@@ -1,0 +1,36 @@
+User-agent: *
+Allow: /$
+Disallow: /decisions
+Disallow: /dna
+Disallow: /settings
+Disallow: /notifications
+Disallow: /outcomes
+Disallow: /api/
+
+# Search & AI Engine Discovery (links unified entity graph to soichose.com)
+User-agent: Googlebot
+Allow: /$
+Disallow: /decisions
+Disallow: /dna
+Disallow: /settings
+
+User-agent: Google-Extended
+Allow: /$
+
+User-agent: GPTBot
+Allow: /$
+
+User-agent: OAI-SearchBot
+Allow: /$
+
+User-agent: ClaudeBot
+Allow: /$
+
+User-agent: PerplexityBot
+Allow: /$
+
+# Complete documentation, articles, FAQ & LLM specification reside at:
+# https://soichose.com/llms.txt
+# https://soichose.com/llms-full.txt
+Sitemap: https://soichose.com/sitemap.xml
+
