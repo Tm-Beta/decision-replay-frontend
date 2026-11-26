@@ -23,6 +23,15 @@ export function AuthGate() {
         <div data-google-welcome className="rounded-2xl">
           <GoogleAuthButton size="large" />
         </div>
+        <div className="pt-3 flex items-center justify-center gap-3 text-[11px] text-muted-foreground">
+          <a href="https://soichose.com" className="hover:text-foreground transition-colors underline underline-offset-4">
+            How So I Chose works
+          </a>
+          <span aria-hidden="true">&middot;</span>
+          <a href="https://soichose.com/security" className="hover:text-foreground transition-colors underline underline-offset-4">
+            .soichose Security
+          </a>
+        </div>
       </div>
       {features.map(({ title, description, art, accent }, index) => (
         <article key={title} className={`signin-feature signin-feature-${index + 1} signin-${accent}`} data-sprout-obstacle>
