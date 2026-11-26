@@ -15,7 +15,7 @@ type Project = { id: string; name: string; createdAt: string; _count: { decision
 type DashboardData = { projects: Project[]; decisions: Decision[] };
 
 export default function DashboardPage() {
-  const { isAuthenticated, isHydrated } = useAuthStore();
+  const { isAuthenticated, isHydrated, user } = useAuthStore();
   const [data, setData] = useState<DashboardData>();
   const [error, setError] = useState("");
 
@@ -45,9 +45,11 @@ export default function DashboardPage() {
   const decisions = data?.decisions ?? [];
   const individual = decisions.filter(decision => !decision.projectId);
   const completed = decisions.filter(decision => decision.outcome).length;
-  const pending = decisions.filter(decision =>
+  const pendingDecisions = decisions.filter(decision =>
     !decision.outcome && ["LOCKED", "REVIEW_PENDING"].includes(decision.status),
-  ).length;
+  );
+  const pending = pendingDecisions.length;
+  const nextPending = pendingDecisions[0];
   const tracked = pending + completed;
   const projectActivity = new Map<string, number>();
   const byProject = new Map<string, number>();
@@ -68,7 +70,12 @@ export default function DashboardPage() {
   return (
     <div className="journal-dashboard branch-workspace illustrated-area"><FloatingDetails kind="journal" />
       <div className="journal-heading">
-        <h1>Decision journal</h1>
+        <div>
+          <h1>{user?.name ? `${user.name.split(" ")[0]}’s journal` : "Your decision journal"}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Every choice you lock in today becomes wisdom tomorrow.
+          </p>
+        </div>
         <Link className="branch-primary inline-flex items-center gap-2" href="/decisions/new">
           <Plus size={17} /> New decision
         </Link>
@@ -76,6 +83,24 @@ export default function DashboardPage() {
       {error && <div className="branch-tools" role="alert"><p>{error}</p><button onClick={() => void load()}>Try again</button></div>}
       {!data && !error && <DecisionReplayLoader size="md" />}
       {data && <>
+        {nextPending && (
+          <div className="mb-4 rounded-2xl border border-spring-500/30 bg-spring-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wider text-spring-500">
+                Ready for reflection · {pending} awaiting outcome
+              </p>
+              <p className="text-sm font-medium text-foreground truncate">
+                How did “{nextPending.title}” turn out?
+              </p>
+            </div>
+            <Link
+              href={`/decisions/${nextPending.id}/replay`}
+              className="branch-primary !py-1.5 !px-3.5 !text-xs shrink-0 inline-flex items-center gap-1.5"
+            >
+              Record what happened <ArrowUpRight size={14} />
+            </Link>
+          </div>
+        )}
         <section className="journal-overview branch-report" aria-label="Decision activity">
           <JournalArt kind="journal" reaction={tracked > 0 && completed === tracked ? "celebrating" : pending > 0 ? "due" : "idle"} />
           <div className="journal-metrics">

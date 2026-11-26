@@ -6,8 +6,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiClient } from "@/services/apiClient";
+import { getDueReviews, invalidateDueReviews, type DueReviewItem } from "@/lib/dueReviewsCache";
 import { useAuthStore } from "@/store/useAuthStore";
-type Due = { id: string; title: string; project: { name: string } | null; reviewDate: string | null; nextReminder: string | null };
+type Due = DueReviewItem;
 export function ReviewAlerts() {
   const user = useAuthStore((s) => s.user?.id),
     path = usePathname();
@@ -115,10 +116,11 @@ export function ReviewAlerts() {
     setLoaded(false);
     setError("");
     if (!user) return;
-    async function refresh() {
+    const uid = user;
+    async function refresh(force = false) {
       const current = ++request;
       try {
-        const data = await apiClient<Due[]>("/decisions/due-reviews");
+        const data = await getDueReviews(uid, force);
         if (active && current === request) {
           setRows(data);
           setLoaded(true);
@@ -129,17 +131,22 @@ export function ReviewAlerts() {
           setError("Could not check review reminders.");
       }
     }
-    void refresh();
-    const interval = setInterval(refresh, 60000);
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    window.addEventListener("reviews-changed", refresh);
+    const handleChanged = () => {
+      invalidateDueReviews();
+      void refresh(true);
+    };
+    const handleFocusOrVis = () => { void refresh(false); };
+    void refresh(false);
+    const interval = setInterval(() => void refresh(true), 60000);
+    window.addEventListener("focus", handleFocusOrVis);
+    document.addEventListener("visibilitychange", handleFocusOrVis);
+    window.addEventListener("reviews-changed", handleChanged);
     return () => {
       active = false;
       clearInterval(interval);
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-      window.removeEventListener("reviews-changed", refresh);
+      window.removeEventListener("focus", handleFocusOrVis);
+      document.removeEventListener("visibilitychange", handleFocusOrVis);
+      window.removeEventListener("reviews-changed", handleChanged);
     };
   }, [user]);
   if (!user || (!isInbox && (path !== "/" || (!rows.length && !error)))) return null;
